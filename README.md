@@ -12,7 +12,10 @@ npm ci
 npm run dev
 ```
 
-Ouvrir l'adresse affichée par Vite, généralement http://localhost:5173.
+Ouvrir http://localhost:8008 depuis le serveur, ou `http://<ip-locale-du-serveur>:8008`
+depuis un autre appareil du réseau local. Vite écoute sur toutes les interfaces
+réseau (`0.0.0.0`) et conserve le port `8008` : si ce port est déjà utilisé, le
+démarrage échoue au lieu de choisir un autre port.
 Les modifications sont rechargées automatiquement.
 
 ## Commandes

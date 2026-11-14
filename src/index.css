@@ -1,4 +1,6 @@
 :root {
+  --page-gutter: clamp(1rem, 4vw, 2rem);
+  --touch-target: 2.75rem;
   font-family: system-ui, sans-serif;
   color: #f1f0f7;
   background: #0b0e16;
@@ -7,6 +9,7 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color-scheme: dark;
+  line-height: 1.5;
 }
 
 * {
@@ -14,6 +17,49 @@
 }
 
 body {
-  min-width: 320px;
   margin: 0;
+}
+
+html {
+  overflow-wrap: anywhere;
+  scroll-padding-block: 1rem;
+}
+
+#root {
+  min-block-size: 100vh;
+  min-block-size: 100svh;
+}
+
+img,
+video,
+svg {
+  max-inline-size: 100%;
+  block-size: auto;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  font-size: 1rem;
+}
+
+button,
+[role='button'],
+input:not([type='checkbox'], [type='radio'], [type='hidden']),
+select {
+  min-block-size: var(--touch-target);
+  min-inline-size: var(--touch-target);
+}
+
+button,
+[role='button'],
+a {
+  touch-action: manipulation;
+}
+
+:focus-visible {
+  outline: 3px solid #c4b5fd;
+  outline-offset: 4px;
 }

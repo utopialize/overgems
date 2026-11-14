@@ -1,21 +1,32 @@
 .workspace {
-  width: min(960px, 100%);
+  width: min(60rem, 100%);
+  min-block-size: 100vh;
+  min-block-size: 100svh;
+  display: grid;
+  grid-template-rows: auto minmax(12rem, 1fr) auto;
+  gap: 1rem;
   margin: 0 auto;
-  padding: 48px 24px 24px;
+  padding-block-start: max(1rem, env(safe-area-inset-top, 0px));
+  padding-inline-end: max(var(--page-gutter), env(safe-area-inset-right, 0px));
+  padding-block-end: max(1rem, env(safe-area-inset-bottom, 0px));
+  padding-inline-start: max(var(--page-gutter), env(safe-area-inset-left, 0px));
+}
+
+.workspace > * {
+  min-inline-size: 0;
 }
 
 .workspace-header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 24px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
 }
 
 .eyebrow {
-  margin: 0 0 8px;
+  margin: 0 0 0.5rem;
   color: #b7a4e8;
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -23,48 +34,73 @@
 h1 {
   margin: 0;
   font-size: clamp(2rem, 6vw, 3rem);
+  line-height: 1.1;
   letter-spacing: -0.04em;
 }
 
 .badge {
   flex-shrink: 0;
-  padding: 8px 12px;
+  max-inline-size: 100%;
+  padding: 0.5rem 0.75rem;
   border: 1px solid #3a3153;
   border-radius: 100px;
   background: #211c30;
   color: #ddd6fe;
-  font-size: 0.8rem;
+  font-size: 0.875rem;
 }
 
 .scene {
+  position: relative;
+  min-block-size: 12rem;
   overflow: hidden;
   border: 1px solid #2d3243;
-  border-radius: 20px;
+  border-radius: 1rem;
   background: #101420;
 }
 
 .pixi-canvas {
-  width: 100%;
-  height: clamp(280px, 55vh, 540px);
+  position: absolute;
+  inset: 0;
 }
 
 .pixi-canvas canvas {
   display: block;
+  /* Keep page scrolling and pinch zoom available over the scene. */
+  touch-action: manipulation;
 }
 
 .scene-error {
-  padding: 24px;
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  overflow: auto;
+  padding: 1rem;
   color: #fecaca;
 }
 
 footer {
-  margin-top: 20px;
   color: #9ca3b8;
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   line-height: 1.8;
   overflow-wrap: anywhere;
 }
 
 code {
   color: #c4b5fd;
+}
+
+/* Start with the phone layout, then add space when it is available. */
+@media (min-width: 40rem) {
+  .workspace {
+    gap: 1.5rem;
+    padding-block-start: max(2rem, env(safe-area-inset-top, 0px));
+    padding-block-end: max(1.5rem, env(safe-area-inset-bottom, 0px));
+  }
+
+  .workspace-header {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+  }
 }

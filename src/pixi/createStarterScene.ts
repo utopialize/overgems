@@ -22,6 +22,12 @@ export function createStarterScene(app: Application): () => void {
 
   const update = (ticker: Ticker) => {
     scene.position.set(app.screen.width / 2, app.screen.height / 2)
+    // Leave room around the animation, including on short landscape screens.
+    scene.scale.set(Math.max(0, Math.min(
+      1,
+      (app.screen.width - 32) / 160,
+      (app.screen.height - 32) / 200,
+    )))
     if (reducedMotion.matches) {
       gem.position.y = 0
       gem.rotation = 0

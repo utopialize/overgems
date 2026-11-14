@@ -14,6 +14,7 @@ export function PixiCanvas() {
     let cancelled = false
     let initialized = false
     let disposeScene: (() => void) | undefined
+    let resizeObserver: ResizeObserver | undefined
 
     async function initialize(container: HTMLDivElement) {
       try {
@@ -36,7 +37,11 @@ export function PixiCanvas() {
         app.canvas.setAttribute('role', 'img')
         app.canvas.setAttribute('aria-label', 'Un cristal violet animé avec PixiJS')
         container.appendChild(app.canvas)
+        // Pixi's event system sets touch-action to none by default.
+        app.canvas.style.touchAction = 'manipulation'
         disposeScene = createStarterScene(app)
+        resizeObserver = new ResizeObserver(() => app.queueResize())
+        resizeObserver.observe(container)
       } catch (cause) {
         if (!cancelled) {
           console.error('Impossible de démarrer PixiJS', cause)
@@ -49,6 +54,7 @@ export function PixiCanvas() {
 
     return () => {
       cancelled = true
+      resizeObserver?.disconnect()
       if (initialized) {
         disposeScene?.()
         app.destroy(true, { children: true })

@@ -1,0 +1,70 @@
+.workspace {
+  width: min(960px, 100%);
+  margin: 0 auto;
+  padding: 48px 24px 24px;
+}
+
+.workspace-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: #b7a4e8;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(2rem, 6vw, 3rem);
+  letter-spacing: -0.04em;
+}
+
+.badge {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  border: 1px solid #3a3153;
+  border-radius: 100px;
+  background: #211c30;
+  color: #ddd6fe;
+  font-size: 0.8rem;
+}
+
+.scene {
+  overflow: hidden;
+  border: 1px solid #2d3243;
+  border-radius: 20px;
+  background: #101420;
+}
+
+.pixi-canvas {
+  width: 100%;
+  height: clamp(280px, 55vh, 540px);
+}
+
+.pixi-canvas canvas {
+  display: block;
+}
+
+.scene-error {
+  padding: 24px;
+  color: #fecaca;
+}
+
+footer {
+  margin-top: 20px;
+  color: #9ca3b8;
+  font-size: 0.8rem;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+
+code {
+  color: #c4b5fd;
+}

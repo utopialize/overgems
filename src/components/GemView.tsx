@@ -1,10 +1,17 @@
+import type { CSSProperties } from 'react'
 import { connections, gemLabel } from '../game/catalog'
 import type { Gem } from '../game/types'
+import { gemPalette } from './gemPalette'
 
 export function GemView({ gem }: { gem: Gem }) {
   const ports = connections(gem)
+  const palette = gemPalette(gem)
+  const style = {
+    '--gem-main': palette.main, '--gem-light': palette.light,
+    '--gem-mid': palette.mid, '--gem-dark': palette.dark,
+  } as CSSProperties
   return (
-    <span className={`gem-view ${gem.kind}`} aria-hidden="true">
+    <span className={`gem-view ${gem.kind}`} data-level={gem.level + 1} style={style} aria-hidden="true">
       <svg viewBox="0 0 64 64" focusable="false">
         {ports.map((port) => (
           <g key={port} transform={`rotate(${({ N: 0, E: 90, S: 180, W: 270 })[port]} 32 32)`}>

@@ -1,9 +1,9 @@
 # OVERGEMS — Audit d’avancement et état des lieux V0.1
 
 Date : **15 novembre 2026**. État examiné : branche `develop`, base Git
-`57afe236d793954159991714e12999a1c4b94305`, puis corrections locales des deux
-régressions identifiées ci-dessous. Ces corrections ne font pas encore partie
-du commit MVP présent sur `main`. Le dépôt contient le premier MVP jouable ; `package.json` porte
+`35e147c`, puis ajout local des palettes de gemmes par niveau. Le commit `35e147c`
+contient l'audit et les deux corrections de gameplay décrites ci-dessous ; le
+premier MVP correspond à `57afe23`. `package.json` porte
 encore la version technique `0.0.0`. « V0.1 » désigne ici le périmètre produit.
 
 Ce document décrit le jeu existant, ses écarts et les décisions à discuter.
@@ -11,8 +11,9 @@ L’audit initial était documentaire. À la demande explicite du porteur de pro
 deux corrections ont ensuite été réalisées : protection du renouvellement sans
 revenu et activation économique unique d’une gemme par branche. Le présent état
 des lieux décrit le code corrigé et conserve la trace des constats initiaux.
+À la demande suivante, la progression chromatique sur douze niveaux a été ajoutée.
 
-Les sources sont le code, les tests, les quatre commits disponibles et les
+Les sources sont le code, les tests, l'historique Git disponible et les
 documents du dépôt : [prompt initial](<OVERGEMS - MASTER DEV PROMPT V01.md>),
 [charte graphique](<OVERGEMS - ART DIRECTION.md>), [règles actuelles](RULES.md),
 [compte rendu antérieur](DELIVERY.md) et [README](../README.md).
@@ -352,9 +353,9 @@ Changer d’hôte, de protocole ou de port ouvre un autre espace localStorage.
 
 ## 3. Évolutions reconstituables
 
-L’historique disponible contient **quatre commits**. Il ne permet pas de dater
+L’historique disponible contient **cinq commits**. Il ne permet pas de dater
 chaque itération de gameplay à l’intérieur du MVP : presque tout le jeu est
-regroupé dans le dernier commit. Aucun échange de conversation n’est nécessaire
+regroupé dans le commit MVP. Aucun échange de conversation n’est nécessaire
 pour les constats ci-dessous, et aucune chronologie intermédiaire n’est inventée.
 
 | Commit, date locale | Évolution attestée |
@@ -363,6 +364,7 @@ pour les constats ci-dessous, et aucune chronologie intermédiaire n’est inven
 | `729055c`, 14/11 à 23:47 | Configuration de l’hôte de développement `192.168.1.112`, port 8008 strict, documentation réseau. |
 | `68758af`, 14/11 à 23:58 | Socle responsive, safe areas, adaptation du canvas et installation de Playwright. L’écran reste une démonstration PixiJS. |
 | `57afe23`, 15/11 à 11:36 | Remplacement de la démo par le jeu : moteur, économie, interactions, persistance, habillage, documentation et tests. Publication du MVP ; `main` et `develop` pointent initialement dessus. |
+| `35e147c`, 15/11 à 11:56 | Audit et corrections du renouvellement sans revenu et de la répétition d'effet d'une gemme déplacée. |
 
 Les arbitrages visibles par rapport au prompt original sont substantiels :
 
@@ -382,11 +384,13 @@ Les migrations et tests attestent une prise en charge d’anciens états sans
 compteurs, avec vitesse réglable ou tarifs d’offres plus élevés. Ils ne permettent
 pas de reconstruire l’ordre précis ni la date de ces versions intermédiaires.
 
-Après cet audit, deux correctifs locaux ont été demandés et ajoutés : refus du
+Après cet audit, deux correctifs ont été demandés et ajoutés : refus du
 renouvellement qui épuiserait le budget d’un circuit sans revenu, avec récolte
 abordable garantie dans un tirage accepté ; mémorisation des gemmes activées par
 branche pour empêcher la réutilisation économique d’une instance déplacée.
 Les règles, l’aide et les scénarios de régression ont été mis à jour.
+L'évolution locale suivante donne aux gemmes une palette propre à chacun des
+douze niveaux, sans changement d'économie ni de propagation.
 
 Les régressions désormais protégées par les tests concernent notamment le double
 débit, les pertes sur refus ou annulation tactile, le paiement avant dépôt, le
@@ -430,6 +434,15 @@ catégories. Les récoltes sont ambre/pêche, les multiplicatrices mauves ; les
 attaches SVG champagne/gris chaud sont dérivées des connexions du catalogue.
 Le plateau est sombre, discret, sans pistes électroniques décoratives.
 
+Chaque niveau possède désormais une nuance distincte : les récoltes vont du
+cuivre au champagne, les multiplicatrices de l'améthyste à la lavande pâle.
+`src/components/gemPalette.ts` calcule quatre couleurs HSL par gemme : teinte
+de 26° à 43° pour les récoltes, de 266° à 289° pour les multiplicatrices, avec
+une luminosité centrale de 65 % à 81 %. Les facettes claires, intermédiaires et
+sombres gardent leur relief. Les valeurs utilisent une encre sombre `#10131E`.
+Le même composant applique ces couleurs dans la boutique, le fantôme et le plateau ;
+elles évoluent à la fusion et sont retrouvées au chargement à partir du niveau.
+
 Les couleurs de base reprennent exactement les tokens de la charte : fond
 `#141C2B`, ardoise `#253247`, violet `#8B79A8`, mauve `#BDA5C4`, ambre `#E9B47D`,
 champagne `#F4D6AE`, texte `#F1EDF2`. Les chiffres sont tabulaires, les bordures
@@ -456,8 +469,8 @@ Les écarts ou réalisations partielles face à la charte sont :
 - Police système (`Avenir Next`, `Segoe UI`, etc.), sans Manrope embarquée.
 - Pas de grain minéral, décor de diorama, silhouettes atmosphériques ou ambiance
   sonore. La charte présente plusieurs de ces éléments comme suggestions.
-- Pas de différenciation visuelle progressive des niveaux hors valeur affichée
-  et niveau indiqué en boutique ; silhouette, facettes et couleurs restent fixes.
+- La progression chromatique est réalisée ; silhouette et nombre de facettes
+  restent fixes, sans ornements ni halo propres aux niveaux élevés.
 - Fusion plus simple que la convergence lumineuse et les particules envisagées.
 - Taille et intensité de la bulle stables, plutôt qu’intensité liée à l’énergie ;
   la vitesse est une constante de code plutôt qu’une option accessible.
@@ -479,6 +492,7 @@ les validations de cet audit tournent sur Node 22.22.1, npm 9.2.0.
 | `runtime.ts` | Ordonnancement chronologique, émissions simultanées, application unique des gains, actions sur la session. |
 | `save.ts`, `useGame.ts` | Validation/migration et localStorage ; liaison à React, minuterie de simulation et suspension. |
 | `src/App.tsx`, `src/components/` | Interface HTML accessible, gemmes SVG, sélection, glisser et fenêtres. |
+| `src/components/gemPalette.ts` | Progression visuelle des teintes et facettes sur les douze niveaux, indépendante de l'économie. |
 | `src/pixi/createFlowScene.ts`, `pulseVisuals.ts` | Animation des événements, bulles, halos, labels et éclatements. |
 | `src/index.css`, `src/App.css` | Tokens et styles, disposition responsive, couches graphiques. |
 | `vitest.config.ts`, `playwright.config.ts` | Tests purs Node et scénarios navigateur sur serveur de test distinct. |
@@ -516,14 +530,14 @@ retestée dans cet audit.
 | Vérification | Résultat constaté le 15/11/2026 |
 | --- | --- |
 | `npm run check` | Réussi après correction : Oxlint, 96 tests Vitest, compilation TypeScript et build Vite. |
-| `npm run test:mobile` | Réussi après correction : 38 scénarios Chromium, environ 1 min 15 s. |
+| `npm run test:mobile` | Réussi après ajout des palettes : 41 scénarios Chromium, environ 1 min 20 s. |
 | `npm run test:mobile -- tests/mobile/layout.spec.ts` | 12 scénarios réussis après la mise à jour de l’aide ; ses sept pages tiennent en paysage. |
-| Examen des captures | Trois captures examinées : grille neuve 390 × 844, paysage 568 × 320 et pose/déplacement pendant un flux. |
+| Examen des captures | Captures initiales : grille neuve, paysage et réseau vivant. Puis palettes des 24 gemmes en portrait 390 × 844 et paysage 568 × 320. |
 | Sondes initiales, puis tests de régression | Les deux problèmes initiaux ont été reproduits, corrigés puis couverts par des assertions moteur et navigateur. |
 
 Les tests produisent des artefacts ignorés dans `test-results/` et le build dans
-`dist/`. Les modifications de code et tests se limitent aux deux corrections
-demandées et à leur explication dans l’aide. Le build
+`dist/`. Après les deux corrections et leur explication dans l'aide, les dernières
+modifications portent sur les palettes par niveau et leurs vérifications. Le build
 produit notamment deux chunks d’environ 249 et 261 ko avant compression
 (environ 79 et 77 ko gzip), plus les chunks partagés ; ce n’est pas une mesure
 du téléchargement total ni des performances d’un mobile.
@@ -540,6 +554,7 @@ du téléchargement total ni des performances d’un mobile.
 | `tests/mobile/gameplay.spec.ts` | 12 | Achat à la pose, fusion, souris/tactile/clavier, sauvegarde, effets réels, reset confirmé, mode réduit, réserve historique et erreurs de stockage. |
 | `tests/mobile/balance.spec.ts` | 7 | Renouvellement sauvegardé puis refus sans perte, achat encore possible ; recyclage et annulation, palier et remboursement après fusion. |
 | `tests/mobile/live.spec.ts` | 7 | Bulles, pose/déplacement, taille/vitesse/arrondi, couches, collisions ; absence de répétition d’effet après deux déplacements de la même récolte ou multiplicatrice. |
+| `tests/mobile/palette.spec.ts` | 3 | 24 palettes distinctes, luminosité croissante, contraste d'au moins 4,5:1 sur toutes les facettes au repos en portrait/paysage ; cohérence du glisser, évolution à la fusion et persistance. |
 
 Les neuf viewports sont 320 × 568, 360 × 640, 390 × 664, 390 × 844,
 412 × 915, 568 × 320, 844 × 390, 768 × 1024 et 1280 × 800. Les contrôles de mise
@@ -572,7 +587,7 @@ Chromium émule le tactile et les dimensions ; cela ne teste pas Safari/iOS,
 Firefox ni un appareil Android réel. Le test « zoom » contrôle la balise viewport
 et `touch-action` du canvas, pas un véritable pincement. Les safe areas sont
 partiellement simulées par du padding. Taille de police système agrandie,
-lecteur d’écran, contraste mesuré, pression imprécise, gros nombres et plateau
+lecteur d’écran, contraste global de l'interface, pression imprécise, gros nombres et plateau
 entièrement rempli restent à éprouver.
 
 À valider manuellement : démarrage sans aide, première bifurcation, compréhension
@@ -620,7 +635,7 @@ Aucun échec n’a été observé dans les suites relancées. Cela ne suffit pas
 | Fusion stricte entre toutes zones | Complète dans le moteur ; parcours actifs plateau et boutique | Partiel côté interface pour la réserve. |
 | Tutoriel contextuel, progression mémorisée | Aide facultative de sept pages ; champ historique non utilisé | Partiel. |
 | Fiche concise et indicateurs réels | Description en statut/noms accessibles ; solde et dernier flux | Partiel ; pas de fiche dédiée ni moyenne récente visible. |
-| Gemmes évoluant visuellement avec leur niveau | Valeur changeante, niveau en boutique, même rendu de base | Partiel face à la charte. |
+| Gemmes évoluant visuellement avec leur niveau | Nuances et luminosité progressives sur douze niveaux ; silhouette et attaches stables | Progression chromatique réalisée ; ornements et halos de niveau non ajoutés. |
 | Simulation pure, calculs indépendants des animations | Moteur, runtime et rendu séparés | Réalisé ; le plateau reste vivant pendant les flux. |
 | Sauvegarde versionnée, pas de gains hors ligne | Présente avec migrations locales | Réalisé ; parcours transitoires non conservés. |
 | Jeu mobile confortable, cible de fluidité | Mise en page testée sous Chromium, confort réel non mesuré | Partiel jusqu’aux essais matériels et humains. |

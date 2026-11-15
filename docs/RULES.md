@@ -86,6 +86,14 @@ défilement de la page ni du plateau. Sur les écrans courts, les cases rétréc
 En paysage, la boutique passe à côté du circuit. L'aide et les paramètres sont
 des fenêtres compactes ; le tutoriel n'occupe plus l'écran de jeu.
 
+Les gemmes changent de nuances sur les douze niveaux : cuivre vers champagne pour
+les récoltes, améthyste vers lavande pâle pour les multiplicatrices. La teinte et
+la luminosité des quatre couleurs de facettes progressent avec le niveau, sans
+changer la silhouette ni les attaches. La palette est centralisée dans
+`src/components/gemPalette.ts` et partagée par plateau, boutique et fantôme de
+glisser. Une fusion l'actualise immédiatement ; aucune donnée de sauvegarde
+supplémentaire n'est nécessaire. Les valeurs restent lisibles en encre sombre.
+
 Les impulsions sont des boules à halo ambre avec leur puissance actuelle au
 centre, derrière les gemmes. Leur diamètre est fixe (18 px) et ne dépend pas de
 la puissance. La valeur se met à jour après amplification et chaque branche affiche

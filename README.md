@@ -38,6 +38,8 @@ en une seule action. Les attaches doivent être identiques ; aucune rotation.
 
 La source envoie une puissance de 1 toutes les 5 secondes. Les gemmes traversées
 brillent et affichent brièvement leur véritable gain ou leur multiplicateur.
+Les douze niveaux possèdent des nuances distinctes, progressivement plus claires :
+cuivre à champagne pour les récoltes, améthyste à lavande pâle pour les multiplicatrices.
 L'interface tient sur un seul écran ; l'aide est accessible avec le bouton « ? ».
 La réserve est masquée et ses données historiques restent conservées.
 
@@ -108,6 +110,7 @@ reste autorisé. Essayer aussi sur de vrais appareils iOS/Safari et Android/Chro
 - `runtime.ts` : émissions et crédit unique des gains, indépendants du framerate.
 - `save.ts`, `useGame.ts` : validation des sauvegardes et liaison React.
 - `src/components/` : interface HTML, gemmes SVG et Pointer Events.
+- `src/components/gemPalette.ts` : nuances et luminosité des facettes par niveau.
 - `src/pixi/` : lecture visuelle des événements, sans calcul de production.
 - `src/index.css` : palette et tokens ; `src/App.css` : mise en page mobile first.
 

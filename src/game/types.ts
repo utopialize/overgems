@@ -36,6 +36,7 @@ export type Offer = { item: ShopItem; price: number }
 export type Settings = { reducedMotion: boolean; paused: boolean; viewMode: 'simple' | 'advanced' }
 export type GameState = {
   version: 1
+  columns: number
   board: (Gem | null)[]
   inventory: (Gem | null)[]
   stones: boolean[]

@@ -13,13 +13,15 @@ export function createExcavationFeedback(stage: HTMLElement) {
   stage.appendChild(layer)
   const bursts = new Map<number, HTMLSpanElement>()
   return {
-    draw(effects: readonly ExcavationFeedback[], now: number, reduced: boolean, offset: number, width: number, height: number) {
+    draw(effects: readonly ExcavationFeedback[], now: number, reduced: boolean, offset: number, width: number, height: number, columns = 7, scrollLeft = 0, viewportWidth = Infinity) {
       const active = new Set<number>()
       const size = Math.min(width, height)
       for (const effect of effects) {
         const elapsed = now - effect.at
         const duration = reduced ? STILL_MS : BURST_MS
         if (elapsed < 0 || elapsed >= duration) continue
+        const x = offset + (effect.index % columns + 0.5) * width - scrollLeft
+        if (x < offset - size || x > viewportWidth + size) continue
         active.add(effect.id)
         let burst = bursts.get(effect.id)
         if (!burst) {
@@ -42,8 +44,8 @@ export function createExcavationFeedback(stage: HTMLElement) {
             burst.appendChild(particle)
           }
         }
-        burst.style.left = offset + (effect.index % 7 + 0.5) * width + 'px'
-        burst.style.top = (Math.floor(effect.index / 7) + 0.5) * height + 'px'
+        burst.style.left = x + 'px'
+        burst.style.top = (Math.floor(effect.index / columns) + 0.5) * height + 'px'
         const t = elapsed / duration
         const flash = burst.firstElementChild as HTMLElement
         const radius = size * (reduced ? 0.38 : 0.22 + Math.min(1, t * 2) * 0.36)

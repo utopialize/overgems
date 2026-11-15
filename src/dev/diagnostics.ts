@@ -11,7 +11,8 @@ export function installDiagnostics(getGame: () => GameState): () => void {
       peak = Math.max(peak, running.frontier.length)
       running = advanceEmission(game.board, running, game.stones)
     }
-    return { scope: 'current-board-forecast', events: running.result.events.length, branches: running.nextBranch,
+    return { scope: 'current-board-forecast', columns: game.columns, events: running.result.events.length,
+      branches: new Set(running.result.events.map((event) => event.branch)).size, allocatedBranchIds: running.nextBranch,
       peakBranches: peak, depth: running.result.maxStep, gain: running.result.gain,
       limited: running.result.limited, causes: running.result.limits, elapsedMs: performance.now() - start }
   }

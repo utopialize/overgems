@@ -10,13 +10,14 @@ Le dépôt est hébergé sur [GitHub](https://github.com/utopialize/overgems).
 `main` contient le premier MVP ; `develop` accueille la suite du développement.
 Les évolutions validées sur `develop` peuvent ensuite être intégrées à `main`.
 Les vues, outils d'optimisation et rochers sont intégrés à `develop`.
-Les lots inventaire/récompenses puis gemmes majeures sont développés sur
-`feature/inventory-major-gems`, avec un point de validation distinct par lot.
+Les lots inventaire/récompenses et gemmes majeures sont intégrés à `develop`.
+L'audit du moteur et les extensions horizontales sont sur
+`feature/engine-world-expansion`.
 
 Pour tester cette évolution :
 
 ```sh
-git switch feature/inventory-major-gems
+git switch feature/engine-world-expansion
 ```
 
 ## Lancer
@@ -79,6 +80,22 @@ peut recouvrir une partie de son ancienne empreinte. La majeure se range dans
 **une seule place d'inventaire**, même sans espace 2×2 sur le plateau. Un dépôt
 impossible conserve la gemme. Recyclage et contribution concernent l'objet entier.
 Les anciennes sauvegardes sont conservées.
+
+Le bouton **+** près du circuit achète sept colonnes à droite : **100, 200, 400,
+puis 800 Éclats**, jusqu'à **35×9**. Chaque extension est entièrement rocheuse ;
+creusez les zones dans l'ordre de votre choix. Les gemmes et leur économie,
+l'inventaire et les découvertes restent conservés. La configuration est dans
+`WORLD_RULES`, fichier `src/game/world.ts` : largeur par palier, plafond, prix
+initial et facteur de progression.
+
+La page tient sur un écran. **Balayez les cases vides ou les pierres** pour
+déplacer la caméra ; glisser une gemme reste un déplacement d'objet. Au bord,
+le glisser fait défiler la caméra automatiquement. La molette, le trackpad et
+le glisser souris sur le terrain fonctionnent également. **↤** revient à la source ;
+le petit compteur indique les colonnes visibles. Les majeures peuvent chevaucher
+deux zones débloquées si leurs quatre cases sont libres. Les flux et les gains
+continuent hors écran. Après rechargement, le territoire est conservé et la
+caméra revient à la source.
 
 La partie est sauvegardée dans ce navigateur. Aucun gain hors ligne.
 Les paramètres permettent de mettre le circuit en pause, réduire les animations
@@ -199,6 +216,7 @@ reste autorisé. Essayer aussi sur de vrais appareils iOS/Safari et Android/Chro
 - `catalog.ts`, `economy.ts` : valeurs, sertissages, prix et génération des offres.
 - `state.ts`, `fusion.ts` : opérations atomiques sur plateau et inventaire.
 - `board.ts` : ancre unique, empreintes et occupation des quatre cellules des majeures.
+- `world.ts` : paliers, prix et achat atomique de territoires entièrement rocheux.
 - `terrain.ts` : terrain initial, minéraux et hasard d'excavation sauvegardé.
 - `rewards.ts` : table extensible des récompenses de gemmes et probabilités.
 - `runtime.ts` : émissions et crédit unique des gains, indépendants du framerate.

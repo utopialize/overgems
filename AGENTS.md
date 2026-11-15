@@ -31,9 +31,21 @@
 - Une pose de majeure exige quatre cases libres et sans rocher. Les quartiers
   permettent de sélectionner, fusionner et recycler l'objet entier. Une majeure
   occupe une place d'inventaire et récolte une seule fois par branche, par identité.
-- Le jeu doit tenir dans un seul écran (`100dvh`), sans scroll de la page ni du
-  plateau. La grille s'adapte à l'espace restant ; ses cases peuvent devenir plus
+- Le jeu tient dans un écran (`100dvh`), sans scroll de page. Seule la caméra du
+  plateau défile horizontalement, avec une fenêtre d'environ sept colonnes.
+  La grille s'adapte à l'espace restant ; ses cases peuvent devenir plus
   petites que 44 px sur les écrans courts. Garder les autres contrôles à 44 px.
+- Le monde commence en 7×9 et s'étend par sept colonnes à droite, jusqu'à 35×9
+  par défaut (`WORLD_RULES`). Toute nouvelle cellule est rocheuse. Préserver les
+  coordonnées et objets existants, les historiques et les flux lors d'un achat.
+- Les index stockés sont par lignes de `game.columns`. Passer par `board.ts` et
+  `remapIndex` pour les empreintes et extensions. Les états de visite du moteur
+  sont stables en coordonnées monde, indépendants de la largeur et de la caméra.
+- Le moteur simule tout le monde. La caméra ne modifie ni les gains ni les
+  prévisions ; SVG et effets éloignés sont omis. Caméra sur vide/pierre, glisser
+  sur gemme ; l'autodéfilement est piloté par le ticker et nettoyé en fin de geste.
+- Les limites d'émission explicitent événements/puissance/monnaie. Distinguer
+  une prévision partielle du plateau courant d'un ancien flux réel limité.
 - L'inventaire de 12 places est actif, en deux pages tactiles de six. Il partage
   la zone de boutique pour garder le plateau fixe. Achats, transferts et fusions
   plateau/inventaire sont atomiques. Ne jamais perdre un objet sur inventaire plein.

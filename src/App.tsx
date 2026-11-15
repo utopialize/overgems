@@ -14,6 +14,7 @@ import { buyOfferAt, createInitialGame, transferGem } from './game/state'
 import type { GemOrigin, Slot } from './game/types'
 import { normalizeSlot } from './game/board'
 import { limitLabel } from './game/diagnostics'
+import { WORLD_RULES, buyExpansion, expansionPrice } from './game/world'
 import { useGame } from './game/useGame'
 import './App.css'
 
@@ -26,6 +27,9 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
   const [pane, setPane] = useState<'shop' | 'inventory'>('shop')
+  const [cameraColumn, setCameraColumn] = useState(0)
+  const [cameraRequest, setCameraRequest] = useState({ column: 0, serial: 0 })
+  function requestCamera(column: number) { setCameraRequest((previous) => ({ column, serial: previous.serial + 1 })) }
   const [collectionOpen, setCollectionOpen] = useState(false)
   const [systemReducedMotion, setSystemReducedMotion] = useState(() => matchMedia('(prefers-reduced-motion: reduce)').matches)
   useEffect(() => {
@@ -50,8 +54,17 @@ export default function App() {
     return () => clearTimeout(timer)
   }, [session.discovery, dispatch])
   function focusBoard(index?: number) {
-    document.querySelector<HTMLButtonElement>(index === undefined
-      ? '.board-cell[tabindex="0"]' : `[data-area="board"][data-index="${index}"]`)?.focus()
+    let target = document.querySelector<HTMLButtonElement>(index === undefined
+      ? '.board-cell[tabindex="0"]' : `[data-area="board"][data-index="${index}"]`)
+    const viewport = document.querySelector<HTMLElement>('[data-board-viewport]')
+    if (index === undefined && viewport && target) {
+      const windowBounds = viewport.getBoundingClientRect(), cellBounds = target.getBoundingClientRect()
+      if (cellBounds.left < windowBounds.left - 1 || cellBounds.right > windowBounds.right + 1) {
+        const column = Math.min(game.columns - 1, Math.ceil(viewport.scrollLeft / (viewport.clientWidth / RULES.columns)))
+        target = document.querySelector<HTMLButtonElement>(`[data-area="board"][data-index="${RULES.sourceRow * game.columns + column}"]`)
+      }
+    }
+    target?.focus({ preventScroll: index === undefined })
   }
   function clearSelection() {
     if (selected) focusBoard(selected.area === 'board' ? selected.index : undefined)
@@ -146,11 +159,22 @@ export default function App() {
       </section>
 
       <section className="circuit-section" aria-labelledby="circuit-title">
-        <div className="section-heading"><h2 id="circuit-title" className={advanced ? '' : 'sr-only'}>Le circuit</h2>
+        <div className="section-heading world-navigation"><h2 id="circuit-title" className="sr-only">Le circuit</h2>
+          <button type="button" className="icon-button" aria-label="Revenir à la source" title="Revenir à la source" onClick={() => requestCamera(0)}>↤</button>
+          <span className="world-position" data-testid="world-position" title="Colonnes visibles / territoire débloqué">{cameraColumn + 1}–{Math.min(game.columns, cameraColumn + RULES.columns)} / {game.columns}</span>
+          <button type="button" className="expansion-button" aria-label={game.columns >= WORLD_RULES.maxColumns ? 'Territoire maximal débloqué' : 'Acheter 7 colonnes pour ' + expansionPrice(game.columns) + ' Éclats'}
+            disabled={game.columns >= WORLD_RULES.maxColumns || game.coins < expansionPrice(game.columns)}
+            title={game.columns >= WORLD_RULES.maxColumns ? 'Territoire maximal débloqué' : '+7 colonnes rocheuses · ' + expansionPrice(game.columns) + ' Éclats'}
+            onClick={() => {
+              const transaction = buyExpansion(game)
+              dispatch({ type: 'expand', now: performance.now() })
+              if (transaction.ok) { setSelected(null); setHovered(null); requestCamera(game.columns) }
+            }}> {game.columns >= WORLD_RULES.maxColumns ? '✓' : '+'} <small>{game.columns >= WORLD_RULES.maxColumns ? game.columns : numberLabel(expansionPrice(game.columns)) + ' ✧'}</small></button>
           <span className="circuit-rhythm" aria-label={game.settings.paused ? 'Circuit en pause' : 'Puissance 1, une impulsion toutes les 5 secondes'}>
-            <i className={game.settings.paused ? 'paused' : ''} />{game.settings.paused ? advanced ? 'En pause' : 'Ⅱ' : (advanced ? 'Puissance 1 · ' : '') + RULES.periodMs / 1000 + ' s'}
+            <i className={game.settings.paused ? 'paused' : ''} />{game.settings.paused ? advanced ? 'En pause' : 'Ⅱ' : (advanced ? '1 · ' : '') + RULES.periodMs / 1000 + ' s'}
           </span></div>
         <GameBoard board={game.board} stones={game.stones} selected={selected} selectedItem={ghost?.item ?? selectedItem} emissions={session.pending}
+          cameraRequest={cameraRequest} onCamera={setCameraColumn}
           excavationEffects={session.excavationEffects}
           reducedMotion={reducedMotion} advanced={advanced} mergedId={session.mergedId} onChoose={choose}
           previewIndex={showPreview && previewDestination?.area === 'board' ? previewDestination.index : null} onPreview={(index) => { if (advanced && selected) setHovered(index === null ? null : { area: 'board', index }) }} />

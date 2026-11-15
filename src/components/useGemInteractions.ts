@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { PointerEvent } from 'react'
 import type { GameState, ShopItem, GemOrigin, Slot } from '../game/types'
 import { validSlot } from '../game/state'
@@ -6,24 +6,37 @@ import { normalizeSlot } from '../game/board'
 
 export function useGemInteractions(game: GameState, onDrop: (from: GemOrigin, to: Slot) => void,
   onRecycle: (from: Slot, gemId: string) => void, onTab: (pane: 'shop' | 'inventory') => void) {
-  const pointer = useRef<{ id: number; from: GemOrigin; x: number; y: number; item: ShopItem; moved: boolean } | null>(null)
+  const pointer = useRef<{ id: number; from: GemOrigin; x: number; y: number; lastX: number; lastY: number; item: ShopItem; moved: boolean } | null>(null)
   const suppressClick = useRef(false)
   const tabHover = useRef<{ pane: 'shop' | 'inventory'; timer: number } | null>(null)
   function clearTabHover() { if (tabHover.current) clearTimeout(tabHover.current.timer); tabHover.current = null }
   useEffect(() => clearTabHover, [])
+  function clearAutoScroll() { document.querySelector<HTMLElement>('[data-board-viewport]')?.removeAttribute('data-drag-scroll') }
   const [ghost, setGhost] = useState<{ item: ShopItem; origin: GemOrigin; x: number; y: number; recycling: boolean; target: Slot | null } | null>(null)
-  function slotAt(element: Element | null): Slot | null {
+  const slotAt = useCallback((element: Element | null): Slot | null => {
     const target = element?.closest<HTMLElement>('[data-area][data-index]')
     if (!target) return null
     const area = target?.dataset.area
     if (area !== 'board' && area !== 'inventory') return null
     const slot = { area, index: Number(target.dataset.index) } as Slot
-    return validSlot(slot) ? slot : null
-  }
+    return validSlot(slot, game.columns) ? slot : null
+  }, [game.columns])
+  useEffect(() => {
+    const scrolled = (event: Event) => {
+      const current = pointer.current
+      if (!current?.moved || !(event.target as HTMLElement)?.matches?.('[data-board-viewport]')) return
+      const target = slotAt(document.elementFromPoint(current.lastX, current.lastY))
+      setGhost((previous) => previous && (previous.target?.area !== target?.area || previous.target?.index !== target?.index) ? { ...previous, target } : previous)
+    }
+    document.addEventListener('scroll', scrolled, true)
+    return () => { document.removeEventListener('scroll', scrolled, true); clearAutoScroll() }
+  }, [slotAt])
+
   function end(event: PointerEvent<HTMLElement>, cancelled = false) {
     const current = pointer.current
     if (!current || event.pointerId !== current.id) return
     clearTabHover()
+    clearAutoScroll()
     if (current.moved) {
       suppressClick.current = true
       window.setTimeout(() => { suppressClick.current = false }, 0)
@@ -52,15 +65,24 @@ export function useGemInteractions(game: GameState, onDrop: (from: GemOrigin, to
         const slot = slotAt(event.target as Element)
         const from: GemOrigin | null = offer ? { area: 'shop', index, offerId: offer.item.id } : slot ? normalizeSlot(game.board, slot) : null
         const gem = from ? from.area === 'shop' ? offer?.item : game[from.area][from.index] : null
-        if (from && gem) pointer.current = { id: event.pointerId, from, item: gem, x: event.clientX, y: event.clientY, moved: false }
+        if (from && gem) pointer.current = { id: event.pointerId, from, item: gem, x: event.clientX, y: event.clientY, lastX: event.clientX, lastY: event.clientY, moved: false }
       },
       onPointerMove(event: PointerEvent<HTMLElement>) {
         const current = pointer.current
         if (!current || event.pointerId !== current.id) return
         if (!current.moved && Math.hypot(event.clientX - current.x, event.clientY - current.y) < 8) return
         current.moved = true
+        current.lastX = event.clientX; current.lastY = event.clientY
         event.currentTarget.setPointerCapture(event.pointerId)
         const element = document.elementFromPoint(event.clientX, event.clientY)
+        const viewport = document.querySelector<HTMLElement>('[data-board-viewport]')
+        if (viewport) {
+          const bounds = viewport.getBoundingClientRect()
+          const near = Math.min(28, bounds.width / 7 * 0.6)
+          const direction = event.clientY >= bounds.top && event.clientY <= bounds.bottom && event.clientX >= bounds.left && event.clientX <= bounds.right
+            ? event.clientX < bounds.left + near ? -1 : event.clientX > bounds.right - near ? 1 : 0 : 0
+          viewport.dataset.dragScroll = String(direction)
+        }
         const tab = element?.closest<HTMLElement>('[data-workbench-tab]')?.dataset.workbenchTab
         if (tab === 'shop' || tab === 'inventory') {
           if (tabHover.current?.pane !== tab) {
@@ -79,6 +101,7 @@ export function useGemInteractions(game: GameState, onDrop: (from: GemOrigin, to
         // the main element must not cancel that same drag via a bubbled event.
         if (event.target !== event.currentTarget) return
         clearTabHover()
+        clearAutoScroll()
         pointer.current = null
         setGhost(null)
       },

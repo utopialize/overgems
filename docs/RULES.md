@@ -3,7 +3,7 @@
 ## Circuit
 
 Une source extérieure à gauche de la ligne 5 émet une puissance de 1 toutes les
-5 secondes. Le plateau compte 7 colonnes et 9 lignes. Une case vide laisse le
+5 secondes. Le plateau commence en 7×9 et peut atteindre 35×9. Une case vide laisse le
 flux continuer tout droit, sans gain ni amplification. Un rocher, une connectique fermée
 ou le bord termine une branche.
 
@@ -56,6 +56,49 @@ lorsqu'elle retrouve la même cellule avec la même direction d'arrivée dans so
 propre historique. La limite globale d'événements est 4096, la puissance
 maximale par branche 10¹² et le solde maximal 10¹⁵. Une alerte signale une limite
 exceptionnelle ; les effets peuvent être simplifiés sans changer les gains.
+Une limite précise sa cause : événements, puissance, monnaie ou entrée invalide.
+Le flux réel concerné est identifié ; une édition du plateau retire l'ancienne
+alerte. La prévision du plateau courant reste indépendante et signale sa cause
+dans ses détails. Le budget est global par émission, pas par branche. Il borne
+la croissance exponentielle des chemins malgré une détection des boucles correcte.
+
+## Extensions et caméra
+
+Chaque achat ajoute sept colonnes à droite, sans augmenter les neuf lignes :
+7 → 14 → 21 → 28 → 35 colonnes. `WORLD_RULES` dans `world.ts` fixe le palier,
+la limite initiale de 35, le prix initial de 100 et sa progression ×2 :
+**100, 200, 400, 800 Éclats**. Un achat refusé ne change rien. Les prix des gemmes,
+les compteurs d'achats/renouvellements et les tirages ne sont pas affectés.
+
+Les 63 cellules d'une extension sont toutes rocheuses, contrairement au passage
+libre du terrain initial. Aucun besoin de finir une zone avant d'en acheter une
+autre : excavation libre dans tout le territoire débloqué, avec les mêmes outils,
+probabilités de gemmes, majeures et minéraux. Aucune nouvelle récompense ni bonus.
+
+La transaction préserve les coordonnées monde des anciennes cellules, objets
+et rochers, remappe leurs index par ligne vers la nouvelle largeur et ne modifie
+ni leurs identités ni les inventaires. Les vagues, puissances et activations en
+cours continuent ; les états déjà visités ne dépendent pas de la largeur.
+La règle de collision au contact vaut aussi à l'ancienne frontière : une branche
+déjà terminée ne ressuscite pas ; creuser avant contact peut laisser passer.
+
+La caméra locale montre environ sept colonnes, avec des cellules de même taille
+avant/après achat. Un balayage tactile ou glisser souris sur vide/pierre déplace
+la caméra ; un glisser sur une gemme déplace l'objet. Molette et trackpad sont
+acceptés. Le bord pendant un glisser déclenche l'autodéfilement via le ticker
+PixiJS ; le dépôt est recalculé sous le pointeur avec le décalage de caméra.
+Les flèches du clavier rendent la destination visible. ↤ revient à la source ;
+le compteur discret indique la fenêtre actuelle et la largeur débloquée.
+
+Le monde entier est simulé, caméra indépendante : hors écran, les impulsions
+continuent et les gains sont crédités. Le canvas garde la taille de la fenêtre.
+Les décors SVG éloignés et effets hors champ sont omis. Les boutons de cellules
+restent présents pour le clavier (315 au maximum actuel).
+
+Les majeures peuvent traverser la frontière de deux zones débloquées. Les quatre
+cellules doivent rester libres et sans pierre ; une empreinte ne peut déborder
+du territoire acheté. Fusion, recyclage, contribution et aperçu concernent
+l'objet entier, quel que soit le décalage de caméra.
 
 ## Terrain et minéraux
 
@@ -177,7 +220,7 @@ sans changer le solde, les objets, leurs attaches ou leurs coûts investis.
 ## Affichage
 
 Le plateau et la boutique tiennent dans la hauteur dynamique du viewport, sans
-défilement de la page ni du plateau. Sur les écrans courts, les cases rétrécissent.
+défilement de page. Seule la fenêtre du plateau défile horizontalement. Sur les écrans courts, les cases rétrécissent.
 En paysage, la boutique passe à côté du circuit. L'aide et les paramètres sont
 des fenêtres compactes ; le tutoriel n'occupe plus l'écran de jeu.
 
@@ -292,6 +335,11 @@ modifier les anciennes données ni multiplier les objets. À la lecture, bords,
 recouvrements et pierres sous une empreinte sont validés sur les quatre cellules.
 Une sauvegarde invalide suit la récupération explicite habituelle ; aucun objet
 n'est tronqué ou déplacé silencieusement.
+Le champ `columns` conserve la largeur achetée et valide la longueur des tableaux.
+Une ancienne sauvegarde sans largeur est migrée en 7×9, sans ajout de rochers ni
+remise à zéro des objets, niveaux, Éclats ou découvertes. La caméra n'est pas
+sauvegardée : au rechargement, elle revient à la source. Le nombre d'excavations
+peut désormais dépasser 63 sur le territoire étendu.
 
 ## Exemple de référence
 

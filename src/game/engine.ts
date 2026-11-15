@@ -1,10 +1,10 @@
 import { DELTA, DIRECTIONS, OPPOSITE, RULES, gemValue, roundCoins } from './catalog'
 import type { Direction, Emission, FlowEvent, Gem, Point, LimitReason } from './types'
-import { occupantAt } from './board'
+import { occupantAt, boardColumns } from './board'
 
 export type Pulse = {
   position: Point; from: Point; direction: Direction; energy: number
-  visited: Set<number>; activatedGems: Set<string>; branch: number; step: number
+  visited: ReadonlySet<number>; activatedGems: ReadonlySet<string>; branch: number; step: number
 }
 export type SimulationOptions = {
   power?: number; source?: Point & { direction: Direction }; maxEvents?: number; maxEnergy?: number
@@ -20,9 +20,10 @@ const limit = (reasons: readonly LimitReason[], reason: LimitReason): LimitReaso
 
 export function collisionReason(board: readonly (Gem | null)[], pulse: Pulse, stones: readonly boolean[] = []): 'edge' | 'connection' | 'stone' | null {
   const { x, y } = pulse.position
-  if (x < 0 || x >= RULES.columns || y < 0 || y >= RULES.rows) return 'edge'
-  if (stones[y * RULES.columns + x]) return 'stone'
-  const gem = occupantAt(board, y * RULES.columns + x)?.gem
+  const columns = boardColumns(board)
+  if (x < 0 || x >= columns || y < 0 || y >= RULES.rows) return 'edge'
+  if (stones[y * columns + x]) return 'stone'
+  const gem = occupantAt(board, y * columns + x)?.gem
   return gem?.kind === 'multiplier' && !gem.setting.includes(OPPOSITE[pulse.direction]) ? 'connection' : null
 }
 
@@ -85,9 +86,11 @@ export function advanceEmission(board: readonly (Gem | null)[], current: Running
     const visit: FlowEvent[] = []
     const children: Pulse[] = []
     let earned = 0
-    const inside = position.x >= 0 && position.x < RULES.columns && position.y >= 0 && position.y < RULES.rows
-    const gem = inside ? occupantAt(board, position.y * RULES.columns + position.x)?.gem : null
-    const key = (position.y * RULES.columns + position.x) * 4 + DIRECTIONS.indexOf(direction)
+    const columns = boardColumns(board)
+    const inside = position.x >= 0 && position.x < columns && position.y >= 0 && position.y < RULES.rows
+    const gem = inside ? occupantAt(board, position.y * columns + position.x)?.gem : null
+    // Column-major state identity remains stable when the world expands to the right.
+    const key = (position.x * RULES.rows + position.y) * 4 + DIRECTIONS.indexOf(direction)
     if (!inside) visit.push({ ...base, type: 'end', reason: 'edge' })
     else if (pulse.visited.has(key)) visit.push({ ...base, type: 'end', reason: 'loop' })
     else if (gem?.kind === 'multiplier' && !gem.setting.includes(OPPOSITE[direction])) {
@@ -119,9 +122,9 @@ export function advanceEmission(board: readonly (Gem | null)[], current: Running
           if (nextDirection !== direction) visit.push({ ...base, type: 'turn', direction: nextDirection, energy: outgoingEnergy })
           const child: Pulse = { position: { x: position.x + nx, y: position.y + ny }, from: position,
             direction: nextDirection, energy: outgoingEnergy, visited: new Set(pulse.visited).add(key),
-            activatedGems: !activates && outgoing.length === 1 ? pulse.activatedGems : new Set(pulse.activatedGems),
+            activatedGems: activates && gem ? new Set(pulse.activatedGems).add(gem.id)
+              : outgoing.length === 1 ? pulse.activatedGems : new Set(pulse.activatedGems),
             branch: outgoing.length > 1 ? nextBranch++ : branch, step: step + 1 }
-          if (gem && activates) child.activatedGems.add(gem.id)
           children.push(child)
           visit.push(moveEvent(child))
         }

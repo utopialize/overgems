@@ -4,10 +4,16 @@ Les documents d'origine fournis sont conservés à l'identique dans ce dossier.
 Les règles à jour et les arbitrages sont dans RULES.md.
 Le suivi des lots inventaire/récompenses et gemmes majeures est dans
 [LOTS-03-04.md](LOTS-03-04.md). Les rochers sont intégrés à `develop`.
+L'[audit moteur et extension horizontale](ENGINE-WORLD.md) décrit les causes
+des limitations, les mesures CPU et le monde de 7×9 à 35×9.
 
 ## Comportement actuel
 
 - Nouvelle partie : plateau 7 × 9 sans gemmes, 18 rochers et 30 Éclats.
+- Extensions de sept colonnes, entièrement rocheuses : 100/200/400/800 Éclats,
+  jusqu'à 35×9. Caméra locale, retour à la source, simulation de tout le réseau.
+- Limites réelles identifiant le flux et la cause ; prévisions partielles
+  distinctes. Plafonds conservés après mesures, historiques moins copiés.
 - Inventaire actif de douze places, affiché à la place des offres, en deux pages
   tactiles de six. Achats, transferts et fusions dans les deux sens ; grille fixe.
 - Récompenses d'excavation de gemmes configurables et rares signalées par ✦,
@@ -61,7 +67,8 @@ Le suivi des lots inventaire/récompenses et gemmes majeures est dans
 - Une gemme ne récolte ou n'amplifie qu'une fois par branche, même déplacée devant
   la boule. Le routage continue ; les branches filles héritent des activations,
   les émissions suivantes repartent sans ces activations.
-- Interface sur un seul écran en portrait et paysage, aide paginée, sauvegarde
+- Interface sur un seul écran en portrait et paysage, caméra horizontale du
+  plateau sans scroll de page, aide paginée, sauvegarde
   validée, réduction des animations, pause et remise à zéro confirmée.
 - Vue épurée par défaut : solde, gemmes et icônes, sans statistiques ou chiffres
   flottants. L'œil et les paramètres activent la vue avancée, choix mémorisé.
@@ -80,8 +87,8 @@ Le suivi des lots inventaire/récompenses et gemmes majeures est dans
 
 ## Vérifications effectuées
 
-- `npm run check` : lint, **196 tests Vitest**, TypeScript et build au lot 04
-  (156 tests existants conservés, 40 tests majeures ajoutés).
+- `npm run check` : lint, **209 tests Vitest**, TypeScript et build après audit
+  moteur/extension (196 tests précédents conservés, 4 limites et 9 monde ajoutés).
 - Propagation dans les quatre directions, sertissages fixes, croisements,
   boucles, limites, déterminisme et exemple de référence à 22 Éclats.
 - Moteur incrémental et prévision statique concordants, passage à travers les
@@ -91,10 +98,15 @@ Le suivi des lots inventaire/récompenses et gemmes majeures est dans
   de gains anticipés ou hors ligne et dix minutes de temps simulé.
 - Hausse au cinquième achat, renouvellements progressifs, refus sans fonds,
   remboursements et migration des anciennes sauvegardes.
-- **87 scénarios Chromium** au lot 04 : 78 scénarios existants conservés et
-  9 scénarios majeures ajoutés ; achat et recyclage souris/tactile/clavier,
+- **99 scénarios Chromium** : 87 scénarios précédents conservés, un diagnostic
+  et onze scénarios monde ajoutés ; achat et recyclage souris/tactile/clavier,
   sauvegarde, suppression du sélecteur, évolution du prix de renouvellement,
   tarifs au palier et conservation des coûts payés.
+- Suite complète réussie, puis contrôle ciblé des 17 scénarios monde/flux après
+  confinement des effets à la fenêtre et normalisation des unités de molette.
+  Nouvelle réception complète avec le focus avancé conservant la caméra.
+- Mesures CPU : monde 35×9 linéaire et dense, serpentin de 175 cellules pendant
+  cinq minutes simulées avec pic de 29 émissions simultanées, sans limite.
 - Majeures : huit traversées (quatre directions et deux voies), croisements,
   retour par une autre face, mouvements pendant la propagation, paliers +4,
   fusions dans les quatre couples de zones, validation d'empreinte et sauvegardes.

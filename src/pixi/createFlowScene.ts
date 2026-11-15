@@ -6,7 +6,7 @@ import type { Point, FlowEvent } from '../game/types'
 import { PULSE_VISUALS, powerLabel } from './pulseVisuals'
 import { createExcavationFeedback } from './createExcavationFeedback'
 
-export type FlowSnapshot = { emissions: ActiveEmission[]; excavationEffects: ExcavationFeedback[]; reducedMotion: boolean; advanced: boolean; offset: number }
+export type FlowSnapshot = { emissions: ActiveEmission[]; columns: number; excavationEffects: ExcavationFeedback[]; reducedMotion: boolean; advanced: boolean; offset: number }
 type IndexedEvent = { event: FlowEvent; index: number }
 type Timeline = { indexed: number; steps: Map<number, IndexedEvent[]> }
 
@@ -26,18 +26,24 @@ export function createFlowScene(app: Application, snapshot: { current: FlowSnaps
   const orbs = new Map<string, HTMLSpanElement>()
   const impacts = new Map<string, HTMLSpanElement>()
   const timelines = new Map<number, Timeline>()
-  const cells = Array.from(host.parentElement!.querySelectorAll<HTMLElement>('.board-cell'))
+  let cells = Array.from(host.parentElement!.querySelectorAll<HTMLElement>('.board-cell'))
+  const viewport = host.parentElement!.querySelector<HTMLElement>('[data-board-viewport]')!
   const excavation = createExcavationFeedback(host.parentElement!)
   let glowing = new Map<number, number>()
 
   const draw = () => {
     light.clear()
-    const { emissions, excavationEffects, reducedMotion, advanced, offset } = snapshot.current
+    const { emissions, columns, excavationEffects, reducedMotion, advanced, offset } = snapshot.current
+    if (cells.length !== columns * RULES.rows) cells = Array.from(host.parentElement!.querySelectorAll<HTMLElement>('.board-cell'))
+    const autoScroll = Number(viewport.dataset.dragScroll ?? 0)
+    if (autoScroll) viewport.scrollLeft += autoScroll * Math.min(40, app.ticker.deltaMS) * 0.22
+    const scrollLeft = viewport.scrollLeft
     const cellWidth = (app.screen.width - offset) / 7
     const cellHeight = app.screen.height / 9
-    const point = (p: Point, source = false) => ({ x: source ? offset / 2 : offset + (p.x + 0.5) * cellWidth, y: (p.y + 0.5) * cellHeight })
+    const point = (p: Point, source = false) => ({ x: (source ? offset / 2 : offset + (p.x + 0.5) * cellWidth) - scrollLeft, y: (p.y + 0.5) * cellHeight })
+    const visible = (x: number) => x >= offset - 20 && x <= app.screen.width + 20
     const now = performance.now()
-    excavation.draw(excavationEffects, now, reducedMotion, offset, cellWidth, cellHeight)
+    excavation.draw(excavationEffects, now, reducedMotion, offset, cellWidth, cellHeight, columns, scrollLeft, app.screen.width)
     const activeLabels = new Set<string>(), activeOrbs = new Set<string>()
     const activeImpacts = new Set<string>()
     const nextGlowing = new Map<number, number>()
@@ -57,6 +63,7 @@ export function createFlowScene(app: Application, snapshot: { current: FlowSnaps
         const radius = advanced ? PULSE_VISUALS.radius : 3
         const x = from.x + (to.x - from.x) * progress
         const y = from.y + (to.y - from.y) * progress
+        if (!visible(x)) continue
         if (!reducedMotion) {
           light.moveTo(from.x + (to.x - from.x) * Math.max(0, progress - 0.25), from.y + (to.y - from.y) * Math.max(0, progress - 0.25))
             .lineTo(x, y).stroke({ width: 2.5, color: 0xe9b47d, alpha: 0.65 })
@@ -109,6 +116,10 @@ export function createFlowScene(app: Application, snapshot: { current: FlowSnaps
             const elapsed = now - emission.start - (event.atStep ?? event.step + 1) * RULES.stepMs
             if (elapsed < 0 || elapsed >= PULSE_VISUALS.burstMs || activeImpacts.size >= 40) continue
             const key = emission.id + ':' + index
+            const from = point(event.from, event.step === 0), to = point(event.to)
+            const contact = event.progress ?? 1
+            const impactX = from.x + (to.x - from.x) * contact
+            if (!visible(impactX)) continue
             activeImpacts.add(key)
             let impact = impacts.get(key)
             if (!impact) {
@@ -120,9 +131,7 @@ export function createFlowScene(app: Application, snapshot: { current: FlowSnaps
               for (let i = 0; i < PULSE_VISUALS.particleCount; i++) impact.appendChild(document.createElement('i'))
               impacts.set(key, impact); layer.appendChild(impact)
             }
-            const from = point(event.from, event.step === 0), to = point(event.to)
-            const contact = event.progress ?? 1
-            impact.style.left = from.x + (to.x - from.x) * contact + 'px'
+            impact.style.left = impactX + 'px'
             impact.style.top = from.y + (to.y - from.y) * contact + 'px'
             const t = elapsed / PULSE_VISUALS.burstMs
             Array.from(impact.children).forEach((particle, i) => {
@@ -137,13 +146,14 @@ export function createFlowScene(app: Application, snapshot: { current: FlowSnaps
           if (event.type !== 'harvest' && event.type !== 'multiply') continue
           const feedbackAge = now - emission.start - (event.step + 1) * RULES.stepMs
           if (feedbackAge < 0 || feedbackAge >= RULES.feedbackMs || feedbackCount >= 40) continue
+          const p = point(event.to)
+          if (!visible(p.x)) continue
           feedbackCount++
           const t = feedbackAge / RULES.feedbackMs
-          const arrivalIndex = event.to.y * 7 + event.to.x
+          const arrivalIndex = event.to.y * columns + event.to.x
           const cellIndex = Number(cells[arrivalIndex]?.dataset.anchorIndex ?? arrivalIndex)
           const intensity = reducedMotion ? 0.35 : (1 - t) ** 2
           nextGlowing.set(cellIndex, Math.max(nextGlowing.get(cellIndex) ?? 0, intensity))
-          const p = point(event.to)
           if (!reducedMotion && drawn < 120) {
             light.circle(p.x, p.y, Math.min(cellWidth, cellHeight) * (0.27 + t * 0.24))
               .stroke({ width: 2, color: event.type === 'harvest' ? 0xf4d6ae : 0xd2bddc, alpha: (1 - t) * 0.9 })

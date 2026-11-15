@@ -13,7 +13,7 @@ export function createInitialGame(seed = 20261115): GameState {
   const inventory: (Gem | null)[] = Array.from({ length: RULES.inventorySize }, () => null)
   const starter: Gem[] = [{ id: 'gem-8', kind: 'harvest', level: 0 },
     { id: 'gem-9', kind: 'multiplier', level: 0, setting: 'EW' }, { id: 'gem-10', kind: 'harvest', level: 0 }]
-  return { version: 1, board, inventory, stones: createStones(seed), excavationSeed: initialExcavationSeed(seed),
+  return { version: 1, columns: RULES.columns, board, inventory, stones: createStones(seed), excavationSeed: initialExcavationSeed(seed),
     excavations: 0, minerals: emptyCollection(), coins: 30, purchases: 0, rerolls: 0, offers: starter.map((gem) => ({ item: gem, price: gemPrice(gem) })),
     seed, nextId: 11, stats: { emissions: 0, earned: 0, lastGain: 0, recent: [] },
     settings: { reducedMotion: false, paused: false, viewMode: 'simple' }, tutorial: 0 }
@@ -28,13 +28,13 @@ function replacePurchasedOffer(game: GameState, index: number, gemPurchase = tru
   offers[index] = generated.offer
   return { ...next, seed: generated.seed, nextId: generated.nextId }
 }
-export function validSlot(slot: Slot): boolean {
+export function validSlot(slot: Slot, columns: number = RULES.columns): boolean {
   return Number.isInteger(slot.index) && slot.index >= 0
-    && slot.index < (slot.area === 'board' ? RULES.columns * RULES.rows : RULES.inventorySize)
+    && slot.index < (slot.area === 'board' ? columns * RULES.rows : RULES.inventorySize)
 }
 export function transferGem(game: GameState, from: Slot, to: Slot): Transaction {
   const fail = (message: string): Transaction => ({ game, message, ok: false })
-  if (!validSlot(from) || !validSlot(to)) return fail('Cet emplacement est en dehors du plateau.')
+  if (!validSlot(from, game.columns) || !validSlot(to, game.columns)) return fail('Cet emplacement est en dehors du plateau.')
   from = normalizeSlot(game.board, from)
   if (from.area === to.area && from.index === to.index) return fail('Gemme déjà sélectionnée.')
   const gem = game[from.area][from.index]
@@ -85,7 +85,7 @@ export function buyOfferOnBoard(game: GameState, index: number, destination: num
   const fail = (message: string): Transaction => ({ game, ok: false, message })
   const offer = game.offers[index]
   if (!offer || offer.item.id !== offerId) return fail('Cette offre a changé. Sélectionnez à nouveau une gemme.')
-  if (!validSlot({ area: 'board', index: destination })) return fail('Déposez la gemme sur une case du circuit.')
+  if (!validSlot({ area: 'board', index: destination }, game.columns)) return fail('Déposez la gemme sur une case du circuit.')
   if (game.coins < offer.price) return fail('Pas assez d’Éclats pour cet achat.')
   if (offer.item.kind === 'pickaxe') {
     if (!game.stones[destination] || occupantAt(game.board, destination)) return fail('Déposez la pioche sur un rocher.')
@@ -134,7 +134,7 @@ export function buyOfferOnBoard(game: GameState, index: number, destination: num
 }
 export function recycleGem(game: GameState, index: number, gemId: string, area: Slot['area'] = 'board'): Transaction {
   if (area === 'board') index = occupantAt(game.board, index)?.anchor ?? index
-  const gem = validSlot({ area, index }) ? game[area][index] : null
+  const gem = validSlot({ area, index }, game.columns) ? game[area][index] : null
   if (!gem || gem.id !== gemId) return { game, ok: false, message: 'Cette gemme n’est plus sur cette case.' }
   const storage = [...game[area]]
   storage[index] = null

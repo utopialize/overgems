@@ -7,9 +7,9 @@ const LESSONS = [
   ['Fusionner deux doubles', 'Même famille, niveau, rareté et attaches : +1 en récolte classique, +0,1 au facteur ou +4 pour une majeure. Une majeure rare occupe 2×2 cases libres et ne récolte qu’une fois par branche. Elle se trouve en creusant et se range dans une seule place d’inventaire.'],
   ['Recycler un cristal', 'Glissez une gemme hors du plateau pour récupérer 50 % de son prix d’achat. Les coûts fusionnés sont cumulés. Les gemmes augmentent de 1 Éclat tous les 5 achats ; chaque renouvellement coûte 1 Éclat de plus.'],
   ['Un circuit vivant', 'Les boules rencontrent les gemmes présentes à leur arrivée. Une même gemme ne récolte ou n’amplifie qu’une fois par branche : la déplacer ne réactive pas son effet.'],
-  ['Jouer au toucher ou au clavier', 'Vous pouvez sélectionner une offre ou une gemme, puis toucher la destination. Au clavier : Entrée sélectionne, les flèches parcourent le plateau, Échap annule.'],
+  ['Jouer au toucher ou au clavier', 'Sélectionnez une offre ou une gemme, puis sa destination. Balayez une case vide ou une pierre pour déplacer la caméra ; glissez une gemme pour la déplacer. Au bord, la caméra avance automatiquement. ↤ revient à la source. Au clavier : Entrée, flèches et Échap.'],
   ['Observer et optimiser', 'Le bouton œil active la vue avancée : puissances, gains, inspection sur la boutique et rendement du plateau fixe. Avant de relâcher une gemme, l’aperçu indique l’écart prévu en Éclats par seconde.'],
-  ['Dégager le terrain', 'Les rochers arrêtent les impulsions. Une pioche peut apparaître au hasard en boutique : déposez-la sur un rocher pour libérer la case contre 8 Éclats. Chaque pioche ne sert qu’une fois. Le passage central reste libre au départ.'],
+  ['Dégager le terrain', 'La commande + près du circuit achète 7 colonnes rocheuses : 100, 200, 400 puis 800 Éclats, jusqu’à 35×9. Creusez dans l’ordre de votre choix. Une pioche aléatoire en boutique libère un rocher pour 8 Éclats. Les impulsions continuent hors écran.'],
   ['Découvrir et ranger', 'L’icône ▦ ouvre les 12 places de l’inventaire, en deux pages. Choisissez une gemme ou une offre, puis sa destination pour stocker, poser ou fusionner. Creuser peut donner une gemme, parfois rare (✦), sans bonus passif. Si une récompense ne peut être rangée, le rocher et votre argent restent intacts.'],
 ]
 

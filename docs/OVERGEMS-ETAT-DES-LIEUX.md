@@ -9,6 +9,8 @@ conservent le détail de l'audit et de la version des rochers qui l'a suivi.
 Le lot 04 ajoute les majeures 2×2 à ancre unique : +4 par fusion, une récolte par
 branche, découverte rare et stockage en une place. Sa réception complète passe
 avec 196 tests unitaires et 87 scénarios navigateur, sans extension du plateau.
+L'évolution suivante ajoute l'audit des plafonds et le territoire 7×9 → 35×9 ;
+voir [ENGINE-WORLD.md](ENGINE-WORLD.md) pour les mesures, la navigation et les migrations.
 
 Date : **15 novembre 2026**. État examiné : branche
 `feature/stone-excavation`, issue de `develop` au commit `252e657`.

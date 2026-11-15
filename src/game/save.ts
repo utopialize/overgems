@@ -3,6 +3,7 @@ import { createInitialGame } from './state'
 import { emptyCollection, initialExcavationSeed, MINERALS } from './terrain'
 import type { GameState, Gem, ShopItem } from './types'
 import { validFootprints } from './board'
+import { WORLD_RULES } from './world'
 
 export const SAVE_KEY = 'overgems.save.v1'
 function record(value: unknown): value is Record<string, unknown> {
@@ -24,10 +25,12 @@ function validItem(value: unknown): value is ShopItem {
   return validGem(value) || (record(value) && value.kind === 'pickaxe' && typeof value.id === 'string' && /^tool-\d+$/.test(value.id))
 }
 export function validateGame(value: unknown): value is GameState {
-  if (!record(value) || value.version !== 1 || !Array.isArray(value.board) || value.board.length !== 63
+  if (!record(value) || value.version !== 1 || !integer(value.columns) || value.columns < RULES.columns
+    || value.columns > WORLD_RULES.maxColumns || value.columns % WORLD_RULES.stepColumns !== 0
+    || !Array.isArray(value.board) || value.board.length !== value.columns * RULES.rows
     || !Array.isArray(value.inventory) || value.inventory.length !== RULES.inventorySize
-    || !Array.isArray(value.stones) || value.stones.length !== 63 || !value.stones.every((stone) => typeof stone === 'boolean')
-    || !integer(value.excavationSeed) || value.excavationSeed > 0xffffffff || !integer(value.excavations) || value.excavations > 63
+    || !Array.isArray(value.stones) || value.stones.length !== value.board.length || !value.stones.every((stone) => typeof stone === 'boolean')
+    || !integer(value.excavationSeed) || value.excavationSeed > 0xffffffff || !integer(value.excavations) || value.excavations > value.board.length
     || !record(value.minerals) || Object.keys(value.minerals).length !== MINERALS.length
     || !Array.isArray(value.offers) || value.offers.length !== 3 || !finite(value.coins)
     || !integer(value.purchases) || !integer(value.rerolls)
@@ -62,7 +65,8 @@ export function decodeSave(raw: string | null): { game: GameState; warning: stri
     let value: unknown = JSON.parse(raw)
     // Migrate existing v1 games without discarding progress or inventing past purchases.
     if (record(value) && value.version === 1) {
-      value = { ...value, purchases: value.purchases === undefined ? 0 : value.purchases,
+      value = { ...value, columns: value.columns === undefined ? RULES.columns : value.columns,
+        purchases: value.purchases === undefined ? 0 : value.purchases,
         rerolls: value.rerolls === undefined ? 0 : value.rerolls,
         stones: value.stones === undefined ? Array.from({ length: 63 }, () => false) : value.stones,
         excavationSeed: value.excavationSeed === undefined ? initialExcavationSeed(typeof value.seed === 'number' ? value.seed : 0) : value.excavationSeed,

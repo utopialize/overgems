@@ -5,12 +5,14 @@ import { buyOfferAt, rerollOffers, transferGem, recycleGem } from './state'
 import type { GameState, Settings, Slot, MineralId, Gem } from './types'
 import { occupantAt } from './board'
 import { limitLabel } from './diagnostics'
+import { buyExpansion, remapIndex } from './world'
 
 export type ActiveEmission = RunningEmission & { id: number; start: number; stepMs: number; completedAt: number | null }
 export type ExcavationFeedback = { id: number; index: number; at: number }
 export type Session = { game: GameState; pending: ActiveEmission[]; nextAt: number; serial: number; notice: string; noticeError: boolean; warning: boolean; limitNotice: string; mergedId: string | null; boardChangedAt: number; discovery: { mineral?: MineralId; gem?: Gem } | null; excavationEffects: ExcavationFeedback[] }
 export type Action =
   | { type: 'tick'; now: number }
+  | { type: 'expand'; now: number }
   | { type: 'suspend'; now: number }
   | { type: 'resume'; now: number }
   | { type: 'buy'; index: number; destination: number; area?: Slot['area']; offerId: string; now?: number }
@@ -96,6 +98,14 @@ export function sessionReducer(session: Session, action: Action): Session {
     return { ...base, game: { ...base.game, settings: { ...base.game.settings, ...action.patch } } }
   }
   if (action.type === 'tutorial') return { ...session, game: { ...session.game, tutorial: action.step } }
+  if (action.type === 'expand') {
+    session = advanceSession(session, action.now)
+    const transaction = buyExpansion(session.game)
+    return transaction.ok ? { ...session, game: transaction.game, notice: transaction.message, noticeError: false,
+      warning: false, limitNotice: '', boardChangedAt: action.now,
+      excavationEffects: session.excavationEffects.map((effect) => ({ ...effect, index: remapIndex(effect.index, session.game.columns, transaction.game.columns) })) }
+      : { ...session, notice: transaction.message, noticeError: true }
+  }
 
   if (action.type !== 'reroll' && action.now !== undefined) session = advanceSession(session, action.now)
 

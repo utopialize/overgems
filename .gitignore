@@ -18,6 +18,7 @@ test-results/
 !.env.example
 .agents/
 .codex/
+.codex-attachments/
 .aws/
 
 # Editor directories and files

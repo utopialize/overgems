@@ -1,10 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
 import { Application } from 'pixi.js'
-import { createStarterScene } from '../pixi/createStarterScene'
+import { createFlowScene } from '../pixi/createFlowScene'
+import type { FlowSnapshot } from '../pixi/createFlowScene'
+import type { ActiveEmission } from '../game/runtime'
 
-export function PixiCanvas() {
+export function PixiCanvas({ emissions, reducedMotion }: { emissions: ActiveEmission[]; reducedMotion: boolean }) {
   const hostRef = useRef<HTMLDivElement>(null)
+  const snapshot = useRef<FlowSnapshot>({ emissions, reducedMotion, offset: 20 })
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    snapshot.current = { ...snapshot.current, emissions, reducedMotion }
+  }, [emissions, reducedMotion])
 
   useEffect(() => {
     const host = hostRef.current
@@ -20,11 +27,12 @@ export function PixiCanvas() {
       try {
         await app.init({
           resizeTo: container,
-          background: '#101420',
+          backgroundAlpha: 0,
           antialias: true,
           autoDensity: true,
           resolution: Math.min(window.devicePixelRatio || 1, 2),
           preference: 'webgl',
+          powerPreference: 'low-power',
         })
         initialized = true
 
@@ -34,18 +42,22 @@ export function PixiCanvas() {
           return
         }
 
-        app.canvas.setAttribute('role', 'img')
-        app.canvas.setAttribute('aria-label', 'Un cristal violet animé avec PixiJS')
+        app.canvas.setAttribute('aria-hidden', 'true')
         container.appendChild(app.canvas)
         // Pixi's event system sets touch-action to none by default.
         app.canvas.style.touchAction = 'manipulation'
-        disposeScene = createStarterScene(app)
-        resizeObserver = new ResizeObserver(() => app.queueResize())
+        disposeScene = createFlowScene(app, snapshot, container)
+        const resize = () => {
+          snapshot.current.offset = parseFloat(getComputedStyle(container.parentElement!).paddingLeft)
+          app.queueResize()
+        }
+        resizeObserver = new ResizeObserver(resize)
         resizeObserver.observe(container)
+        resize()
       } catch (cause) {
         if (!cancelled) {
           console.error('Impossible de démarrer PixiJS', cause)
-          setError('Impossible de démarrer la scène. Vérifiez que WebGL est disponible dans votre navigateur.')
+          setError('Animations indisponibles sur ce navigateur. Le circuit reste jouable.')
         }
       }
     }

@@ -1,59 +1,82 @@
 # Overgems
 
-Base de projet pour prototyper avec React, Vite, TypeScript et PixiJS.
+Jeu de cristaux mobile first : construisez un circuit, amplifiez ses impulsions,
+récoltez des Éclats et fusionnez vos gemmes. React, TypeScript strict, Vite,
+SVG et PixiJS ; aucun compte, backend ou service externe.
 
-## Démarrer
+## Développement
 
-Node.js 22.12 ou plus récent et npm sont nécessaires. Un fichier `.nvmrc` est fourni :
+Le dépôt est hébergé sur [GitHub](https://github.com/utopialize/overgems).
+`main` contient le premier MVP ; `develop` accueille la suite du développement.
+Les évolutions validées sur `develop` peuvent ensuite être intégrées à `main`.
 
 ```sh
-nvm use # si nvm est installé
+git switch develop
+```
+
+## Lancer
+
+Node.js 22.12+ et npm :
+
+```sh
 npm ci
 npm run dev
 ```
 
-Ouvrir http://192.168.1.112:8008 depuis le serveur ou un autre appareil du réseau
-local. Vite écoute sur l'adresse configurée dans `vite.config.ts`
-(`192.168.1.112`) et conserve le port `8008` : si ce port est déjà utilisé, le
-démarrage échoue au lieu de choisir un autre port.
-Les modifications sont rechargées automatiquement.
+Ouvrir **http://192.168.1.112:8008/** sur le réseau local. L'adresse et le port
+sont configurés dans `vite.config.ts`. Sur ce serveur, UFW autorise le TCP 8008
+depuis `192.168.1.0/24` sur `enp0s31f6` ; cette règle est extérieure au dépôt.
+Avec nvm, `nvm use` sélectionne la version de Node fournie dans `.nvmrc`.
 
-Sur ce serveur, une règle UFW autorise le port TCP `8008` depuis
-`192.168.1.0/24` uniquement, sur l'interface LAN `enp0s31f6`. Cette règle appartient
-à la configuration du serveur ; elle ne fait pas partie du dépôt Git.
+## Jouer
 
-## Commandes
+Une nouvelle partie démarre avec une grille 7 × 9 vide et 30 Éclats. Glissez une
+gemme depuis la boutique sur la grille pour l'acheter : le paiement a lieu
+uniquement après un dépôt valide. La sélection suivie d'un toucher de destination
+fonctionne aussi, ainsi que le clavier. Un dépôt sur un double achète et fusionne
+en une seule action. Les attaches doivent être identiques ; aucune rotation.
+
+La source envoie une puissance de 1 toutes les 5 secondes. Les gemmes traversées
+brillent et affichent brièvement leur véritable gain ou leur multiplicateur.
+L'interface tient sur un seul écran ; l'aide est accessible avec le bouton « ? ».
+La réserve est masquée et ses données historiques restent conservées.
+
+La partie est sauvegardée dans ce navigateur. Aucun gain hors ligne.
+Les paramètres permettent de mettre le circuit en pause, réduire les animations
+et recommencer après confirmation. Les anciennes parties sont préservées :
+utiliser « Recommencer une partie… » pour retrouver une grille vide.
+
+La propagation est fixée à **800 ms par case**. Chaque impulsion est une petite
+boule dont le centre affiche sa puissance actuelle. Les cases vides la laissent
+passer ; un bord ou une entrée de gemme fermée l'arrête. Déplacer, poser, fusionner
+ou recycler une gemme conserve les impulsions en cours : chaque prochaine arrivée
+rencontre la gemme présente à cet instant. Les récoltes sont créditées au passage.
+
+Les bulles ont un diamètre fixe de 18 px, indépendant de la puissance, et passent
+derrière les gemmes. Leur valeur affiche une seule décimale ; le moteur conserve
+la précision interne : trois ×1,1 donnent 1,1 → 1,21 → 1,331, affichés
+1,1 → 1,2 → 1,3. Au quatrième passage, 1,4641 s'affiche 1,5.
+Une collision au bord ou devant une connexion fermée détruit la bulle au contact,
+avec six particules discrètes pendant 280 ms, supprimées en mode d'animations réduites.
+
+Sortir une gemme du plateau la recycle pour **50 % du prix réellement payé**.
+Un aperçu du remboursement apparaît pendant le glisser ; un bouton équivalent
+est disponible après sélection. Les coûts investis sont cumulés à la fusion.
+Les prix des gemmes augmentent de **1 Éclat tous les 5 achats**. Le renouvellement
+coûte **5 Éclats au départ, puis 1 Éclat de plus à chaque renouvellement réussi**.
+Les deux compteurs sont sauvegardés ; un renouvellement ne compte pas comme un achat.
+
+## Vérifier
 
 | Commande | Usage |
 | --- | --- |
-| `npm run dev` | Serveur de développement |
+| `npm run dev` | Serveur de développement sur le port 8008 |
+| `npm test` | Tests unitaires Vitest |
 | `npm run typecheck` | Vérification TypeScript |
-| `npm run lint` | Analyse du code avec Oxlint |
-| `npm run build` | Vérification TypeScript et compilation dans `dist/` |
-| `npm run check` | Lint et build |
-| `npm run preview` | Prévisualisation du build de production |
-| `npm run test:mobile` | Tests navigateur du rendu responsive et du canvas |
-
-## Base mobile first
-
-Les styles de base ciblent les téléphones ; une media query `min-width: 40rem`
-adapte ensuite l'en-tête et les espacements aux écrans plus larges. La page utilise
-la hauteur visible stable (`svh`), les marges de sécurité des appareils à encoche
-et une grille qui réserve l'espace disponible au canvas. En paysage ou avec du
-texte agrandi, le contenu reste accessible par défilement vertical.
-
-Le zoom et le défilement tactile restent disponibles, y compris sur le canvas.
-Les contrôles HTML disposent d'une base typographique de 16 px et d'une taille
-tactile minimale de 44 px. Les scènes PixiJS suivent leur conteneur avec
-`ResizeObserver`, réduisent leur échelle dans les petites surfaces et limitent
-la densité de rendu à 2 pour maîtriser la charge sur mobile.
-
-Pour les futurs écrans : conserver des dimensions souples, prévoir des retours
-à la ligne et vérifier chaque nouveau contrôle au toucher et au clavier.
-Éviter les actions disponibles uniquement au survol et les éléments fixes qui
-masquent le contenu quand le clavier virtuel s'ouvre.
-
-### Vérifier le rendu
+| `npm run check` | Lint, tests unitaires et build |
+| `npm run test:mobile` | Tests responsive et gameplay dans Chromium |
+| `npm run build` | Build de production dans `dist/` |
+| `npm run preview` | Prévisualisation du build |
 
 Installer le navigateur de test une première fois :
 
@@ -62,55 +85,37 @@ npx playwright install chromium --only-shell
 npm run test:mobile
 ```
 
-Les tests démarrent leur propre serveur sur `127.0.0.1:18008` et vérifient les
-largeurs 320, 360, 390, 412, 768 et 1280 px, le paysage, la rotation, le texte à
-200 %, le redimensionnement du conteneur, les gestes tactiles autorisés et la
-réduction des animations. Ils vérifient aussi l'absence de débordement horizontal
-et d'erreur JavaScript. Les captures de contrôle et les traces des échecs sont
-dans `test-results/`, ignoré par Git.
+Playwright utilise un serveur distinct sur `127.0.0.1:18008`. Les captures de
+contrôle et les traces d'échec sont dans `test-results/`, ignoré par Git.
+Les formats 320 à 1280 px, le paysage, les changements de hauteur disponible,
+le clavier, le glisser tactile et la sauvegarde sont couverts. Les tests vérifient
+que le plateau et les trois offres restent dans le viewport, sans défilement.
+Sur les écrans courts, les cases du plateau sont réduites pour conserver la
+grille entière ; les autres contrôles gardent des cibles de 44 px. Le zoom natif
+reste autorisé. Essayer aussi sur de vrais appareils iOS/Safari et Android/Chrome.
 
-Cette émulation Chromium sert de garde-fou ; compléter avec un essai sur un
-iPhone/Safari et un Android/Chrome réels, notamment pour les encoches, les barres
-du navigateur et le clavier virtuel. Depuis le téléphone connecté au même LAN,
-ouvrir http://192.168.1.112:8008 après `npm run dev`.
+## Architecture et références
 
-## Où travailler
+- `src/game/engine.ts` : propagation pure et événements déterministes.
+- `catalog.ts`, `economy.ts` : valeurs, sertissages, prix et génération des offres.
+- `state.ts`, `fusion.ts` : opérations atomiques sur plateau et inventaire.
+- `runtime.ts` : émissions et crédit unique des gains, indépendants du framerate.
+- `save.ts`, `useGame.ts` : validation des sauvegardes et liaison React.
+- `src/components/` : interface HTML, gemmes SVG et Pointer Events.
+- `src/pixi/` : lecture visuelle des événements, sans calcul de production.
+- `src/index.css` : palette et tokens ; `src/App.css` : mise en page mobile first.
 
-```text
-src/
-  App.tsx                    Interface React
-  App.css                    Styles de l'interface
-  components/PixiCanvas.tsx   Montage et nettoyage de PixiJS
-  pixi/createStarterScene.ts  Scène de départ : cristal animé
-  main.tsx                   Entrée React, avec StrictMode
-  index.css                  Styles globaux
-tests/mobile/                Vérifications responsive avec Playwright
-public/                      Futurs assets servis tels quels
-```
+Les coûts, niveaux, périodes et limites se règlent dans `src/game/catalog.ts`.
+La vitesse fixe est `RULES.stepMs`. La hausse des gemmes utilise
+`RULES.purchasePriceStep` et `RULES.purchasesPerPriceStep` ; celle du renouvellement
+utilise `RULES.rerollCost` et `RULES.rerollPriceStep`. Les anciennes sauvegardes
+conservent leur progression ; les offres sont recalées sur le nouveau barème et
+l'ancien réglage de vitesse est retiré. Une ancienne
+gemme sans coût d'achat enregistré utilise son prix catalogue pour le recyclage.
+La sauvegarde versionnée utilise la clé `overgems.save.v1`. Aucune variable
+d'environnement ni dépendance réseau n'est requise à l'exécution.
 
-React gère l'interface HTML et PixiJS le rendu du canvas. La scène utilise le
-ticker PixiJS pour les animations, sans provoquer de rendu React à chaque image.
-Elle suit les dimensions de son conteneur et respecte la préférence de réduction
-des animations du navigateur. Son initialisation asynchrone et son nettoyage
-prennent en charge StrictMode et le rechargement à chaud.
-
-Le projet démarre sans backend ni variables d'environnement. Si des variables
-deviennent nécessaires, les stocker dans `.env.local`, ignoré par Git, et
-documenter les clés dans `.env.example`. Les variables préfixées `VITE_` sont
-publiques dans le navigateur : ne pas y placer de secrets.
-
-## Git
-
-Le dépôt est local, sur la branche `main`. Pour suivre les prochaines modifications :
-
-```sh
-git status
-git add .
-git commit -m "Décrire la modification"
-```
-
-## Documentation
-
-- [React](https://react.dev/learn)
-- [Vite](https://vite.dev/guide/)
-- [PixiJS : Application](https://pixijs.com/8.x/guides/components/application)
+- [Prompt maître de développement](<docs/OVERGEMS - MASTER DEV PROMPT V01.md>)
+- [Direction artistique](<docs/OVERGEMS - ART DIRECTION.md>)
+- [Règles de la version jouable](docs/RULES.md)
+- [État et validations](docs/DELIVERY.md)

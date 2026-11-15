@@ -3,6 +3,7 @@ import type { Gem } from './types'
 
 export function canMerge(first: Gem, second: Gem): boolean {
   return first.id !== second.id && first.kind === second.kind && first.level === second.level
+    && (first.rarity ?? 'common') === (second.rarity ?? 'common')
     && gemValue(first) === gemValue(second) && first.level < HARVEST_VALUES.length - 1
     && (first.kind === 'harvest' || (second.kind === 'multiplier' && first.setting === second.setting))
 }

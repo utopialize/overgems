@@ -2,10 +2,16 @@
 
 Les documents d'origine fournis sont conservés à l'identique dans ce dossier.
 Les règles à jour et les arbitrages sont dans RULES.md.
+Le suivi des lots inventaire/récompenses et gemmes majeures est dans
+[LOTS-03-04.md](LOTS-03-04.md). Les rochers sont intégrés à `develop`.
 
 ## Comportement actuel
 
-- Nouvelle partie : plateau 7 × 9 sans gemmes, 18 rochers et 30 Éclats, réserve masquée.
+- Nouvelle partie : plateau 7 × 9 sans gemmes, 18 rochers et 30 Éclats.
+- Inventaire actif de douze places, affiché à la place des offres, en deux pages
+  tactiles de six. Achats, transferts et fusions dans les deux sens ; grille fixe.
+- Récompenses d'excavation de gemmes configurables et rares signalées par ✦,
+  sans bonus passif. Inventaire plein : refus intégral sans perte ni débit.
 - Terrain constructible : source et trois lignes centrales dégagées ; rochers
   bloquants au contact et impossibles à recouvrir par une gemme.
 - Pioche aléatoire (20 % par tirage), usage unique directement sur un rocher :
@@ -70,7 +76,7 @@ Les règles à jour et les arbitrages sont dans RULES.md.
 
 ## Vérifications effectuées
 
-- `npm run check` : lint, **149 tests Vitest**, TypeScript et build.
+- `npm run check` : lint, **156 tests Vitest**, TypeScript et build au lot 03.
 - Propagation dans les quatre directions, sertissages fixes, croisements,
   boucles, limites, déterminisme et exemple de référence à 22 Éclats.
 - Moteur incrémental et prévision statique concordants, passage à travers les
@@ -80,7 +86,7 @@ Les règles à jour et les arbitrages sont dans RULES.md.
   de gains anticipés ou hors ligne et dix minutes de temps simulé.
 - Hausse au cinquième achat, renouvellements progressifs, refus sans fonds,
   remboursements et migration des anciennes sauvegardes.
-- **70 scénarios Chromium** : achat et recyclage souris/tactile/clavier,
+- **78 scénarios Chromium** au lot 03 : achat et recyclage souris/tactile/clavier,
   sauvegarde, suppression du sélecteur, évolution du prix de renouvellement,
   tarifs au palier et conservation des coûts payés.
 - Terrain : cinq graines, départ productif, tirages aléatoires, excavation

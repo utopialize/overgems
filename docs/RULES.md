@@ -111,8 +111,29 @@ donc la moitié de l'investissement total, sans réévaluer les gemmes à cause 
 l'inflation. Les anciennes gemmes sans coût enregistré utilisent le prix catalogue
 comme valeur initiale ; leurs données et leur solde restent conservés.
 
-La réserve est masquée. Ses données et opérations sont conservées pour une
-réactivation future ; une réserve historique pleine ne bloque pas les achats.
+L'inventaire de douze places est actif. Deux pages de six emplacements gardent
+les cibles de 44 px en portrait comme en paysage. Il remplace visuellement les
+offres dans la même zone, sans déplacer la grille. Les transferts et fusions
+fonctionnent dans les deux sens, ainsi qu'entre deux places d'inventaire.
+Les achats peuvent viser un emplacement vide ou un double compatible de
+l'inventaire. Un emplacement occupé incompatible n'est jamais écrasé ; un
+inventaire plein n'empêche pas un achat directement sur le plateau.
+
+La table `EXCAVATION_REWARDS` dans `src/game/rewards.ts` définit des poids relatifs :
+70 rien, 20 récolte classique N1, 8 multiplicatrice classique N1 (sertissage
+fixe tiré au sort), 2 récolte rare N1. Le tirage est indépendant de la collection
+de minéraux, sans nouveau système d'album ni bonus passif. Les trouvailles sont
+stockées dans la première place libre et ne font pas augmenter les tarifs.
+Leur investissement est nul ; les fusions additionnent toujours les coûts réels.
+Si le tirage donne une gemme mais que les douze places sont pleines, toute
+l'excavation est refusée sans paiement, retrait de pierre, remplacement d'offre
+ou changement du hasard. La récompense reste disponible après avoir libéré une
+place. Les aperçus ne révèlent pas la récompense et n'affectent aucun tirage.
+
+Les gemmes sont classiques (rareté absente ou `common`) ou rares (`rare`, marque ✦).
+La rareté ne modifie pas la production. Elle doit être identique pour fusionner,
+en plus de la catégorie, du niveau et des attaches. Les anciennes sauvegardes
+restent compatibles et l'ancienne réserve conserve ses douze objets éventuels.
 
 Sélectionner puis toucher une destination est une alternative au glisser-déposer
 depuis la boutique et au sein du plateau. Deux gemmes identiques fusionnent au niveau suivant à destination ;

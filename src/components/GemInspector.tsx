@@ -1,13 +1,15 @@
 import { connections, DIRECTION_NAMES, exactNumberLabel, gemLabel, recycleValue, signedRateLabel } from '../game/catalog'
 import type { Gem } from '../game/types'
 
-export function GemInspector({ gem, onBoard, contribution, onClose, onRecycle }: {
+export function GemInspector({ gem, onBoard, contribution, onClose, onRecycle, onStore }: {
   gem: Gem; onBoard: boolean; contribution: { perEmission: number; perSecond: number } | null; onClose: () => void; onRecycle: () => void
+  onStore: () => void
 }) {
   const ports = gem.kind === 'harvest' ? '4 côtés · tout droit' : connections(gem).map((port) => DIRECTION_NAMES[port]).join(', ')
   return <aside className="gem-inspector" aria-labelledby="inspector-title" data-testid="gem-inspector">
     <div className="inspector-heading">
       <h3 id="inspector-title">{gem.kind === 'harvest' ? 'Récolte' : 'Amplification'} <span>· Niveau {gem.level + 1}</span></h3>
+      <button type="button" className="icon-button" aria-label="Choisir une destination dans l’inventaire" onClick={onStore}>▦</button>
       {onBoard && <button type="button" className="icon-button inspector-recycle" aria-label={'Recycler la gemme sélectionnée pour ' + exactNumberLabel(recycleValue(gem)) + ' Éclats'}
         title="Recycler la gemme" onClick={onRecycle}>♲</button>}
       <button type="button" className="icon-button" aria-label="Fermer l’inspection" onClick={onClose}>✕</button>

@@ -15,6 +15,7 @@ function validGem(value: unknown): value is Gem {
   return record(value) && typeof value.id === 'string' && /^gem-\d+$/.test(value.id)
     && integer(value.level) && value.level < HARVEST_VALUES.length
     && (value.invested === undefined || finite(value.invested))
+    && (value.rarity === undefined || value.rarity === 'common' || value.rarity === 'rare')
     && (value.kind === 'harvest' || (value.kind === 'multiplier' && SETTINGS.includes(value.setting as never)))
 }
 function validItem(value: unknown): value is ShopItem {

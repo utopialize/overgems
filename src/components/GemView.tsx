@@ -11,7 +11,7 @@ export function GemView({ gem }: { gem: Gem }) {
     '--gem-mid': palette.mid, '--gem-dark': palette.dark,
   } as CSSProperties
   return (
-    <span className={`gem-view ${gem.kind}`} data-level={gem.level + 1} style={style} aria-hidden="true">
+    <span className={`gem-view ${gem.kind}${gem.rarity === 'rare' ? ' rare' : ''}`} data-level={gem.level + 1} data-rarity={gem.rarity ?? 'common'} style={style} aria-hidden="true">
       <svg viewBox="0 0 64 64" focusable="false">
         {ports.map((port) => (
           <g key={port} transform={`rotate(${({ N: 0, E: 90, S: 180, W: 270 })[port]} 32 32)`}>
@@ -26,6 +26,7 @@ export function GemView({ gem }: { gem: Gem }) {
         <path d="M15 17 31 9" fill="none" stroke="#f1edf2" strokeWidth="1" opacity=".6" />
       </svg>
       <span className="gem-value">{gemLabel(gem)}</span>
+      {gem.rarity === 'rare' && <span className="rarity-mark">✦</span>}
     </span>
   )
 }

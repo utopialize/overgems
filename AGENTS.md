@@ -28,8 +28,14 @@
 - Le jeu doit tenir dans un seul écran (`100dvh`), sans scroll de la page ni du
   plateau. La grille s'adapte à l'espace restant ; ses cases peuvent devenir plus
   petites que 44 px sur les écrans courts. Garder les autres contrôles à 44 px.
-- La réserve est dormante : conserver ses données et opérations sans l'afficher.
-  Les achats actifs se font directement à la pose sur la grille, de façon atomique.
+- L'inventaire de 12 places est actif, en deux pages tactiles de six. Il partage
+  la zone de boutique pour garder le plateau fixe. Achats, transferts et fusions
+  plateau/inventaire sont atomiques. Ne jamais perdre un objet sur inventaire plein.
+- Les récompenses d'excavation utilisent la table configurable de `rewards.ts`.
+  Si une récompense ne peut être stockée, refuser toute l'excavation sans paiement,
+  retrait de pierre ou avancement du hasard. Les gemmes trouvées ont investi 0.
+- Une rareté absente signifie classique. Deux raretés différentes ne fusionnent
+  pas ; la rareté rare est signalée par ✦ et n'ajoute aucun bonus implicite.
 - Une nouvelle partie commence sans gemmes, avec 18 rochers. La colonne de la
   source et les trois lignes centrales restent libres. Les rochers bloquent au
   contact ; les gemmes ne peuvent pas occuper leur case.

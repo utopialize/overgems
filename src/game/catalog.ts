@@ -36,7 +36,7 @@ export function connections(gem: Gem): Direction[] {
 export function gemDescription(gem: Gem): string {
   const name = gem.kind === 'harvest' ? 'Récolte' : 'Amplification'
   const setting = gem.kind === 'harvest' ? 'traversée libre en ligne droite' : connections(gem).map((d) => DIRECTION_NAMES[d]).join(', ')
-  return `${name} ${gemLabel(gem)}, niveau ${gem.level + 1}, ${setting}`
+  return `${name} ${gemLabel(gem)}, niveau ${gem.level + 1}, ${setting}${gem.rarity === 'rare' ? ', rare' : ''}`
 }
 export function gemPrice(gem: Gem): number {
   const shapeCost = gem.kind === 'harvest' ? 1 : connections(gem).length - 1

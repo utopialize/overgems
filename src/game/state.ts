@@ -2,6 +2,8 @@ import { RULES, gemDescription, gemPrice, roundCoins, recycleValue, numberLabel,
 import { generateOffer } from './economy'
 import { simulateEmission } from './engine'
 import { mergeGems } from './fusion'
+import { rollExcavationReward, EXCAVATION_REWARDS } from './rewards'
+import type { RewardRule } from './rewards'
 import { createStones, discoverMineral, emptyCollection, initialExcavationSeed, MINERALS } from './terrain'
 import type { GameState, Gem, Slot, Transaction } from './types'
 
@@ -50,16 +52,29 @@ export function buyOffer(game: GameState, index: number): Transaction {
   if (!offer) return { game, ok: false, message: 'Offre indisponible.' }
   if (!isGem(offer.item)) return { game, ok: false, message: 'La pioche s’utilise directement sur un rocher.' }
   const empty = game.inventory.findIndex((gem) => !gem)
-  if (empty === -1) return { game, ok: false, message: 'Réserve pleine. Placez ou fusionnez une gemme.' }
+  if (empty === -1) return { game, ok: false, message: 'Inventaire plein. Placez ou fusionnez une gemme.' }
+  return buyOfferAt(game, index, { area: 'inventory', index: empty }, offer.item.id)
+}
+export function buyOfferAt(game: GameState, index: number, destination: Slot, offerId: string): Transaction {
+  if (destination.area === 'board') return buyOfferOnBoard(game, index, destination.index, offerId)
+  const fail = (message: string): Transaction => ({ game, ok: false, message })
+  const offer = game.offers[index]
+  if (!offer || offer.item.id !== offerId) return fail('Cette offre a changé.')
+  if (!validSlot(destination)) return fail('Emplacement d’inventaire invalide.')
+  if (!isGem(offer.item)) return fail('La pioche s’utilise directement sur un rocher.')
   if (game.coins < offer.price) return { game, ok: false, message: 'Pas assez d’Éclats pour cet achat.' }
+  const target = game.inventory[destination.index]
+  const purchased = { ...offer.item, invested: offer.price }
+  const merged = target ? mergeGems(purchased, target) : null
+  if (target && !merged) return fail('Emplacement occupé : seul un double compatible peut fusionner.')
   const inventory = [...game.inventory]
-  inventory[empty] = { ...offer.item, invested: offer.price }
+  inventory[destination.index] = merged ?? purchased
   return { game: replacePurchasedOffer({ ...game, inventory, coins: roundCoins(game.coins - offer.price) }, index),
-    ok: true, message: 'Gemme ajoutée à la réserve.' }
+    ok: true, merged: Boolean(merged), message: merged ? 'Achat et fusion dans l’inventaire.' : 'Gemme ajoutée à l’inventaire.' }
 }
 
 /** Purchase atomically at the destination. A failed drop never spends currency. */
-export function buyOfferOnBoard(game: GameState, index: number, destination: number, offerId: string): Transaction {
+export function buyOfferOnBoard(game: GameState, index: number, destination: number, offerId: string, rewardRules: readonly RewardRule[] = EXCAVATION_REWARDS): Transaction {
   const fail = (message: string): Transaction => ({ game, ok: false, message })
   const offer = game.offers[index]
   if (!offer || offer.item.id !== offerId) return fail('Cette offre a changé. Sélectionnez à nouveau une gemme.')
@@ -74,7 +89,12 @@ export function buyOfferOnBoard(game: GameState, index: number, destination: num
     const stones = [...game.stones]
     stones[destination] = false
     const discovery = discoverMineral(game)
-    const next = { ...game, stones, excavationSeed: discovery.seed, minerals: discovery.minerals,
+    const reward = rollExcavationReward(discovery.seed, game.nextId, rewardRules)
+    const empty = game.inventory.findIndex((gem) => !gem)
+    if (reward.gem && empty === -1) return fail('Inventaire plein : libérez une place avant de creuser. Le rocher et la récompense sont conservés.')
+    const inventory = reward.gem ? [...game.inventory] : game.inventory
+    if (reward.gem) inventory[empty] = reward.gem
+    const next = { ...game, stones, inventory, nextId: game.nextId + (reward.gem ? 1 : 0), excavationSeed: reward.seed, minerals: discovery.minerals,
       excavations: game.excavations + 1, coins: roundCoins(game.coins - offer.price) }
     const name = MINERALS.find(({ id }) => id === discovery.found)?.name
     let purchased = replacePurchasedOffer(next, index, false)
@@ -88,8 +108,9 @@ export function buyOfferOnBoard(game: GameState, index: number, destination: num
         purchased = { ...purchased, offers, seed: generated.seed, nextId: generated.nextId }
       }
     }
-    return { game: purchased, ok: true, found: discovery.found,
-      message: name ? `Rocher dégagé · ${name} découvert !` : 'Rocher dégagé. Cette case est maintenant constructible.' }
+    return { game: purchased, ok: true, found: discovery.found, reward: reward.gem,
+      message: reward.gem ? `Rocher dégagé · ${gemDescription(reward.gem)} ajoutée à l’inventaire.`
+        : name ? `Rocher dégagé · ${name} découvert !` : 'Rocher dégagé. Cette case est maintenant constructible.' }
   }
   if (game.stones[destination]) return fail('Un rocher occupe cette case. Utilisez une pioche.')
   const target = game.board[destination]
@@ -101,13 +122,13 @@ export function buyOfferOnBoard(game: GameState, index: number, destination: num
   return { game: replacePurchasedOffer({ ...game, board, coins: roundCoins(game.coins - offer.price) }, index), ok: true, merged: Boolean(merged),
     message: merged ? `Achat et fusion réussis ! ${gemDescription(merged)}.` : 'Gemme achetée et posée sur le circuit.' }
 }
-export function recycleGem(game: GameState, index: number, gemId: string): Transaction {
-  const gem = validSlot({ area: 'board', index }) ? game.board[index] : null
+export function recycleGem(game: GameState, index: number, gemId: string, area: Slot['area'] = 'board'): Transaction {
+  const gem = validSlot({ area, index }) ? game[area][index] : null
   if (!gem || gem.id !== gemId) return { game, ok: false, message: 'Cette gemme n’est plus sur cette case.' }
-  const board = [...game.board]
-  board[index] = null
+  const storage = [...game[area]]
+  storage[index] = null
   const refund = recycleValue(gem)
-  return { game: { ...game, board, coins: roundCoins(game.coins + refund) }, ok: true,
+  return { game: { ...game, [area]: storage, coins: roundCoins(game.coins + refund) }, ok: true,
     message: 'Gemme recyclée : +' + numberLabel(refund) + ' Éclats (50 % de sa valeur d’achat).' }
 }
 export function rerollOffers(game: GameState): Transaction {

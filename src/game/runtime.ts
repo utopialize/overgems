@@ -1,20 +1,20 @@
 import { RULES, roundCoins } from './catalog'
 import { createEmission, advanceEmission, collisionReason, resolveImpacts, CONTACT_PROGRESS } from './engine'
 import type { RunningEmission } from './engine'
-import { buyOfferOnBoard, rerollOffers, transferGem, recycleGem } from './state'
-import type { GameState, Settings, Slot, MineralId } from './types'
+import { buyOfferAt, rerollOffers, transferGem, recycleGem } from './state'
+import type { GameState, Settings, Slot, MineralId, Gem } from './types'
 
 export type ActiveEmission = RunningEmission & { id: number; start: number; stepMs: number; completedAt: number | null }
 export type ExcavationFeedback = { id: number; index: number; at: number }
-export type Session = { game: GameState; pending: ActiveEmission[]; nextAt: number; serial: number; notice: string; noticeError: boolean; warning: boolean; mergedId: string | null; boardChangedAt: number; discovery: { mineral: MineralId } | null; excavationEffects: ExcavationFeedback[] }
+export type Session = { game: GameState; pending: ActiveEmission[]; nextAt: number; serial: number; notice: string; noticeError: boolean; warning: boolean; mergedId: string | null; boardChangedAt: number; discovery: { mineral?: MineralId; gem?: Gem } | null; excavationEffects: ExcavationFeedback[] }
 export type Action =
   | { type: 'tick'; now: number }
   | { type: 'suspend'; now: number }
   | { type: 'resume'; now: number }
-  | { type: 'buy'; index: number; destination: number; offerId: string; now?: number }
+  | { type: 'buy'; index: number; destination: number; area?: Slot['area']; offerId: string; now?: number }
   | { type: 'reroll' }
   | { type: 'transfer'; from: Slot; to: Slot; now?: number }
-  | { type: 'recycle'; index: number; gemId: string; now?: number }
+  | { type: 'recycle'; index: number; area?: Slot['area']; gemId: string; now?: number }
   | { type: 'settings'; patch: Partial<Settings> }
   | { type: 'tutorial'; step: number }
   | { type: 'notice'; message: string; error?: boolean }
@@ -91,19 +91,19 @@ export function sessionReducer(session: Session, action: Action): Session {
 
   if (action.type !== 'reroll' && action.now !== undefined) session = advanceSession(session, action.now)
 
-  const transaction = action.type === 'buy' ? buyOfferOnBoard(session.game, action.index, action.destination, action.offerId)
+  const transaction = action.type === 'buy' ? buyOfferAt(session.game, action.index, { area: action.area ?? 'board', index: action.destination }, action.offerId)
     : action.type === 'reroll' ? rerollOffers(session.game)
-    : action.type === 'recycle' ? recycleGem(session.game, action.index, action.gemId)
+    : action.type === 'recycle' ? recycleGem(session.game, action.index, action.gemId, action.area)
     : transferGem(session.game, action.from, action.to)
   // Editing the board NEVER clears, settles, restarts or recalculates an existing wave.
   const updated = { ...session, game: transaction.game, notice: transaction.message, noticeError: !transaction.ok,
     excavationEffects: transaction.ok && action.type === 'buy' && transaction.game.excavations > session.game.excavations
       ? [...session.excavationEffects.slice(-15), { id: transaction.game.excavations, index: action.destination, at: action.now ?? session.boardChangedAt }]
       : session.excavationEffects,
-    discovery: transaction.found ? { mineral: transaction.found } : session.discovery,
+    discovery: transaction.found || transaction.reward ? { mineral: transaction.found, gem: transaction.reward } : session.discovery,
     boardChangedAt: transaction.ok && action.type !== 'reroll' ? action.now ?? session.boardChangedAt : session.boardChangedAt,
     mergedId: transaction.merged ? (action.type === 'buy'
-      ? transaction.game.board[action.destination]!.id
+      ? transaction.game[action.area ?? 'board'][action.destination]!.id
       : action.type === 'transfer' ? transaction.game[action.to.area][action.to.index]!.id : null) : null }
   return transaction.ok && action.type !== 'reroll' && action.now !== undefined ? advanceSession(updated, action.now) : updated
 }

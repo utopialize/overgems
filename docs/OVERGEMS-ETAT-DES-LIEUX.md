@@ -44,6 +44,9 @@ laisse passer ; une branche déjà éclatée n'est pas relancée. Les analyses
 statiques et les aperçus prennent en compte le terrain, sans révéler de minéraux.
 Ces paramètres de répartition, prix et fréquence sont une première base
 d'équilibrage, pas une validation par des sessions humaines prolongées.
+Un petit correctif distinct arrondit ensuite le rendement principal à deux
+décimales maximum ; ses détails au toucher/clavier conservent le taux complet,
+le gain par émission et la cadence, sans modifier les calculs.
 
 Les sources sont le code, les tests, l'historique Git disponible et les
 documents du dépôt : [prompt initial](<OVERGEMS - MASTER DEV PROMPT V01.md>),
@@ -616,7 +619,7 @@ retestée dans cet audit.
 | Vérification | Résultat constaté le 15/11/2026 |
 | --- | --- |
 | `npm run check` | Réussi : Oxlint, 148 tests Vitest, compilation TypeScript et build Vite. |
-| `npm run test:mobile` | 59 régressions existantes et 8 scénarios terrain Chromium ; vues, inspection, rendement, excavation et collection. |
+| `npm run test:mobile` | 68 scénarios Chromium : 59 régressions existantes, 8 scénarios terrain et 1 correctif de précision ; relance ciblée des 17 scénarios avancés après le correctif. |
 | `npm run test:mobile -- tests/mobile/layout.spec.ts` | 12 scénarios dont les dix pages d'aide et les paramètres en paysage. |
 | `npm run test:mobile -- tests/mobile/palette.spec.ts` | 3 scénarios après amplification des palettes : contraste, distances de couleur, portrait/paysage, glisser, fusion et rechargement. |
 | Examen des captures | Captures initiales : grille neuve, paysage et réseau vivant. Puis palettes des 24 gemmes en portrait 390 × 844 et paysage 568 × 320. |
@@ -646,7 +649,7 @@ du téléchargement total ni des performances d’un mobile.
 | `tests/mobile/live.spec.ts` | 7 | Bulles, pose/déplacement, taille/vitesse/arrondi, couches, collisions ; absence de répétition d’effet après deux déplacements de la même récolte ou multiplicatrice. |
 | `tests/mobile/palette.spec.ts` | 3 | 24 palettes distinctes, luminosité croissante, contraste d'au moins 4,5:1 ; distances CIELAB ≥3 entre voisins et ≥40 entre N1/N12 ; portrait/paysage, glisser, fusion et persistance. |
 | `tests/mobile/fusion.spec.ts` | 2 | Pour chaque catégorie : fusion au quatrième niveau sans saut, achat avec fusion, plafond N12, refus sans perte et sauvegarde/rechargement. |
-| `tests/mobile/advanced.spec.ts` | 16 | Modes et persistance, éclat/bulle sur la même impulsion, distinction des rendements, inspection et clavier, aperçus souris/tactile, annulation, limites et superposition sans mouvement de grille sur neuf formats. |
+| `tests/mobile/advanced.spec.ts` | 17 | Modes et persistance, éclat/bulle sur la même impulsion, distinction des rendements, précision principale et détails, inspection et clavier, aperçus souris/tactile, annulation, limites et superposition sans mouvement de grille sur neuf formats. |
 
 Les neuf viewports sont 320 × 568, 360 × 640, 390 × 664, 390 × 844,
 412 × 915, 568 × 320, 844 × 390, 768 × 1024 et 1280 × 800. Les contrôles de mise

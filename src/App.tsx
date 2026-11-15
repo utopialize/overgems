@@ -126,11 +126,20 @@ export default function App() {
         {advanced && <div className="production"><span>Dernier flux réel</span><strong data-testid="last-gain" title={exactNumberLabel(game.stats.lastGain)}>
           {game.stats.emissions ? '+' + numberLabel(game.stats.lastGain) : '—'}</strong><small>Dernière émission terminée</small></div>
         }
-        {theoretical && <div className="production theoretical"><span>Rendement théorique</span>
+        {theoretical && <><button type="button" className="production theoretical" popoverTarget="yield-details"
+          aria-label="Détails du rendement théorique" aria-haspopup="dialog"><span>Rendement théorique</span>
           <strong data-testid="theoretical-rate" data-limited={theoretical.limited}
-            title={`${exactNumberLabel(theoretical.perEmission)} Éclats par émission · ${RULES.periodMs / 1000} s${theoretical.limited ? ' · Estimation partielle : limite de simulation atteinte' : ''}`}>
-            {theoretical.limited ? '≥ ' : ''}{rateLabel(theoretical.perSecond)} <span>✧/s</span></strong>
-          <small>{theoretical.limited ? 'Estimation partielle' : 'Plateau actuel'}</small></div>}
+            title={`${exactNumberLabel(theoretical.perSecond)} Éclats/s · ${exactNumberLabel(theoretical.perEmission)} Éclats par émission · ${RULES.periodMs / 1000} s${theoretical.limited ? ' · Estimation partielle : limite de simulation atteinte' : ''}`}>
+            {theoretical.limited ? '≥ ' : ''}{rateLabel(theoretical.perSecond, 2)} <span>✧/s</span></strong>
+          <small>{theoretical.limited ? 'Estimation partielle' : 'Plateau actuel'}</small></button>
+          <div id="yield-details" popover="auto" className="yield-details" role="dialog" aria-labelledby="yield-title">
+            <div className="panel-heading"><h2 id="yield-title">Rendement théorique</h2>
+              <button type="button" className="icon-button" popoverTarget="yield-details" popoverTargetAction="hide" aria-label="Fermer les détails du rendement">✕</button></div>
+            <dl><div><dt>Précision complète</dt><dd data-testid="theoretical-exact">{theoretical.limited ? '≥ ' : ''}{exactNumberLabel(theoretical.perSecond)} ✧/s</dd></div>
+              <div><dt>Par émission</dt><dd>{exactNumberLabel(theoretical.perEmission)} ✧</dd></div>
+              <div><dt>Cadence</dt><dd>{RULES.periodMs / 1000} s</dd></div></dl>
+            <p className="muted">{theoretical.limited ? 'Estimation partielle : limite de simulation atteinte.' : 'Une émission sur la configuration actuelle du plateau, à cadence nominale.'}</p>
+          </div></>}
       </section>
 
       <section className="circuit-section" aria-labelledby="circuit-title">

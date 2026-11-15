@@ -120,6 +120,9 @@ par les 5 secondes de cadence. Il représente un potentiel, y compris en pause,
 sans anticiper ni verser de monnaie. La contribution d'une gemme est l'écart avec
 la même case vide, routage inclus ; elle peut être négative et les contributions
 ne s'additionnent pas en une répartition du total.
+Le rendement principal affiche deux décimales maximum. Touchez cette statistique
+pour ouvrir ses détails : taux complet, gain par émission et cadence. Seul
+l'affichage est arrondi ; la simulation conserve sa précision.
 
 Un glisser, un survol après sélection ou les flèches du clavier affichent le
 rendement après pose et son écart avant validation. Un aperçu refusé ou annulé

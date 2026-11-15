@@ -56,6 +56,8 @@ Les règles à jour et les arbitrages sont dans RULES.md.
   contrôles masqués inertes. La grille conserve sa géométrie sur les neuf formats.
 - Rendement théorique du plateau fixe, distinct du dernier flux réel ; contribution
   marginale et aperçus avant pose/recyclage, sans crédit ou débit anticipé.
+- Rendement principal à deux décimales maximum ; détails au toucher ou au clavier
+  avec taux complet, gain par émission et cadence, sans modifier la simulation.
 - Nuances par niveau : douze palettes cuivre/ambre/or/champagne et douze palettes
   indigo/améthyste/orchidée, aux écarts de teinte et de saturation renforcés,
   partagées par plateau, boutique et glisser. Les fusions
@@ -75,7 +77,7 @@ Les règles à jour et les arbitrages sont dans RULES.md.
   de gains anticipés ou hors ligne et dix minutes de temps simulé.
 - Hausse au cinquième achat, renouvellements progressifs, refus sans fonds,
   remboursements et migration des anciennes sauvegardes.
-- **67 scénarios Chromium** : achat et recyclage souris/tactile/clavier,
+- **68 scénarios Chromium** : achat et recyclage souris/tactile/clavier,
   sauvegarde, suppression du sélecteur, évolution du prix de renouvellement,
   tarifs au palier et conservation des coûts payés.
 - Terrain : cinq graines, départ productif, tirages aléatoires, excavation
@@ -87,6 +89,8 @@ Les règles à jour et les arbitrages sont dans RULES.md.
 - Analyses : comparaison avec la case vide, contributions positives/négatives,
   bifurcations, refus et limites ; la préférence de vue et les aperçus conservent
   les émissions, échéances, monnaie et statistiques réelles.
+- Précision : valeur principale arrondie, détails complets accessibles sur 320 px,
+  ouverture tactile/clavier et fermeture sans changement de partie ou de grille.
 - Deux vues : icône sans texte, statistiques absentes en épuré, étincelle/bulle
   conservant la même identité ; sélection, paramètres et préférence après reload.
 - Inspection sans mouvement du plateau sur neuf formats, clavier sans accès aux

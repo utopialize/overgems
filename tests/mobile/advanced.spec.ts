@@ -21,6 +21,34 @@ async function seed(page: Page, game: GameState) {
   await page.goto('/')
 }
 
+test('rendement principal arrondi à deux décimales, précision complète au toucher sans modifier la partie', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 })
+  const game = fixture()
+  for (let index = 28; index < 34; index++) game.board[index] = { id: 'gem-' + (index - 27), kind: 'multiplier', level: 1, setting: 'EW' }
+  game.board[34] = { id: 'gem-7', kind: 'harvest', level: 5 }
+  await seed(page, game)
+  await expect(page.getByTestId('theoretical-rate')).toHaveText('3,58 ✧/s')
+  await expect(page.getByTestId('theoretical-rate')).toHaveAttribute('title', /3,583181 Éclats\/s/)
+  const before = await saved(page), board = await page.locator('.board-grid').boundingBox()
+  await page.getByRole('button', { name: 'Détails du rendement théorique' }).tap()
+  const details = page.getByRole('dialog', { name: 'Rendement théorique' })
+  await expect(details).toBeVisible()
+  await expect(page.getByTestId('theoretical-exact')).toHaveText('3,583181 ✧/s')
+  await expect(details).toContainText('17,915904 ✧')
+  expect(await details.evaluate((element) => element.scrollHeight <= element.clientHeight + 1)).toBe(true)
+  expect(await saved(page)).toEqual(before)
+  expect(await page.locator('.board-grid').boundingBox()).toEqual(board)
+  await page.getByRole('button', { name: 'Fermer les détails du rendement' }).tap()
+  await expect(details).not.toBeVisible()
+  await page.getByRole('button', { name: 'Détails du rendement théorique' }).focus()
+  await page.keyboard.press('Enter')
+  await expect(details).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(details).not.toBeVisible()
+  await page.getByRole('button', { name: 'Passer en vue épurée' }).click()
+  await expect(page.getByRole('button', { name: 'Détails du rendement théorique' })).toHaveCount(0)
+})
+
 test('vue épurée par défaut, sélection conservée et préférence mémorisée depuis les deux commandes', async ({ page }) => {
   const game = fixture()
   game.settings.viewMode = 'simple'

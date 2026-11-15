@@ -189,7 +189,11 @@ Les analyses sont mémorisées sur leurs données, sans recalcul à chaque image
 Une simulation limitée est signalée par `≥` et « Estimation partielle ». Si le
 plateau actuel ou son alternative atteint une limite, la différence ou la
 contribution concernée affiche une indisponibilité plutôt qu'une comparaison
-tronquée. Les taux affichent jusqu'à six décimales, avec abréviation des grands nombres.
+tronquée. Le rendement principal affiche deux décimales maximum (`3,879744` devient
+`3,88 ✧/s`), avec abréviation des grands nombres. Toucher ou activer au clavier
+cette statistique ouvre les détails avec le taux complet (jusqu'à six décimales,
+précision des calculs), le gain par émission et la cadence. Les contributions et
+aperçus gardent leur précision d'affichage. Aucun calcul n'est arrondi par ce choix.
 
 La propagation est fixée à **800 ms par case**, sans réglage dans les paramètres.
 La vitesse n'est pas comprimée sur les longs circuits.

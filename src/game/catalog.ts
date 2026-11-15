@@ -60,8 +60,8 @@ export function numberLabel(value: number): string {
 export function exactNumberLabel(value: number): string {
   return value.toLocaleString('fr-FR', { maximumFractionDigits: 6 })
 }
-export function rateLabel(value: number): string {
-  return value.toLocaleString('fr-FR', { maximumFractionDigits: 6, notation: Math.abs(value) >= 100_000 ? 'compact' : 'standard' })
+export function rateLabel(value: number, maximumFractionDigits = 6): string {
+  return value.toLocaleString('fr-FR', { maximumFractionDigits, notation: Math.abs(value) >= 100_000 ? 'compact' : 'standard' })
 }
 export function signedRateLabel(value: number): string {
   return (value > 0 ? '+' : '') + rateLabel(value)

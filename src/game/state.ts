@@ -6,6 +6,7 @@ import { rollExcavationReward, EXCAVATION_REWARDS } from './rewards'
 import type { RewardRule } from './rewards'
 import { createStones, discoverMineral, emptyCollection, initialExcavationSeed, MINERALS } from './terrain'
 import type { GameState, Gem, Slot, Transaction } from './types'
+import { canPlace, normalizeSlot, occupantAt } from './board'
 
 export function createInitialGame(seed = 20261115): GameState {
   const board: (Gem | null)[] = Array.from({ length: RULES.columns * RULES.rows }, () => null)
@@ -34,13 +35,19 @@ export function validSlot(slot: Slot): boolean {
 export function transferGem(game: GameState, from: Slot, to: Slot): Transaction {
   const fail = (message: string): Transaction => ({ game, message, ok: false })
   if (!validSlot(from) || !validSlot(to)) return fail('Cet emplacement est en dehors du plateau.')
+  from = normalizeSlot(game.board, from)
   if (from.area === to.area && from.index === to.index) return fail('Gemme déjà sélectionnée.')
   const gem = game[from.area][from.index]
   if (!gem) return fail('Sélectionnez une gemme à déplacer.')
   if (to.area === 'board' && game.stones[to.index]) return fail('Un rocher occupe cette case. Utilisez une pioche.')
-  const target = game[to.area][to.index]
+  const occupied = to.area === 'board' ? occupantAt(game.board, to.index) : null
+  const target = occupied?.gem.id === gem.id ? null : occupied?.gem ?? game[to.area][to.index]
   const merged = target ? mergeGems(gem, target) : null
   if (target && !merged) return fail('Fusion impossible : catégorie, niveau et sertissage doivent être identiques.')
+  if (merged && occupied) to = { ...to, index: occupied.anchor }
+  if (to.area === 'board' && !merged && !canPlace(game.board, game.stones, gem, to.index, from.area === 'board' ? gem.id : undefined)) {
+    return fail('Placement impossible : toute l’empreinte doit être libre et sans rochers.')
+  }
   const next = { ...game, board: [...game.board], inventory: [...game.inventory] }
   next[from.area][from.index] = null
   next[to.area][to.index] = merged ?? gem
@@ -81,7 +88,7 @@ export function buyOfferOnBoard(game: GameState, index: number, destination: num
   if (!validSlot({ area: 'board', index: destination })) return fail('Déposez la gemme sur une case du circuit.')
   if (game.coins < offer.price) return fail('Pas assez d’Éclats pour cet achat.')
   if (offer.item.kind === 'pickaxe') {
-    if (!game.stones[destination] || game.board[destination]) return fail('Déposez la pioche sur un rocher.')
+    if (!game.stones[destination] || occupantAt(game.board, destination)) return fail('Déposez la pioche sur un rocher.')
     const starterPrice = shopPrice({ id: 'gem-0', kind: 'harvest', level: 0 }, game.purchases)
     if (game.coins - offer.price < starterPrice && simulateEmission(game.board, { stones: game.stones }).gain === 0) {
       return fail('Gardez ' + numberLabel(starterPrice) + ' Éclats pour une récolte : le circuit ne produit pas.')
@@ -113,16 +120,20 @@ export function buyOfferOnBoard(game: GameState, index: number, destination: num
         : name ? `Rocher dégagé · ${name} découvert !` : 'Rocher dégagé. Cette case est maintenant constructible.' }
   }
   if (game.stones[destination]) return fail('Un rocher occupe cette case. Utilisez une pioche.')
-  const target = game.board[destination]
+  const occupied = occupantAt(game.board, destination)
+  const target = occupied?.gem
   const purchased = { ...offer.item, invested: offer.price }
   const merged = target ? mergeGems(purchased, target) : null
   if (target && !merged) return fail('Case occupée : seul un double identique peut fusionner.')
+  if (merged && occupied) destination = occupied.anchor
+  if (!merged && !canPlace(game.board, game.stones, purchased, destination)) return fail('Placement impossible : toute l’empreinte doit être libre et sans rochers.')
   const board = [...game.board]
   board[destination] = merged ?? purchased
   return { game: replacePurchasedOffer({ ...game, board, coins: roundCoins(game.coins - offer.price) }, index), ok: true, merged: Boolean(merged),
     message: merged ? `Achat et fusion réussis ! ${gemDescription(merged)}.` : 'Gemme achetée et posée sur le circuit.' }
 }
 export function recycleGem(game: GameState, index: number, gemId: string, area: Slot['area'] = 'board'): Transaction {
+  if (area === 'board') index = occupantAt(game.board, index)?.anchor ?? index
   const gem = validSlot({ area, index }) ? game[area][index] : null
   if (!gem || gem.id !== gemId) return { game, ok: false, message: 'Cette gemme n’est plus sur cette case.' }
   const storage = [...game[area]]

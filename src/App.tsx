@@ -12,6 +12,7 @@ import { MINERALS } from './game/terrain'
 import { estimateCircuit, estimateGemContribution, previewPlacement } from './game/analysis'
 import { buyOfferAt, createInitialGame, transferGem } from './game/state'
 import type { GemOrigin, Slot } from './game/types'
+import { normalizeSlot } from './game/board'
 import { useGame } from './game/useGame'
 import './App.css'
 
@@ -86,6 +87,7 @@ export default function App() {
       if (slot.area === 'board' && game.stones[slot.index]) {
         dispatch({ type: 'notice', message: 'Pioche nécessaire pour libérer cette case.', error: true }); return
       }
+      slot = normalizeSlot(game.board, slot)
       const gem = game[slot.area][slot.index]
       if (gem) {
         setSelected(slot)
@@ -166,7 +168,7 @@ export default function App() {
             onClick={() => { dispatch({ type: 'reroll' }); setSelected(null) }} disabled={game.coins < renewalCost}>↻ <span>{numberLabel(renewalCost)} ✧</span></button>}
           </div>
         </div>
-        {pane === 'inventory' ? <Inventory gems={game.inventory} selected={selected} item={ghost?.item ?? selectedItem} mergedId={session.mergedId}
+        {pane === 'inventory' ? <Inventory gems={game.inventory} selected={selected} item={ghost?.item ?? selectedItem} mergedId={session.mergedId} headerBlocked={Boolean(session.discovery)}
           onChoose={choose} onCancel={clearSelection} onPreview={(slot) => { if (advanced && selected) setHovered(slot) }} /> : <div className="shop-offers" inert={inspecting} aria-hidden={inspecting}>{game.offers.map((offer, index) => (
           <button type="button" key={offer.item.id} data-area="shop" data-index={index} data-testid={'offer-' + index}
             className={'offer' + (selected?.area === 'shop' && selected.offerId === offer.item.id ? ' selected' : '')}
@@ -188,7 +190,7 @@ export default function App() {
           <strong>♲ {advanced ? 'Recycler · ' : ''}+{numberLabel(recycleValue(ghost.item))} ✧</strong>
           <span className={advanced ? '' : 'sr-only'}>Relâchez hors du plateau · 50 % de la valeur d’achat</span>
         </div>}
-        {inspecting && selectedItem && isGem(selectedItem) && <GemInspector gem={selectedItem} onBoard={selected?.area === 'board'} contribution={contribution} onClose={clearSelection}
+        {inspecting && selectedItem && isGem(selectedItem) && <GemInspector gem={selectedItem} owned={selected?.area !== 'shop'} onBoard={selected?.area === 'board'} contribution={contribution} onClose={clearSelection}
           onRecycle={() => { if (selected && selected.area !== 'shop') recycle(selected, selectedItem.id) }} onStore={() => { setPane('inventory'); setHovered(null) }} />}
         {session.discovery && !inspecting && <div className="discovery-toast" role="status" data-testid="discovery-toast">
           <button type="button" className="discovery-open" onClick={() => { if (session.discovery?.gem) setPane('inventory'); else setCollectionOpen(true); dispatch({ type: 'dismiss-discovery' }) }}>

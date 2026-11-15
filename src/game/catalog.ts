@@ -17,10 +17,12 @@ export const DELTA: Record<Direction, readonly [number, number]> = { N: [0, -1],
 export const DIRECTION_NAMES: Record<Direction, string> = { N: 'haut', E: 'droite', S: 'bas', W: 'gauche' }
 
 export function gemValue(gem: Gem): number {
+  if (gem.kind === 'major') return (gem.level + 1) * 4
   return (gem.kind === 'harvest' ? HARVEST_VALUES : MULTIPLIER_VALUES)[gem.level]!
 }
+export function gemRarity(gem: Gem): 'common' | 'rare' { return gem.rarity ?? (gem.kind === 'major' ? 'rare' : 'common') }
 export function isGem(item: ShopItem): item is Gem { return item.kind !== 'pickaxe' }
-export function itemLabel(item: ShopItem): string { return isGem(item) ? gemLabel(item) : 'Pioche' }
+export function itemLabel(item: ShopItem): string { return isGem(item) ? (item.kind === 'major' ? 'Majeure ' : '') + gemLabel(item) : 'Pioche' }
 export function itemDescription(item: ShopItem): string {
   return isGem(item) ? gemDescription(item) : 'Pioche à usage unique, libère une case de pierre'
 }
@@ -28,19 +30,19 @@ export function offerPrice(item: ShopItem, purchases: number): number {
   return isGem(item) ? shopPrice(item, purchases) : RULES.pickaxePrice
 }
 export function gemLabel(gem: Gem): string {
-  return `${gem.kind === 'harvest' ? '+' : '×'}${gemValue(gem).toLocaleString('fr-FR')}`
+  return `${gem.kind !== 'multiplier' ? '+' : '×'}${gemValue(gem).toLocaleString('fr-FR')}`
 }
 export function connections(gem: Gem): Direction[] {
-  return gem.kind === 'harvest' ? [] : DIRECTIONS.filter((direction) => gem.setting.includes(direction))
+  return gem.kind !== 'multiplier' ? [] : DIRECTIONS.filter((direction) => gem.setting.includes(direction))
 }
 export function gemDescription(gem: Gem): string {
-  const name = gem.kind === 'harvest' ? 'Récolte' : 'Amplification'
-  const setting = gem.kind === 'harvest' ? 'traversée libre en ligne droite' : connections(gem).map((d) => DIRECTION_NAMES[d]).join(', ')
-  return `${name} ${gemLabel(gem)}, niveau ${gem.level + 1}, ${setting}${gem.rarity === 'rare' ? ', rare' : ''}`
+  const name = gem.kind === 'major' ? 'Gemme majeure 2×2' : gem.kind === 'harvest' ? 'Récolte' : 'Amplification'
+  const setting = gem.kind !== 'multiplier' ? 'traversée libre en ligne droite' : connections(gem).map((d) => DIRECTION_NAMES[d]).join(', ')
+  return `${name} ${gemLabel(gem)}, niveau ${gem.level + 1}, ${setting}${gemRarity(gem) === 'rare' ? ', rare' : ''}`
 }
 export function gemPrice(gem: Gem): number {
-  const shapeCost = gem.kind === 'harvest' ? 1 : connections(gem).length - 1
-  return Math.ceil((gem.kind === 'harvest' ? 6 : 10) * 2.5 ** gem.level * shapeCost)
+  const shapeCost = gem.kind !== 'multiplier' ? 1 : connections(gem).length - 1
+  return Math.ceil((gem.kind === 'major' ? 24 : gem.kind === 'harvest' ? 6 : 10) * 2.5 ** gem.level * shapeCost)
 }
 export function shopPrice(gem: Gem, purchases: number): number {
   return Math.min(RULES.maxCoins, gemPrice(gem) + Math.floor(purchases / RULES.purchasesPerPriceStep) * RULES.purchasePriceStep)

@@ -5,10 +5,11 @@ import type { Gem } from './types'
 export type RewardRule = { kind: 'none' | Gem['kind']; weight: number; rarity?: Gem['rarity']; level?: number }
 /** Relative weights, independent of mineral finds. No passive bonus from rarity. */
 export const EXCAVATION_REWARDS: readonly RewardRule[] = [
-  { kind: 'none', weight: 70 },
+  { kind: 'none', weight: 68 },
   { kind: 'harvest', weight: 20 },
   { kind: 'multiplier', weight: 8 },
   { kind: 'harvest', rarity: 'rare', weight: 2 },
+  { kind: 'major', rarity: 'rare', weight: 2 },
 ]
 
 export function rollExcavationReward(seed: number, nextId: number, rules = EXCAVATION_REWARDS): { seed: number; gem?: Gem } {
@@ -21,5 +22,6 @@ export function rollExcavationReward(seed: number, nextId: number, rules = EXCAV
   const base = { id: 'gem-' + nextId, level: Math.max(0, Math.min(11, Math.floor(selected.level ?? 0))),
     rarity: selected.rarity ?? 'common', invested: 0 } as const
   return { seed: variant, gem: selected.kind === 'harvest' ? { ...base, kind: 'harvest' }
+    : selected.kind === 'major' ? { ...base, kind: 'major', rarity: 'rare' }
     : { ...base, kind: 'multiplier', setting: SETTINGS[(variant >>> 16) % SETTINGS.length]! } }
 }

@@ -4,10 +4,11 @@ import { gemDescription, isGem } from '../game/catalog'
 import type { Gem, GemOrigin, ShopItem, Slot } from '../game/types'
 import { GemView } from './GemView'
 
-export function Inventory({ gems, selected, item, mergedId, onChoose, onPreview, onCancel }: {
+export function Inventory({ gems, selected, item, mergedId, onChoose, onPreview, onCancel, headerBlocked }: {
   gems: (Gem | null)[]; selected: GemOrigin | null; item: ShopItem | null; mergedId: string | null
   onChoose: (slot: Slot) => void; onPreview: (slot: Slot | null) => void
   onCancel: () => void
+  headerBlocked: boolean
 }) {
   const [focus, setFocus] = useState(0)
   const [page, setPage] = useState(0)
@@ -19,8 +20,8 @@ export function Inventory({ gems, selected, item, mergedId, onChoose, onPreview,
       event.preventDefault()
       event.currentTarget.querySelector<HTMLButtonElement>(`[data-index="${Math.max(page * 6, Math.min(page * 6 + 5, focus + delta))}"]`)?.focus()
     }}>
-    {selected && <button type="button" className="inventory-cancel icon-button" aria-label="Annuler la sélection" onClick={onCancel}>✕</button>}
-    <button type="button" className="inventory-page" aria-label={'Afficher les emplacements ' + (page ? '1 à 6' : '7 à 12')}
+    {selected && <button type="button" className="inventory-cancel icon-button" disabled={headerBlocked} aria-hidden={headerBlocked} aria-label="Annuler la sélection" onClick={onCancel}>✕</button>}
+    <button type="button" className="inventory-page" disabled={headerBlocked} aria-hidden={headerBlocked} aria-label={'Afficher les emplacements ' + (page ? '1 à 6' : '7 à 12')}
       onClick={() => { setPage(1 - page); setFocus((1 - page) * 6) }}><small>{page + 1}/2</small> ↔</button>
     {gems.slice(page * 6, page * 6 + 6).map((gem, offset) => { const index = page * 6 + offset; return <button key={index} type="button" data-area="inventory" data-index={index}
       tabIndex={index === focus ? 0 : -1} onFocus={() => { setFocus(index); onPreview({ area: 'inventory', index }) }}

@@ -2,6 +2,7 @@ import { RULES, roundCoins } from './catalog'
 import { simulateEmission } from './engine'
 import { buyOfferAt, recycleGem, transferGem } from './state'
 import type { GameState, Gem, GemOrigin, Slot } from './types'
+import { occupantAt, normalizeSlot } from './board'
 
 export type CircuitEstimate = { perEmission: number; perSecond: number; limited: boolean }
 export type PlacementPreview =
@@ -20,9 +21,10 @@ export function estimateCircuit(board: readonly (Gem | null)[], stones: readonly
 export function estimateGemContribution(board: readonly (Gem | null)[], index: number,
   current?: CircuitEstimate, stones: readonly boolean[] = []): { perEmission: number; perSecond: number } | null {
   current ??= estimateCircuit(board, stones)
-  if (!board[index] || current.limited) return null
+  const occupied = occupantAt(board, index)
+  if (!occupied || current.limited) return null
   const without = [...board]
-  without[index] = null
+  without[occupied.anchor] = null
   const alternative = estimateCircuit(without, stones)
   if (alternative.limited) return null
   const gain = roundCoins(current.perEmission - alternative.perEmission) || 0
@@ -33,6 +35,7 @@ export function estimateGemContribution(board: readonly (Gem | null)[], index: n
 export function previewPlacement(game: GameState, origin: GemOrigin, destination: number | Slot | null,
   current = estimateCircuit(game.board, game.stones)): PlacementPreview {
   const to: Slot | null = typeof destination === 'number' ? { area: 'board', index: destination } : destination
+  if (origin.area !== 'shop') origin = normalizeSlot(game.board, origin)
   const recycling = to === null && origin.area !== 'shop'
   if (origin.area !== 'shop' && origin.area === to?.area && origin.index === to.index && game[origin.area][origin.index]) {
     return { ok: true, estimate: current, deltaPerSecond: current.limited ? null : 0, recycling: false }

@@ -4,7 +4,7 @@ const LESSONS = [
   ['Votre premier cristal', 'Glissez une gemme ambre depuis la boutique sur la case face à la source, à gauche de la ligne centrale. L’achat est payé uniquement à la pose.'],
   ['Un souffle toutes les 5 secondes', 'La source émet une puissance de 1 : éclat lumineux en vue épurée, bulle chiffrée en vue avancée. Le flux avance à 800 ms par case jusqu’au bord ou à une attache fermée.'],
   ['Amplifier et bifurquer', 'Les gemmes × multiplient l’énergie et la redistribuent vers leurs autres attaches. Chaque branche garde toute la puissance. Les attaches sont fixes.'],
-  ['Fusionner deux doubles', 'Même famille, niveau et attaches : chaque fusion ajoute +1 en récolte ou +0,1 au facteur, jusqu’à +12 ou ×2,2. Vous pouvez aussi acheter directement sur un double.'],
+  ['Fusionner deux doubles', 'Même famille, niveau, rareté et attaches : +1 en récolte classique, +0,1 au facteur ou +4 pour une majeure. Une majeure rare occupe 2×2 cases libres et ne récolte qu’une fois par branche. Elle se trouve en creusant et se range dans une seule place d’inventaire.'],
   ['Recycler un cristal', 'Glissez une gemme hors du plateau pour récupérer 50 % de son prix d’achat. Les coûts fusionnés sont cumulés. Les gemmes augmentent de 1 Éclat tous les 5 achats ; chaque renouvellement coûte 1 Éclat de plus.'],
   ['Un circuit vivant', 'Les boules rencontrent les gemmes présentes à leur arrivée. Une même gemme ne récolte ou n’amplifie qu’une fois par branche : la déplacer ne réactive pas son effet.'],
   ['Jouer au toucher ou au clavier', 'Vous pouvez sélectionner une offre ou une gemme, puis toucher la destination. Au clavier : Entrée sélectionne, les flèches parcourent le plateau, Échap annule.'],

@@ -3,6 +3,7 @@ import { createEmission, advanceEmission, collisionReason, resolveImpacts, CONTA
 import type { RunningEmission } from './engine'
 import { buyOfferAt, rerollOffers, transferGem, recycleGem } from './state'
 import type { GameState, Settings, Slot, MineralId, Gem } from './types'
+import { occupantAt } from './board'
 
 export type ActiveEmission = RunningEmission & { id: number; start: number; stepMs: number; completedAt: number | null }
 export type ExcavationFeedback = { id: number; index: number; at: number }
@@ -103,7 +104,8 @@ export function sessionReducer(session: Session, action: Action): Session {
     discovery: transaction.found || transaction.reward ? { mineral: transaction.found, gem: transaction.reward } : session.discovery,
     boardChangedAt: transaction.ok && action.type !== 'reroll' ? action.now ?? session.boardChangedAt : session.boardChangedAt,
     mergedId: transaction.merged ? (action.type === 'buy'
-      ? transaction.game[action.area ?? 'board'][action.destination]!.id
-      : action.type === 'transfer' ? transaction.game[action.to.area][action.to.index]!.id : null) : null }
+      ? (action.area === 'inventory' ? transaction.game.inventory[action.destination] : occupantAt(transaction.game.board, action.destination)?.gem)?.id ?? null
+      : action.type === 'transfer' ? (action.to.area === 'inventory' ? transaction.game.inventory[action.to.index]
+        : occupantAt(transaction.game.board, action.to.index)?.gem)?.id ?? null : null) : null }
   return transaction.ok && action.type !== 'reroll' && action.now !== undefined ? advanceSession(updated, action.now) : updated
 }

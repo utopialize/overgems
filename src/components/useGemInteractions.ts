@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { PointerEvent } from 'react'
 import type { GameState, ShopItem, GemOrigin, Slot } from '../game/types'
 import { validSlot } from '../game/state'
+import { normalizeSlot } from '../game/board'
 
 export function useGemInteractions(game: GameState, onDrop: (from: GemOrigin, to: Slot) => void,
   onRecycle: (from: Slot, gemId: string) => void, onTab: (pane: 'shop' | 'inventory') => void) {
@@ -48,7 +49,8 @@ export function useGemInteractions(game: GameState, onDrop: (from: GemOrigin, to
         const index = Number(target?.dataset.index)
         const offer = target?.dataset.area === 'shop' ? game.offers[index] : null
         if (offer && game.coins < offer.price) return
-        const from: GemOrigin | null = offer ? { area: 'shop', index, offerId: offer.item.id } : slotAt(event.target as Element)
+        const slot = slotAt(event.target as Element)
+        const from: GemOrigin | null = offer ? { area: 'shop', index, offerId: offer.item.id } : slot ? normalizeSlot(game.board, slot) : null
         const gem = from ? from.area === 'shop' ? offer?.item : game[from.area][from.index] : null
         if (from && gem) pointer.current = { id: event.pointerId, from, item: gem, x: event.clientX, y: event.clientY, moved: false }
       },

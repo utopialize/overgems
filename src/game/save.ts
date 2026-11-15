@@ -2,6 +2,7 @@ import { HARVEST_VALUES, RULES, SETTINGS, offerPrice } from './catalog'
 import { createInitialGame } from './state'
 import { emptyCollection, initialExcavationSeed, MINERALS } from './terrain'
 import type { GameState, Gem, ShopItem } from './types'
+import { validFootprints } from './board'
 
 export const SAVE_KEY = 'overgems.save.v1'
 function record(value: unknown): value is Record<string, unknown> {
@@ -16,7 +17,8 @@ function validGem(value: unknown): value is Gem {
     && integer(value.level) && value.level < HARVEST_VALUES.length
     && (value.invested === undefined || finite(value.invested))
     && (value.rarity === undefined || value.rarity === 'common' || value.rarity === 'rare')
-    && (value.kind === 'harvest' || (value.kind === 'multiplier' && SETTINGS.includes(value.setting as never)))
+    && (value.kind === 'harvest' || (value.kind === 'major' && value.rarity !== 'common')
+      || (value.kind === 'multiplier' && SETTINGS.includes(value.setting as never)))
 }
 function validItem(value: unknown): value is ShopItem {
   return validGem(value) || (record(value) && value.kind === 'pickaxe' && typeof value.id === 'string' && /^tool-\d+$/.test(value.id))
@@ -40,7 +42,7 @@ export function validateGame(value: unknown): value is GameState {
     || Object.values(value.minerals).reduce<number>((sum, count) => sum + Number(count), 0) > value.excavations) return false
   const gems: unknown[] = [...value.board, ...value.inventory]
   if (!gems.every((gem) => gem === null || validGem(gem))
-    || value.board.some((gem, index) => gem !== null && (value.stones as boolean[])[index])) return false
+    || !validFootprints(value.board as (Gem | null)[], value.stones as boolean[])) return false
   const items: unknown[] = [...gems]
   for (const offer of value.offers) {
     if (!record(offer) || !finite(offer.price) || !validItem(offer.item)) return false

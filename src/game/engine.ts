@@ -1,5 +1,6 @@
 import { DELTA, DIRECTIONS, OPPOSITE, RULES, gemValue, roundCoins } from './catalog'
 import type { Direction, Emission, FlowEvent, Gem, Point } from './types'
+import { occupantAt } from './board'
 
 export type Pulse = {
   position: Point; from: Point; direction: Direction; energy: number
@@ -20,7 +21,7 @@ export function collisionReason(board: readonly (Gem | null)[], pulse: Pulse, st
   const { x, y } = pulse.position
   if (x < 0 || x >= RULES.columns || y < 0 || y >= RULES.rows) return 'edge'
   if (stones[y * RULES.columns + x]) return 'stone'
-  const gem = board[y * RULES.columns + x]
+  const gem = occupantAt(board, y * RULES.columns + x)?.gem
   return gem?.kind === 'multiplier' && !gem.setting.includes(OPPOSITE[pulse.direction]) ? 'connection' : null
 }
 
@@ -83,7 +84,7 @@ export function advanceEmission(board: readonly (Gem | null)[], current: Running
     const children: Pulse[] = []
     let earned = 0
     const inside = position.x >= 0 && position.x < RULES.columns && position.y >= 0 && position.y < RULES.rows
-    const gem = inside ? board[position.y * RULES.columns + position.x] : null
+    const gem = inside ? occupantAt(board, position.y * RULES.columns + position.x)?.gem : null
     const key = position.x + ',' + position.y + ',' + direction
     if (!inside) visit.push({ ...base, type: 'end', reason: 'edge' })
     else if (pulse.visited.has(key)) visit.push({ ...base, type: 'end', reason: 'loop' })
@@ -102,7 +103,7 @@ export function advanceEmission(board: readonly (Gem | null)[], current: Running
         const outgoing = gem?.kind === 'multiplier'
           ? DIRECTIONS.filter((d) => gem.setting.includes(d) && d !== OPPOSITE[direction])
           : [direction]
-        if (gem?.kind === 'harvest' && activates) {
+        if (gem && gem.kind !== 'multiplier' && activates) {
           earned = energy * gemValue(gem)
           visit.push({ ...base, type: 'harvest', gain: earned })
         } else if (gem?.kind === 'multiplier' && activates) {

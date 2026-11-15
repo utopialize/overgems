@@ -25,6 +25,12 @@
   des fusions dont les attaches diffèrent. Préserver les objets sur action refusée.
 - La progression des douze niveaux est linéaire : récoltes de +1 à +12 (+1 par
   fusion), multiplicatrices de ×1,1 à ×2,2 (+0,1 par fusion). Ne pas dépasser N12.
+- Les majeures sont des récoltes rares 2×2 : +4 par niveau/fusion, de +4 à +48.
+  Une seule ancre haute gauche stocke l'objet dans `board` ; trois cases couvertes
+  restent nulles et leur occupation est dérivée par `board.ts`, jamais dupliquée.
+- Une pose de majeure exige quatre cases libres et sans rocher. Les quartiers
+  permettent de sélectionner, fusionner et recycler l'objet entier. Une majeure
+  occupe une place d'inventaire et récolte une seule fois par branche, par identité.
 - Le jeu doit tenir dans un seul écran (`100dvh`), sans scroll de la page ni du
   plateau. La grille s'adapte à l'espace restant ; ses cases peuvent devenir plus
   petites que 44 px sur les écrans courts. Garder les autres contrôles à 44 px.
@@ -34,7 +40,8 @@
 - Les récompenses d'excavation utilisent la table configurable de `rewards.ts`.
   Si une récompense ne peut être stockée, refuser toute l'excavation sans paiement,
   retrait de pierre ou avancement du hasard. Les gemmes trouvées ont investi 0.
-- Une rareté absente signifie classique. Deux raretés différentes ne fusionnent
+- Une rareté absente signifie classique, sauf pour les majeures toujours rares.
+  Deux raretés différentes ne fusionnent
   pas ; la rareté rare est signalée par ✦ et n'ajoute aucun bonus implicite.
 - Une nouvelle partie commence sans gemmes, avec 18 rochers. La colonne de la
   source et les trois lignes centrales restent libres. Les rochers bloquent au

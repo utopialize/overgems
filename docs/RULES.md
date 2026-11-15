@@ -11,6 +11,29 @@ Une récolte **+v** accepte les quatre directions, rapporte
 `énergie entrante × v` Éclats et laisse le flux continuer tout droit,
 sans consommer ni amplifier l'énergie.
 
+Une **gemme majeure** est une récolte rare occupant exactement **2×2 cases**.
+Son niveau N vaut `4 × N` : +4, +8, +12… +48 à N12. Deux majeures de même
+niveau fusionnent en ajoutant exactement +4 ; une récolte classique ne fusionne
+jamais avec une majeure. Le résultat conserve son empreinte 2×2.
+La traversée horizontale ou verticale reste rectiligne et conserve la puissance.
+L'identité unique limite la récolte à une fois par branche, même si deux cellules
+sont traversées ou si la branche revient par une autre face. Des branches
+indépendantes récoltent séparément la même majeure.
+
+Le plateau stocke **un seul objet à son ancre haute gauche**. Les trois autres
+cases sont nulles dans la sauvegarde ; leur occupation est dérivée par
+`src/game/board.ts`, partagé par moteur, transactions, inspection et rendu.
+Une case couverte n'est jamais disponible. Les quatre cellules de destination
+doivent exister, être libres et sans rocher. Un déplacement peut recouvrir
+l'ancienne empreinte de la même gemme. Un dépôt sur un quartier d'une majeure
+compatible fusionne à l'ancre de la cible. Sélection, recyclage et contribution
+depuis un quartier concernent l'objet entier. Les manipulations conservent
+les impulsions et leurs activations déjà acquises.
+
+Une majeure se stocke dans **une** place d'inventaire, même sans empreinte libre
+sur le plateau. Le rendu utilise un seul cristal facetté chaud sur quatre cases,
+avec marque ✦, sans attaches ni effet permanent supplémentaire.
+
 Une multiplicatrice **×v** accepte seulement les côtés munis d'attaches.
 Elle multiplie l'énergie et envoie cette puissance entière vers chaque autre
 attache. Les connectiques sont bidirectionnelles, sans retour immédiat par
@@ -120,8 +143,10 @@ l'inventaire. Un emplacement occupé incompatible n'est jamais écrasé ; un
 inventaire plein n'empêche pas un achat directement sur le plateau.
 
 La table `EXCAVATION_REWARDS` dans `src/game/rewards.ts` définit des poids relatifs :
-70 rien, 20 récolte classique N1, 8 multiplicatrice classique N1 (sertissage
-fixe tiré au sort), 2 récolte rare N1. Le tirage est indépendant de la collection
+68 rien, 20 récolte classique N1, 8 multiplicatrice classique N1 (sertissage
+fixe tiré au sort), 2 récolte rare N1, 2 majeure rare N1. Les majeures sont obtenues
+uniquement par excavation ; la génération de boutique reste classique.
+Le tirage est indépendant de la collection
 de minéraux, sans nouveau système d'album ni bonus passif. Les trouvailles sont
 stockées dans la première place libre et ne font pas augmenter les tarifs.
 Leur investissement est nul ; les fusions additionnent toujours les coûts réels.
@@ -131,6 +156,7 @@ ou changement du hasard. La récompense reste disponible après avoir libéré u
 place. Les aperçus ne révèlent pas la récompense et n'affectent aucun tirage.
 
 Les gemmes sont classiques (rareté absente ou `common`) ou rares (`rare`, marque ✦).
+Les majeures sont toujours rares, y compris si ce champ est absent.
 La rareté ne modifie pas la production. Elle doit être identique pour fusionner,
 en plus de la catégorie, du niveau et des attaches. Les anciennes sauvegardes
 restent compatibles et l'ancienne réserve conserve ses douze objets éventuels.
@@ -259,6 +285,13 @@ compteurs d'achats et de renouvellements, investissements, paramètres et étape
 du tutoriel sont sauvegardés localement. Les sauvegardes
 invalides sont signalées et remplacées par une partie initiale. Un stockage
 interdit est signalé ; le jeu reste utilisable dans l'onglet.
+
+Le format et la clé V1 restent compatibles : les anciennes gemmes conservent
+leur empreinte 1×1 et leur rareté par défaut. La catégorie `major` s'ajoute sans
+modifier les anciennes données ni multiplier les objets. À la lecture, bords,
+recouvrements et pierres sous une empreinte sont validés sur les quatre cellules.
+Une sauvegarde invalide suit la récupération explicite habituelle ; aucun objet
+n'est tronqué ou déplacé silencieusement.
 
 ## Exemple de référence
 

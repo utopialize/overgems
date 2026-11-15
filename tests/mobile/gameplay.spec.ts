@@ -40,7 +40,7 @@ test('achat à la pose, fusion directe depuis la boutique et sauvegarde', async 
   await page.getByTestId('offer-2').click()
   await cell(page, 28).click()
   await expect(cell(page, 28)).toHaveAccessibleName(/Récolte \+2/)
-  await expect(page.getByRole('status')).toContainText('Achat et fusion réussis')
+  await expect(page.getByRole('status')).toBeEmpty()
   await expect.poll(async () => (await saved(page)).board[28]?.level).toBe(1)
   expect((await saved(page)).coins).toBe(18)
   expect((await saved(page)).inventory.every((gem: unknown) => gem === null)).toBe(true)
@@ -118,6 +118,7 @@ test('achat et déplacement au clavier, sans scroll', async ({ page }) => {
 
 test('à 5 secondes, brillance et valeurs flottantes correspondent au vrai flux', async ({ page }, testInfo) => {
   const game = createInitialGame()
+  game.settings.viewMode = 'advanced'
   game.board[28] = { id: 'gem-1', kind: 'multiplier', level: 4, setting: 'EW' }
   game.board[29] = { id: 'gem-2', kind: 'harvest', level: 4 }
   await page.addInitScript((state) => { localStorage.setItem('overgems.save.v1', JSON.stringify(state)) }, game)
@@ -145,6 +146,7 @@ test('recommencer exige une confirmation et remet une grille vide', async ({ pag
 
 test('en mode réduit, les gains restent visibles sans déplacement ni fondu', async ({ page }) => {
   const game = createInitialGame()
+  game.settings.viewMode = 'advanced'
   game.board[28] = { id: 'gem-1', kind: 'harvest', level: 0 }
   game.settings.reducedMotion = true
   await page.addInitScript((state) => { localStorage.setItem('overgems.save.v1', JSON.stringify(state)) }, game)

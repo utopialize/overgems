@@ -11,7 +11,7 @@ export function createInitialGame(seed = 20261115): GameState {
     { id: 'gem-9', kind: 'multiplier', level: 0, setting: 'EW' }, { id: 'gem-10', kind: 'harvest', level: 0 }]
   return { version: 1, board, inventory, coins: 30, purchases: 0, rerolls: 0, offers: starter.map((gem) => ({ gem, price: gemPrice(gem) })),
     seed, nextId: 11, stats: { emissions: 0, earned: 0, lastGain: 0, recent: [] },
-    settings: { reducedMotion: false, paused: false }, tutorial: 0 }
+    settings: { reducedMotion: false, paused: false, viewMode: 'simple' }, tutorial: 0 }
 }
 
 function replacePurchasedOffer(game: GameState, index: number): GameState {

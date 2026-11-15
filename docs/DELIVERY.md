@@ -8,10 +8,11 @@ Les règles à jour et les arbitrages sont dans RULES.md.
 - Nouvelle partie : plateau 7 × 9 vide et 30 Éclats, réserve masquée.
 - Source de puissance 1 toutes les 5 secondes ; propagation fixe à **800 ms/case**.
   Le réglage de débug a été retiré, y compris des sauvegardes restaurées.
-- Chaque impulsion est une petite boule affichant sa puissance actuelle. Elle
+- Chaque impulsion est un éclat lumineux en vue épurée, ou une boule affichant
+  sa puissance en vue avancée. Elle
   traverse les cases vides jusqu'au bord ou à une connexion fermée. Les branches
   conservent leur puissance entière et leur historique indépendant.
-- Bulles de diamètre constant 18 px, derrière les gemmes, avec une seule décimale
+- En vue avancée : bulles de diamètre constant 18 px, derrière les gemmes, avec une seule décimale
   affichée. La puissance composée reste précise dans le moteur ; trois ×1,1
   produisent bien 1,331 malgré l'affichage 1,3.
 - Les collisions terminent la branche dès le contact, avec six particules discrètes
@@ -39,6 +40,12 @@ Les règles à jour et les arbitrages sont dans RULES.md.
   les émissions suivantes repartent sans ces activations.
 - Interface sur un seul écran en portrait et paysage, aide paginée, sauvegarde
   validée, réduction des animations, pause et remise à zéro confirmée.
+- Vue épurée par défaut : solde, gemmes et icônes, sans statistiques ou chiffres
+  flottants. L'œil et les paramètres activent la vue avancée, choix mémorisé.
+- Inspection avancée superposée à la boutique, avec fermeture/recyclage et
+  contrôles masqués inertes. La grille conserve sa géométrie sur les neuf formats.
+- Rendement théorique du plateau fixe, distinct du dernier flux réel ; contribution
+  marginale et aperçus avant pose/recyclage, sans crédit ou débit anticipé.
 - Nuances par niveau : douze palettes cuivre/ambre/or/champagne et douze palettes
   indigo/améthyste/orchidée, aux écarts de teinte et de saturation renforcés,
   partagées par plateau, boutique et glisser. Les fusions
@@ -48,7 +55,7 @@ Les règles à jour et les arbitrages sont dans RULES.md.
 
 ## Vérifications effectuées
 
-- `npm run check` : lint, **120 tests Vitest**, TypeScript et build.
+- `npm run check` : lint, **130 tests Vitest**, TypeScript et build.
 - Propagation dans les quatre directions, sertissages fixes, croisements,
   boucles, limites, déterminisme et exemple de référence à 22 Éclats.
 - Moteur incrémental et prévision statique concordants, passage à travers les
@@ -58,9 +65,16 @@ Les règles à jour et les arbitrages sont dans RULES.md.
   de gains anticipés ou hors ligne et dix minutes de temps simulé.
 - Hausse au cinquième achat, renouvellements progressifs, refus sans fonds,
   remboursements et migration des anciennes sauvegardes.
-- **43 scénarios Chromium** : achat et recyclage souris/tactile/clavier,
+- **59 scénarios Chromium** : achat et recyclage souris/tactile/clavier,
   sauvegarde, suppression du sélecteur, évolution du prix de renouvellement,
   tarifs au palier et conservation des coûts payés.
+- Analyses : comparaison avec la case vide, contributions positives/négatives,
+  bifurcations, refus et limites ; la préférence de vue et les aperçus conservent
+  les émissions, échéances, monnaie et statistiques réelles.
+- Deux vues : icône sans texte, statistiques absentes en épuré, étincelle/bulle
+  conservant la même identité ; sélection, paramètres et préférence après reload.
+- Inspection sans mouvement du plateau sur neuf formats, clavier sans accès aux
+  offres couvertes, aperçu souris/tactile et annulation sans paiement.
 - Progression : les onze paliers de chaque catégorie, plafonds +12/×2,2,
   conservation des sauvegardes, fusions sur le plateau et achats avec fusion.
 - Régressions : renouvellement protégé sans débit ni modification de sauvegarde,

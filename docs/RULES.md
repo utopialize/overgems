@@ -103,13 +103,60 @@ changer la silhouette ni les attaches. La palette est centralisée dans
 glisser. Une fusion l'actualise immédiatement ; aucune donnée de sauvegarde
 supplémentaire n'est nécessaire. Les valeurs restent lisibles en encre sombre.
 
-Les impulsions sont des boules à halo ambre avec leur puissance actuelle au
+Le mode `viewMode` est sauvegardé dans les paramètres : `simple` par défaut, ou
+`advanced`. Le bouton œil permet aussi de basculer instantanément. Les anciennes
+sauvegardes sans ce champ adoptent la vue épurée, sans perdre leur progression.
+Changer de vue ne suspend, ne relance ni ne recalcule aucune émission.
+
+En vue épurée, le flux est un éclat chaud de 6 px de cœur avec halo et courte
+traînée, sans bulle sombre ni chiffre. Le solde, les valeurs des gemmes, les prix
+et les icônes restent visibles. Les statistiques, niveaux secondaires de boutique
+et textes d'accompagnement sont masqués ; les erreurs et alertes restent visibles.
+
+En vue avancée, les impulsions sont des boules à halo ambre avec leur puissance actuelle au
 centre, derrière les gemmes. Leur diamètre est fixe (18 px) et ne dépend pas de
 la puissance. La valeur se met à jour après amplification et chaque branche affiche
 sa propre puissance, arrondie uniquement à l'écran à une décimale. Les SVG des gemmes traversées
 s'éclairent ; un gain réel « +… » ou un facteur « ×… » apparaît pendant 750 ms.
 Ces effets sont pilotés par le ticker PixiJS, sans calcul de production. En mode
 réduit, les valeurs apparaissent au même endroit sans mouvement ni fondu.
+
+L'inspection d'une sélection en vue avancée remplace visuellement la boutique,
+en superposition absolue : elle ne déplace ni ne redimensionne la grille. Elle
+montre fonction, niveau, valeur exacte, connexions, remboursement et contribution.
+Les contrôles couverts sont inertes ; fermeture et recyclage restent accessibles
+dans le panneau. Pendant un glisser, ce panneau laisse place aux indications du
+geste sans changer la géométrie du plateau.
+
+## Rendement et prévisualisation
+
+En vue avancée, « Dernier flux réel » reste le gain de la dernière émission
+terminée, éventuellement influencée par les manipulations pendant son parcours.
+Avant toute émission terminée, il affiche un tiret. Le « Rendement théorique »
+utilise une émission neuve sur le plateau actuel figé :
+
+`rendement (Éclats/s) = gain simulé par émission / 5`.
+
+Cette estimation est un potentiel à cadence nominale, même en pause. Elle ne
+prévoit pas les manipulations futures ni les gains de démarrage/hors ligne et
+ne touche ni au solde, ni aux statistiques, ni aux flux en cours.
+
+La contribution d'une gemme posée est `(gain du plateau − gain avec sa case vide) / 5`.
+Elle inclut l'amplification et le routage ; elle peut être négative. Les contributions
+ne constituent pas des parts additives du revenu. Une offre non posée n'a pas
+encore de contribution à un emplacement défini.
+
+Avant un dépôt, le glisser, le survol d'une case après sélection ou le focus au
+clavier montrent le rendement candidat et sa différence avec le plateau actuel.
+La simulation candidate utilise les mêmes validations d'achat/fusion/déplacement
+que la transaction réelle, mais son état est jeté : aucun paiement ni tirage n'est
+appliqué à la partie. Un recyclage glissé possède aussi son aperçu de rendement.
+Les analyses sont mémorisées sur leurs données, sans recalcul à chaque image.
+
+Une simulation limitée est signalée par `≥` et « Estimation partielle ». Si le
+plateau actuel ou son alternative atteint une limite, la différence ou la
+contribution concernée affiche une indisponibilité plutôt qu'une comparaison
+tronquée. Les taux affichent jusqu'à six décimales, avec abréviation des grands nombres.
 
 La propagation est fixée à **800 ms par case**, sans réglage dans les paramètres.
 La vitesse n'est pas comprimée sur les longs circuits.

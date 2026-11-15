@@ -4,14 +4,14 @@ import { createFlowScene } from '../pixi/createFlowScene'
 import type { FlowSnapshot } from '../pixi/createFlowScene'
 import type { ActiveEmission } from '../game/runtime'
 
-export function PixiCanvas({ emissions, reducedMotion }: { emissions: ActiveEmission[]; reducedMotion: boolean }) {
+export function PixiCanvas({ emissions, reducedMotion, advanced }: { emissions: ActiveEmission[]; reducedMotion: boolean; advanced: boolean }) {
   const hostRef = useRef<HTMLDivElement>(null)
-  const snapshot = useRef<FlowSnapshot>({ emissions, reducedMotion, offset: 20 })
+  const snapshot = useRef<FlowSnapshot>({ emissions, reducedMotion, advanced, offset: 20 })
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    snapshot.current = { ...snapshot.current, emissions, reducedMotion }
-  }, [emissions, reducedMotion])
+    snapshot.current = { ...snapshot.current, emissions, reducedMotion, advanced }
+  }, [emissions, reducedMotion, advanced])
 
   useEffect(() => {
     const host = hostRef.current

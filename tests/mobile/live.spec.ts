@@ -9,6 +9,7 @@ async function startFrozen(page: Page) {
   await page.clock.install()
   await page.clock.pauseAt(await page.evaluate(() => Date.now() + 100))
   await page.goto('/')
+  await page.getByRole('button', { name: 'Passer en vue avancée' }).click()
   // Let lazy loading and renderer initialization finish while advancing only
   // small clock slices, then synchronize on the first visible source pulse.
   for (let i = 0; i < 20 && await page.locator('canvas').count() === 0; i++) {

@@ -142,7 +142,7 @@ describe('prix progressifs et recyclage', () => {
     expect(restored.game.board).toEqual(game.board)
     expect(restored.game.purchases).toBe(0)
     expect(restored.game.rerolls).toBe(0)
-    expect(restored.game.settings).toEqual({ paused: false, reducedMotion: false })
+    expect(restored.game.settings).toEqual({ paused: false, reducedMotion: false, viewMode: 'simple' })
   })
   test('les nouveaux champs invalides sont rejetés', () => {
     const game = createInitialGame()

@@ -9,9 +9,13 @@ SVG et PixiJS ; aucun compte, backend ou service externe.
 Le dépôt est hébergé sur [GitHub](https://github.com/utopialize/overgems).
 `main` contient le premier MVP ; `develop` accueille la suite du développement.
 Les évolutions validées sur `develop` peuvent ensuite être intégrées à `main`.
+Les vues et outils d'optimisation sont préparés sur
+`feature/advanced-inspection-yield`, à valider avant intégration dans `develop`.
+
+Pour tester cette évolution :
 
 ```sh
-git switch develop
+git switch feature/advanced-inspection-yield
 ```
 
 ## Lancer
@@ -39,7 +43,7 @@ Chaque fusion augmente la récolte de **1** (`+1` à `+12`) ou le facteur de **0
 (`×1,1` à `×2,2`). Les deux familles s'arrêtent au niveau 12.
 
 La source envoie une puissance de 1 toutes les 5 secondes. Les gemmes traversées
-brillent et affichent brièvement leur véritable gain ou leur multiplicateur.
+brillent ; en vue avancée, leur véritable gain ou multiplicateur flotte brièvement.
 Les douze niveaux possèdent des nuances marquées, progressivement plus claires :
 cuivre corail, ambre, or puis champagne pour les récoltes ; indigo, améthyste
 puis orchidée claire pour les multiplicatrices. Les écarts de teinte et de
@@ -49,11 +53,11 @@ La réserve est masquée et ses données historiques restent conservées.
 
 La partie est sauvegardée dans ce navigateur. Aucun gain hors ligne.
 Les paramètres permettent de mettre le circuit en pause, réduire les animations
-et recommencer après confirmation. Les anciennes parties sont préservées :
+et choisir la vue, ou recommencer après confirmation. Les anciennes parties sont préservées :
 utiliser « Recommencer une partie… » pour retrouver une grille vide.
 
-La propagation est fixée à **800 ms par case**. Chaque impulsion est une petite
-boule dont le centre affiche sa puissance actuelle. Les cases vides la laissent
+La propagation est fixée à **800 ms par case**. L'impulsion est un éclat lumineux
+en vue épurée et une bulle chiffrée en vue avancée. Les cases vides la laissent
 passer ; un bord ou une entrée de gemme fermée l'arrête. Déplacer, poser, fusionner
 ou recycler une gemme conserve les impulsions en cours : chaque prochaine arrivée
 rencontre la gemme présente à cet instant. Les récoltes sont créditées au passage.
@@ -61,7 +65,7 @@ Une même gemme ne récolte ou n’amplifie qu’une fois par branche, même dé
 devant la boule ; ses attaches continuent de router le flux. Les branches filles
 héritent de cet historique, et les émissions suivantes peuvent la réactiver.
 
-Les bulles ont un diamètre fixe de 18 px, indépendant de la puissance, et passent
+Les bulles de la vue avancée ont un diamètre fixe de 18 px, indépendant de la puissance, et passent
 derrière les gemmes. Leur valeur affiche une seule décimale ; le moteur conserve
 la précision interne : trois ×1,1 donnent 1,1 → 1,21 → 1,331, affichés
 1,1 → 1,2 → 1,3. Au quatrième passage, 1,4641 s'affiche 1,5.
@@ -77,6 +81,32 @@ Les deux compteurs sont sauvegardés ; un renouvellement ne compte pas comme un 
 Si le circuit ne produit rien, un renouvellement doit laisser le budget d’une
 récolte de niveau 1 et garantir une récolte achetable parmi les nouvelles offres.
 Sinon il est refusé sans paiement ni changement des offres ou des compteurs.
+
+## Vues et optimisation
+
+Le bouton **œil** bascule instantanément entre la vue épurée, par défaut, et la vue
+avancée. Ce choix est sauvegardé, également accessible dans les paramètres. La vue
+épurée privilégie les gemmes, les attaches, un éclat lumineux à traînée courte,
+le solde et les icônes. Les erreurs restent signalées ; les indications secondaires,
+puissances, gains flottants et statistiques sont réservés à la vue avancée.
+
+En vue avancée, sélectionner une gemme ouvre son inspection **sur la boutique**,
+sans déplacer la grille : fonction, niveau, valeur, connexions, recyclage et
+contribution estimée. Fermer le panneau rend les offres accessibles ; pendant un
+glisser, l'inspection s'efface pour les indications de pose ou de recyclage.
+
+**Dernier flux réel** est le gain de la dernière émission terminée. **Rendement
+théorique** simule une nouvelle émission sur le plateau figé, puis divise ses gains
+par les 5 secondes de cadence. Il représente un potentiel, y compris en pause,
+sans anticiper ni verser de monnaie. La contribution d'une gemme est l'écart avec
+la même case vide, routage inclus ; elle peut être négative et les contributions
+ne s'additionnent pas en une répartition du total.
+
+Un glisser, un survol après sélection ou les flèches du clavier affichent le
+rendement après pose et son écart avant validation. Un aperçu refusé ou annulé
+ne coûte rien. Les limites de calcul produisent une estimation signalée comme
+partielle ; les comparaisons concernées sont indisponibles. Ni les analyses ni
+le changement de vue ne modifient les impulsions en cours.
 
 ## Vérifier
 
@@ -112,6 +142,7 @@ reste autorisé. Essayer aussi sur de vrais appareils iOS/Safari et Android/Chro
 - `catalog.ts`, `economy.ts` : valeurs, sertissages, prix et génération des offres.
 - `state.ts`, `fusion.ts` : opérations atomiques sur plateau et inventaire.
 - `runtime.ts` : émissions et crédit unique des gains, indépendants du framerate.
+- `analysis.ts` : rendement théorique, contribution marginale et aperçus sans effet sur la partie.
 - `save.ts`, `useGame.ts` : validation des sauvegardes et liaison React.
 - `src/components/` : interface HTML, gemmes SVG et Pointer Events.
 - `src/components/gemPalette.ts` : nuances et luminosité des facettes par niveau.

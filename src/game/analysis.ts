@@ -1,7 +1,8 @@
 import { RULES, roundCoins } from './catalog'
 import { simulateEmission } from './engine'
-import { buyOfferOnBoard, recycleGem, transferGem } from './state'
-import type { GameState, Gem, GemOrigin } from './types'
+import { buyOfferAt, recycleGem, transferGem } from './state'
+import type { GameState, Gem, GemOrigin, Slot } from './types'
+import { occupantAt, normalizeSlot } from './board'
 
 export type CircuitEstimate = { perEmission: number; perSecond: number; limited: boolean }
 export type PlacementPreview =
@@ -20,9 +21,10 @@ export function estimateCircuit(board: readonly (Gem | null)[], stones: readonly
 export function estimateGemContribution(board: readonly (Gem | null)[], index: number,
   current?: CircuitEstimate, stones: readonly boolean[] = []): { perEmission: number; perSecond: number } | null {
   current ??= estimateCircuit(board, stones)
-  if (!board[index] || current.limited) return null
+  const occupied = occupantAt(board, index)
+  if (!occupied || current.limited) return null
   const without = [...board]
-  without[index] = null
+  without[occupied.anchor] = null
   const alternative = estimateCircuit(without, stones)
   if (alternative.limited) return null
   const gain = roundCoins(current.perEmission - alternative.perEmission) || 0
@@ -30,17 +32,19 @@ export function estimateGemContribution(board: readonly (Gem | null)[], index: n
 }
 
 /** Reuse real transaction validation on immutable states; discard the candidate afterwards. */
-export function previewPlacement(game: GameState, origin: GemOrigin, destination: number | null,
+export function previewPlacement(game: GameState, origin: GemOrigin, destination: number | Slot | null,
   current = estimateCircuit(game.board, game.stones)): PlacementPreview {
-  const recycling = destination === null && origin.area === 'board'
-  if (origin.area === 'board' && origin.index === destination && game.board[origin.index]) {
+  const to: Slot | null = typeof destination === 'number' ? { area: 'board', index: destination } : destination
+  if (origin.area !== 'shop') origin = normalizeSlot(game.board, origin)
+  const recycling = to === null && origin.area !== 'shop'
+  if (origin.area !== 'shop' && origin.area === to?.area && origin.index === to.index && game[origin.area][origin.index]) {
     return { ok: true, estimate: current, deltaPerSecond: current.limited ? null : 0, recycling: false }
   }
-  const transaction = destination === null
-    ? origin.area === 'board' && game.board[origin.index]
-      ? recycleGem(game, origin.index, game.board[origin.index]!.id) : null
-    : origin.area === 'shop' ? buyOfferOnBoard(game, origin.index, destination, origin.offerId)
-      : transferGem(game, origin, { area: 'board', index: destination })
+  const transaction = to === null
+    ? origin.area !== 'shop' && game[origin.area][origin.index]
+      ? recycleGem(game, origin.index, game[origin.area][origin.index]!.id, origin.area) : null
+    : origin.area === 'shop' ? buyOfferAt(game, origin.index, to, origin.offerId)
+      : transferGem(game, origin, to)
   if (!transaction) return { ok: false, message: 'Déposez la gemme sur le circuit.' }
   if (!transaction.ok) return { ok: false, message: transaction.message }
   const estimate = estimateCircuit(transaction.game.board, transaction.game.stones)

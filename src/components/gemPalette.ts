@@ -4,7 +4,7 @@ import type { Gem } from '../game/types'
 /** Wider hue/lightness ranges make each level visible even on a small crystal. */
 export function gemPalette(gem: Gem) {
   const progress = gem.level / (HARVEST_VALUES.length - 1)
-  const warm = gem.kind === 'harvest'
+  const warm = gem.kind !== 'multiplier'
   const hue = warm ? 12 + progress * 42 : 246 + progress * 60
   const richness = Math.sin(progress * Math.PI)
   const saturation = warm ? 70 + richness * 10 : 56 + richness * 12

@@ -1,7 +1,8 @@
 export type Direction = 'N' | 'E' | 'S' | 'W'
 export type Setting = 'EW' | 'NS' | 'NE' | 'ES' | 'SW' | 'NW' | 'NES' | 'ESW' | 'NSW' | 'NEW' | 'NESW'
-export type Gem = { readonly invested?: number } & (
+export type Gem = { readonly invested?: number; readonly rarity?: 'common' | 'rare' } & (
   | { readonly id: string; readonly kind: 'harvest'; readonly level: number }
+  | { readonly id: string; readonly kind: 'major'; readonly level: number }
   | { readonly id: string; readonly kind: 'multiplier'; readonly level: number; readonly setting: Setting })
 export type ExcavationTool = { readonly id: string; readonly kind: 'pickaxe' }
 export type ShopItem = Gem | ExcavationTool
@@ -49,4 +50,4 @@ export type GameState = {
   settings: Settings
   tutorial: number
 }
-export type Transaction = { game: GameState; message: string; ok: boolean; merged?: boolean; found?: MineralId }
+export type Transaction = { game: GameState; message: string; ok: boolean; merged?: boolean; found?: MineralId; reward?: Gem }

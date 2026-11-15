@@ -2,10 +2,20 @@
 
 Les documents d'origine fournis sont conservés à l'identique dans ce dossier.
 Les règles à jour et les arbitrages sont dans RULES.md.
+Le suivi des lots inventaire/récompenses et gemmes majeures est dans
+[LOTS-03-04.md](LOTS-03-04.md). Les rochers sont intégrés à `develop`.
 
 ## Comportement actuel
 
-- Nouvelle partie : plateau 7 × 9 sans gemmes, 18 rochers et 30 Éclats, réserve masquée.
+- Nouvelle partie : plateau 7 × 9 sans gemmes, 18 rochers et 30 Éclats.
+- Inventaire actif de douze places, affiché à la place des offres, en deux pages
+  tactiles de six. Achats, transferts et fusions dans les deux sens ; grille fixe.
+- Récompenses d'excavation de gemmes configurables et rares signalées par ✦,
+  sans bonus passif. Inventaire plein : refus intégral sans perte ni débit.
+- Majeures rares 2×2 : objet unique à une ancre, +4 par niveau/fusion, récolte
+  unique par branche, traversée rectiligne sans amplification. Quatre cases
+  validées, stockage en une place, recyclage/rendement/sauvegarde adaptés.
+- Découverte d'une majeure : poids 2 sur 100, configurable, sans génération en boutique.
 - Terrain constructible : source et trois lignes centrales dégagées ; rochers
   bloquants au contact et impossibles à recouvrir par une gemme.
 - Pioche aléatoire (20 % par tirage), usage unique directement sur un rocher :
@@ -70,7 +80,8 @@ Les règles à jour et les arbitrages sont dans RULES.md.
 
 ## Vérifications effectuées
 
-- `npm run check` : lint, **149 tests Vitest**, TypeScript et build.
+- `npm run check` : lint, **196 tests Vitest**, TypeScript et build au lot 04
+  (156 tests existants conservés, 40 tests majeures ajoutés).
 - Propagation dans les quatre directions, sertissages fixes, croisements,
   boucles, limites, déterminisme et exemple de référence à 22 Éclats.
 - Moteur incrémental et prévision statique concordants, passage à travers les
@@ -80,9 +91,16 @@ Les règles à jour et les arbitrages sont dans RULES.md.
   de gains anticipés ou hors ligne et dix minutes de temps simulé.
 - Hausse au cinquième achat, renouvellements progressifs, refus sans fonds,
   remboursements et migration des anciennes sauvegardes.
-- **70 scénarios Chromium** : achat et recyclage souris/tactile/clavier,
+- **87 scénarios Chromium** au lot 04 : 78 scénarios existants conservés et
+  9 scénarios majeures ajoutés ; achat et recyclage souris/tactile/clavier,
   sauvegarde, suppression du sélecteur, évolution du prix de renouvellement,
   tarifs au palier et conservation des coûts payés.
+- Majeures : huit traversées (quatre directions et deux voies), croisements,
+  retour par une autre face, mouvements pendant la propagation, paliers +4,
+  fusions dans les quatre couples de zones, validation d'empreinte et sauvegardes.
+- Rendu majeur : un SVG sur quatre cases, captures portrait et paysage inspectées,
+  poses/refus/annulation tactiles, quartier couvert, clavier, inspection,
+  inventaire et découverte sans espace 2×2 libre. Aucun scroll ajouté.
 - Terrain : cinq graines, départ productif, tirages aléatoires, excavation
   atomique, refus et protection de budget, dernière pierre et retrait des outils.
 - Collection : garanties, quatre espèces, absence de bonus, hasard reproductible

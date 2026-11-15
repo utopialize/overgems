@@ -9,14 +9,14 @@ SVG et PixiJS ; aucun compte, backend ou service externe.
 Le dépôt est hébergé sur [GitHub](https://github.com/utopialize/overgems).
 `main` contient le premier MVP ; `develop` accueille la suite du développement.
 Les évolutions validées sur `develop` peuvent ensuite être intégrées à `main`.
-Les vues et outils d'optimisation sont intégrés à `develop`.
-Le terrain à excaver est préparé sur `feature/stone-excavation`, à valider avant
-intégration dans `develop`.
+Les vues, outils d'optimisation et rochers sont intégrés à `develop`.
+Les lots inventaire/récompenses puis gemmes majeures sont développés sur
+`feature/inventory-major-gems`, avec un point de validation distinct par lot.
 
 Pour tester cette évolution :
 
 ```sh
-git switch feature/stone-excavation
+git switch feature/inventory-major-gems
 ```
 
 ## Lancer
@@ -52,7 +52,33 @@ cuivre corail, ambre, or puis champagne pour les récoltes ; indigo, améthyste
 puis orchidée claire pour les multiplicatrices. Les écarts de teinte et de
 saturation rendent chaque montée de niveau plus visible.
 L'interface tient sur un seul écran ; l'aide est accessible avec le bouton « ? ».
-La réserve est masquée et ses données historiques restent conservées.
+L'icône **▦** alterne la boutique et l'inventaire de **12 places**, en deux pages
+de six cibles tactiles. La grille ne bouge pas. Sélectionner une gemme ou une
+offre puis une destination permet de ranger, poser ou fusionner ; le glisser
+fonctionne aussi. En vue avancée, le bouton ▦ de l'inspection ouvre l'inventaire.
+Pendant un glisser, survoler l'onglet ▦ permet de l'ouvrir. Les anciennes réserves
+redeviennent accessibles avec tous leurs objets.
+
+Une excavation peut aussi fournir une gemme : 20 % récolte classique, 8 %
+multiplicatrice classique, 2 % récolte rare, **2 % gemme majeure**, 68 % aucune gemme. La table
+`EXCAVATION_REWARDS` dans `src/game/rewards.ts` est configurable par poids.
+Les gemmes rares portent **✦**, sans bonus passif ; les fusions demandent la
+même rareté. Les trouvailles ont un coût investi nul (recyclage nul).
+Si une trouvaille ne peut être rangée, l'excavation entière est refusée : argent,
+rocher, offre et tirage restent intacts. Libérer une place permet de réessayer.
+
+Les **gemmes majeures** sont des récoltes rares de **2×2 cases**. Elles valent
+`+4` à N1 ; une fusion entre deux majeures de même niveau ajoute exactement
+`+4`, jusqu'à `+48` à N12, en conservant l'empreinte. Une branche traverse tout
+droit, sans changement de puissance, et ne récolte qu'une fois, même sur deux
+cellules. Des branches indépendantes peuvent récolter chacune la même majeure.
+
+Les quatre cases doivent être libres et sans rocher. Le dépôt vise le coin haut
+gauche ; toucher n'importe quel quartier sélectionne l'objet. Le déplacement
+peut recouvrir une partie de son ancienne empreinte. La majeure se range dans
+**une seule place d'inventaire**, même sans espace 2×2 sur le plateau. Un dépôt
+impossible conserve la gemme. Recyclage et contribution concernent l'objet entier.
+Les anciennes sauvegardes sont conservées.
 
 La partie est sauvegardée dans ce navigateur. Aucun gain hors ligne.
 Les paramètres permettent de mettre le circuit en pause, réduire les animations
@@ -166,7 +192,9 @@ reste autorisé. Essayer aussi sur de vrais appareils iOS/Safari et Android/Chro
 - `src/game/engine.ts` : propagation pure et événements déterministes.
 - `catalog.ts`, `economy.ts` : valeurs, sertissages, prix et génération des offres.
 - `state.ts`, `fusion.ts` : opérations atomiques sur plateau et inventaire.
+- `board.ts` : ancre unique, empreintes et occupation des quatre cellules des majeures.
 - `terrain.ts` : terrain initial, minéraux et hasard d'excavation sauvegardé.
+- `rewards.ts` : table extensible des récompenses de gemmes et probabilités.
 - `runtime.ts` : émissions et crédit unique des gains, indépendants du framerate.
 - `analysis.ts` : rendement théorique, contribution marginale et aperçus sans effet sur la partie.
 - `save.ts`, `useGame.ts` : validation des sauvegardes et liaison React.

@@ -139,7 +139,8 @@ export function createFlowScene(app: Application, snapshot: { current: FlowSnaps
           if (feedbackAge < 0 || feedbackAge >= RULES.feedbackMs || feedbackCount >= 40) continue
           feedbackCount++
           const t = feedbackAge / RULES.feedbackMs
-          const cellIndex = event.to.y * 7 + event.to.x
+          const arrivalIndex = event.to.y * 7 + event.to.x
+          const cellIndex = Number(cells[arrivalIndex]?.dataset.anchorIndex ?? arrivalIndex)
           const intensity = reducedMotion ? 0.35 : (1 - t) ** 2
           nextGlowing.set(cellIndex, Math.max(nextGlowing.get(cellIndex) ?? 0, intensity))
           const p = point(event.to)

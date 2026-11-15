@@ -5,6 +5,7 @@ import type { ActiveEmission, ExcavationFeedback } from '../game/runtime'
 import type { Gem, GemOrigin, ShopItem, Slot } from '../game/types'
 import { GemView } from './GemView'
 import { StoneView } from './TerrainViews'
+import { footprint, occupantAt } from '../game/board'
 
 const PixiCanvas = lazy(() => import('./PixiCanvas').then((module) => ({ default: module.PixiCanvas })))
 
@@ -16,6 +17,11 @@ export function GameBoard({ board, stones, selected, selectedItem, emissions, ex
   onChoose: (slot: Slot) => void
 }) {
   const [focus, setFocus] = useState(RULES.sourceRow * RULES.columns)
+  const previewTarget = previewIndex === null ? null : occupantAt(board, previewIndex)
+  const previewAnchor = previewTarget && selectedItem && isGem(selectedItem) && canMerge(selectedItem, previewTarget.gem)
+    ? previewTarget.anchor : previewIndex
+  const previewCells = previewAnchor === null ? [] : selectedItem && isGem(selectedItem)
+    ? footprint(selectedItem, previewAnchor) : [previewAnchor]
   return (
     <div className="board-space">
       <div className="board-stage">
@@ -29,21 +35,25 @@ export function GameBoard({ board, stones, selected, selectedItem, emissions, ex
             const target = Math.max(0, Math.min(62, focus + offset))
             event.currentTarget.querySelector<HTMLButtonElement>(`[data-index="${target}"]`)?.focus()
           }}>
-          {board.map((gem, index) => {
-            const isSelected = selected?.area === 'board' && selected.index === index
+          {board.map((stored, index) => {
+            const occupant = occupantAt(board, index)
+            const gem = occupant?.gem
+            const anchor = occupant?.anchor ?? index
+            const isSelected = selected?.area === 'board' && selected.index === anchor
             const stone = stones[index]
             const compatible = Boolean(gem && selectedItem && isGem(selectedItem) && canMerge(selectedItem, gem))
             const excavatable = Boolean(stone && selectedItem?.kind === 'pickaxe')
             return (
               <button key={index} type="button" data-area="board" data-index={index}
+                data-anchor-index={anchor}
                 data-stone={stone || undefined}
-                className={`board-cell ${stone ? 'stone' : gem ? 'occupied' : 'empty'} ${isSelected ? 'selected' : ''} ${compatible || excavatable ? 'compatible' : ''} ${gem?.id === mergedId ? 'just-merged' : ''} ${previewIndex === index ? 'preview-destination' : ''}`}
+                className={`board-cell ${stone ? 'stone' : gem ? 'occupied' : 'empty'} ${isSelected ? 'selected' : ''} ${compatible || excavatable ? 'compatible' : ''} ${gem?.id === mergedId ? 'just-merged' : ''} ${previewCells.includes(index) ? 'preview-destination' : ''}`}
                 aria-pressed={isSelected} tabIndex={focus === index ? 0 : -1} onFocus={() => { setFocus(index); onPreview(index) }}
                 onPointerEnter={() => onPreview(index)}
                 aria-label={`Ligne ${Math.floor(index / 7) + 1}, colonne ${index % 7 + 1} : ${stone ? 'rocher, pioche nécessaire' : gem ? gemDescription(gem) : 'case vide'}${compatible ? ', fusion possible' : ''}${excavatable ? ', excavation possible' : ''}`}
                 onClick={() => onChoose({ area: 'board', index })}>
-                {stone ? <StoneView /> : gem ? <GemView gem={gem} /> : <span className="cell-dot" />}
-                {compatible && <span className="merge-mark">+</span>}
+                {stone ? <StoneView /> : stored ? <GemView gem={stored} /> : !gem && <span className="cell-dot" />}
+                {compatible && anchor === index && <span className="merge-mark">+</span>}
               </button>
             )
           })}

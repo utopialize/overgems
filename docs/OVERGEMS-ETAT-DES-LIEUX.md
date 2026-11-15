@@ -1,5 +1,15 @@
 # OVERGEMS — Audit d’avancement et état des lieux V0.1
 
+**Mise à jour lots 03/04 :** les rochers sont validés et fusionnés dans `develop`
+(`73e65c2`). Le développement courant est `feature/inventory-major-gems`.
+L'inventaire est désormais actif, avec achats et transferts bidirectionnels,
+récompenses d'excavation configurables et rareté sans bonus passif. Le suivi de
+validation par lot est dans [LOTS-03-04.md](LOTS-03-04.md). Les sections suivantes
+conservent le détail de l'audit et de la version des rochers qui l'a suivi.
+Le lot 04 ajoute les majeures 2×2 à ancre unique : +4 par fusion, une récolte par
+branche, découverte rare et stockage en une place. Sa réception complète passe
+avec 196 tests unitaires et 87 scénarios navigateur, sans extension du plateau.
+
 Date : **15 novembre 2026**. État examiné : branche
 `feature/stone-excavation`, issue de `develop` au commit `252e657`.
 Les vues et outils d'optimisation sont intégrés à `develop` par la PR n°1 ;

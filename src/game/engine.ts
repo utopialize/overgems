@@ -7,6 +7,7 @@ export type Pulse = {
 }
 export type SimulationOptions = {
   power?: number; source?: Point & { direction: Direction }; maxEvents?: number; maxEnergy?: number
+  stones?: readonly boolean[]
 }
 export type RunningEmission = {
   result: Emission; frontier: Pulse[]; step: number; nextBranch: number
@@ -15,20 +16,21 @@ export type RunningEmission = {
 // The leading edge of a small pulse reaches a cell boundary before its centre.
 export const CONTACT_PROGRESS = 0.35
 
-export function collisionReason(board: readonly (Gem | null)[], pulse: Pulse): 'edge' | 'connection' | null {
+export function collisionReason(board: readonly (Gem | null)[], pulse: Pulse, stones: readonly boolean[] = []): 'edge' | 'connection' | 'stone' | null {
   const { x, y } = pulse.position
   if (x < 0 || x >= RULES.columns || y < 0 || y >= RULES.rows) return 'edge'
+  if (stones[y * RULES.columns + x]) return 'stone'
   const gem = board[y * RULES.columns + x]
   return gem?.kind === 'multiplier' && !gem.setting.includes(OPPOSITE[pulse.direction]) ? 'connection' : null
 }
 
 /** End only colliding branches, at contact, while their siblings keep travelling. */
-export function resolveImpacts(board: readonly (Gem | null)[], current: RunningEmission, progress: number): RunningEmission {
-  if (current.done || !current.frontier.some((pulse) => collisionReason(board, pulse))) return current
+export function resolveImpacts(board: readonly (Gem | null)[], current: RunningEmission, progress: number, stones: readonly boolean[] = []): RunningEmission {
+  if (current.done || !current.frontier.some((pulse) => collisionReason(board, pulse, stones))) return current
   const events = [...current.result.events]
   const frontier: Pulse[] = []
   for (const pulse of current.frontier) {
-    const reason = collisionReason(board, pulse)
+    const reason = collisionReason(board, pulse, stones)
     if (!reason) { frontier.push(pulse); continue }
     if (events.length >= current.maxEvents) return { ...current,
       result: { ...current.result, events, limited: true }, frontier: [], done: true }
@@ -62,10 +64,10 @@ export function createEmission(options: SimulationOptions = {}): RunningEmission
 }
 
 /** Resolve one simultaneous arrival step against the CURRENT board, without mutating inputs. */
-export function advanceEmission(board: readonly (Gem | null)[], current: RunningEmission): RunningEmission {
+export function advanceEmission(board: readonly (Gem | null)[], current: RunningEmission, stones: readonly boolean[] = []): RunningEmission {
   if (current.done) return current
   // Static forecasts use the same contact events as the live scheduler.
-  current = resolveImpacts(board, current, CONTACT_PROGRESS)
+  current = resolveImpacts(board, current, CONTACT_PROGRESS, stones)
   if (current.done) return current
   const events = [...current.result.events]
   let gain = current.result.gain
@@ -138,6 +140,6 @@ export function advanceEmission(board: readonly (Gem | null)[], current: Running
 /** Deterministic forecast on a static board, using the same step engine as live play. */
 export function simulateEmission(board: readonly (Gem | null)[], options: SimulationOptions = {}): Emission {
   let emission = createEmission(options)
-  while (!emission.done) emission = advanceEmission(board, emission)
+  while (!emission.done) emission = advanceEmission(board, emission, options.stones)
   return emission.result
 }

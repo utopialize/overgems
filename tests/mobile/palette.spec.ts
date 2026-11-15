@@ -14,6 +14,7 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 568, height: 320 }
   test('les 24 palettes restent distinctes et lisibles à ' + viewport.width + ' × ' + viewport.height, async ({ page }, testInfo) => {
     await page.setViewportSize(viewport)
     const game = createInitialGame()
+    game.stones.fill(false)
     game.settings.paused = true
     game.nextId = 200
     for (let level = 0; level < HARVEST_VALUES.length; level++) {

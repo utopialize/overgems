@@ -78,12 +78,12 @@ describe('impulsions vivantes', () => {
     let session = sessionReducer(createSession(createInitialGame(), 0), { type: 'tick', now: 5000 })
     session = sessionReducer(session, { type: 'tick', now: 5800 })
     const pending = session.pending
-    session = sessionReducer(session, { type: 'buy', index: 1, destination: 29, offerId: session.game.offers[1]!.gem.id })
+    session = sessionReducer(session, { type: 'buy', index: 1, destination: 29, offerId: session.game.offers[1]!.item.id })
     expect(session.pending).toBe(pending)
     expect(session.game.coins).toBe(20)
     session = sessionReducer(session, { type: 'tick', now: 6600 })
     expect(session.pending[0]!.frontier[0]!.energy).toBe(1.1)
-    session = sessionReducer(session, { type: 'buy', index: 0, destination: 30, offerId: session.game.offers[0]!.gem.id })
+    session = sessionReducer(session, { type: 'buy', index: 0, destination: 30, offerId: session.game.offers[0]!.item.id })
     expect(session.game.coins).toBe(14)
     session = sessionReducer(session, { type: 'tick', now: 7400 })
     expect(session.game.coins).toBe(15.1)
@@ -107,7 +107,7 @@ describe('impulsions vivantes', () => {
     const game = createInitialGame()
     game.board[29] = { id: 'gem-1', kind: 'harvest', level: 0 }
     const emitted = sessionReducer(createSession(game, 0), { type: 'tick', now: 5000 })
-    let merged = sessionReducer(emitted, { type: 'buy', index: 0, destination: 29, offerId: game.offers[0]!.gem.id })
+    let merged = sessionReducer(emitted, { type: 'buy', index: 0, destination: 29, offerId: game.offers[0]!.item.id })
     expect(merged.pending).toBe(emitted.pending)
     merged = sessionReducer(merged, { type: 'tick', now: 6600 })
     expect(merged.game.coins).toBe(26)
@@ -130,7 +130,7 @@ describe('impulsions vivantes', () => {
   test('une pose sans rapport avec le trajet ne solde ni ne redémarre une émission', () => {
     const initial = createInitialGame()
     const emitted = sessionReducer(createSession(initial, 0), { type: 'tick', now: 5000 })
-    const placed = sessionReducer(emitted, { type: 'buy', index: 0, destination: 0, offerId: initial.offers[0]!.gem.id })
+    const placed = sessionReducer(emitted, { type: 'buy', index: 0, destination: 0, offerId: initial.offers[0]!.item.id })
     expect(placed.pending).toBe(emitted.pending)
     expect(placed.serial).toBe(1)
     expect(placed.nextAt).toBe(10000)

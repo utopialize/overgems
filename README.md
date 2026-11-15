@@ -9,13 +9,14 @@ SVG et PixiJS ; aucun compte, backend ou service externe.
 Le dépôt est hébergé sur [GitHub](https://github.com/utopialize/overgems).
 `main` contient le premier MVP ; `develop` accueille la suite du développement.
 Les évolutions validées sur `develop` peuvent ensuite être intégrées à `main`.
-Les vues et outils d'optimisation sont préparés sur
-`feature/advanced-inspection-yield`, à valider avant intégration dans `develop`.
+Les vues et outils d'optimisation sont intégrés à `develop`.
+Le terrain à excaver est préparé sur `feature/stone-excavation`, à valider avant
+intégration dans `develop`.
 
 Pour tester cette évolution :
 
 ```sh
-git switch feature/advanced-inspection-yield
+git switch feature/stone-excavation
 ```
 
 ## Lancer
@@ -34,7 +35,9 @@ Avec nvm, `nvm use` sélectionne la version de Node fournie dans `.nvmrc`.
 
 ## Jouer
 
-Une nouvelle partie démarre avec une grille 7 × 9 vide et 30 Éclats. Glissez une
+Une nouvelle partie démarre avec une grille 7 × 9 sans gemmes, 18 rochers et
+30 Éclats. La colonne de la source et les trois lignes centrales sont libres
+pour produire dès le premier achat. Glissez une
 gemme depuis la boutique sur la grille pour l'acheter : le paiement a lieu
 uniquement après un dépôt valide. La sélection suivie d'un toucher de destination
 fonctionne aussi, ainsi que le clavier. Un dépôt sur un double achète et fusionne
@@ -54,11 +57,28 @@ La réserve est masquée et ses données historiques restent conservées.
 La partie est sauvegardée dans ce navigateur. Aucun gain hors ligne.
 Les paramètres permettent de mettre le circuit en pause, réduire les animations
 et choisir la vue, ou recommencer après confirmation. Les anciennes parties sont préservées :
-utiliser « Recommencer une partie… » pour retrouver une grille vide.
+utiliser « Recommencer une partie… » pour découvrir le terrain avec rochers.
+
+Une **pioche** peut apparaître au hasard en boutique (20 % par tirage tant qu'il
+reste des rochers). Glissez-la sur un rocher, ou sélectionnez-la puis touchez
+le rocher : **8 Éclats**, une case libérée, un seul usage. Les dépôts refusés ou
+annulés ne coûtent rien. Les outils ne font pas monter le prix des gemmes.
+Sans production, creuser doit laisser le budget d'une première récolte.
+Après le dernier rocher, les autres pioches proposées sont remplacées par des gemmes.
+La pierre éclate en fragments et poussière pendant 700 ms, avec un halo sur la
+case libérée. Le mode réduit garde seulement un flash fixe de 250 ms. Ce feedback
+reste purement visuel et fonctionne également lorsque le circuit est en pause.
+
+L'excavation peut révéler un **Quartz rose, une Fluorite, une Pyrite ou une Azurite** :
+25 % de chance, avec une découverte garantie tous les quatre rochers et priorité
+aux espèces manquantes. Touchez le cristal en haut à gauche pour ouvrir la
+collection. Les quantités sont sauvegardées, sans bonus économique.
+Les anciennes parties gardent leur terrain libre ; aucun rocher n'est ajouté
+sur un circuit existant.
 
 La propagation est fixée à **800 ms par case**. L'impulsion est un éclat lumineux
 en vue épurée et une bulle chiffrée en vue avancée. Les cases vides la laissent
-passer ; un bord ou une entrée de gemme fermée l'arrête. Déplacer, poser, fusionner
+passer ; un rocher, un bord ou une entrée de gemme fermée l'arrête. Déplacer, poser, fusionner
 ou recycler une gemme conserve les impulsions en cours : chaque prochaine arrivée
 rencontre la gemme présente à cet instant. Les récoltes sont créditées au passage.
 Une même gemme ne récolte ou n’amplifie qu’une fois par branche, même déplacée
@@ -69,7 +89,9 @@ Les bulles de la vue avancée ont un diamètre fixe de 18 px, indépendant de la
 derrière les gemmes. Leur valeur affiche une seule décimale ; le moteur conserve
 la précision interne : trois ×1,1 donnent 1,1 → 1,21 → 1,331, affichés
 1,1 → 1,2 → 1,3. Au quatrième passage, 1,4641 s'affiche 1,5.
-Une collision au bord ou devant une connexion fermée détruit la bulle au contact,
+Creuser avant le contact permet à la vague en cours de continuer ; creuser après
+un éclatement ne ressuscite pas la branche.
+Une collision au bord, devant un rocher ou une connexion fermée détruit la bulle au contact,
 avec six particules discrètes pendant 280 ms, supprimées en mode d'animations réduites.
 
 Sortir une gemme du plateau la recycle pour **50 % du prix réellement payé**.
@@ -101,6 +123,9 @@ par les 5 secondes de cadence. Il représente un potentiel, y compris en pause,
 sans anticiper ni verser de monnaie. La contribution d'une gemme est l'écart avec
 la même case vide, routage inclus ; elle peut être négative et les contributions
 ne s'additionnent pas en une répartition du total.
+Le rendement principal affiche deux décimales maximum. Touchez cette statistique
+pour ouvrir ses détails : taux complet, gain par émission et cadence. Seul
+l'affichage est arrondi ; la simulation conserve sa précision.
 
 Un glisser, un survol après sélection ou les flèches du clavier affichent le
 rendement après pose et son écart avant validation. Un aperçu refusé ou annulé
@@ -141,12 +166,14 @@ reste autorisé. Essayer aussi sur de vrais appareils iOS/Safari et Android/Chro
 - `src/game/engine.ts` : propagation pure et événements déterministes.
 - `catalog.ts`, `economy.ts` : valeurs, sertissages, prix et génération des offres.
 - `state.ts`, `fusion.ts` : opérations atomiques sur plateau et inventaire.
+- `terrain.ts` : terrain initial, minéraux et hasard d'excavation sauvegardé.
 - `runtime.ts` : émissions et crédit unique des gains, indépendants du framerate.
 - `analysis.ts` : rendement théorique, contribution marginale et aperçus sans effet sur la partie.
 - `save.ts`, `useGame.ts` : validation des sauvegardes et liaison React.
 - `src/components/` : interface HTML, gemmes SVG et Pointer Events.
 - `src/components/gemPalette.ts` : nuances et luminosité des facettes par niveau.
 - `src/pixi/` : lecture visuelle des événements, sans calcul de production.
+- `src/pixi/createExcavationFeedback.ts` : fragments, poussière et halo d'excavation pilotés par le ticker.
 - `src/index.css` : palette et tokens ; `src/App.css` : mise en page mobile first.
 
 Les coûts, niveaux, périodes et limites se règlent dans `src/game/catalog.ts`.

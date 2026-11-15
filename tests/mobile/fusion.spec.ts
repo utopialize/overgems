@@ -10,6 +10,7 @@ for (const kind of ['harvest', 'multiplier'] as const) {
     const makeGem = (id: number, level: number): Gem => kind === 'harvest'
       ? { id: 'gem-' + id, kind, level } : { id: 'gem-' + id, kind, level, setting: 'EW' }
     const game = createInitialGame()
+    game.stones.fill(false)
     game.settings.paused = true
     game.coins = 1000
     game.board[0] = makeGem(1, 2)
@@ -18,7 +19,7 @@ for (const kind of ['harvest', 'multiplier'] as const) {
     game.board[3] = makeGem(4, 10)
     game.board[4] = makeGem(5, 11)
     const offer = makeGem(8, 3)
-    game.offers[0] = { gem: offer, price: gemPrice(offer) }
+    game.offers[0] = { item: offer, price: gemPrice(offer) }
     await page.addInitScript((state) => {
       if (!localStorage.getItem('overgems.save.v1')) localStorage.setItem('overgems.save.v1', JSON.stringify(state))
     }, game)

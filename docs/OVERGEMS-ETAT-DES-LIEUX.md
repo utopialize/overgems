@@ -1,8 +1,9 @@
 # OVERGEMS — Audit d’avancement et état des lieux V0.1
 
 Date : **15 novembre 2026**. État examiné : branche
-`feature/advanced-inspection-yield`, issue de `develop` au commit `b107133`, avec
-les vues et outils d'optimisation en attente de validation avant fusion. Le commit `35e147c`
+`feature/stone-excavation`, issue de `develop` au commit `252e657`.
+Les vues et outils d'optimisation sont intégrés à `develop` par la PR n°1 ;
+le terrain à excaver attend sa validation avant fusion. Le commit `35e147c`
 contient l'audit et les deux corrections de gameplay décrites ci-dessous ; le
 premier MVP correspond à `57afe23`. `package.json` porte
 encore la version technique `0.0.0`. « V0.1 » désigne ici le périmètre produit.
@@ -15,8 +16,41 @@ des lieux décrit le code corrigé et conserve la trace des constats initiaux.
 À la demande suivante, la progression chromatique sur douze niveaux a été ajoutée.
 La progression économique a ensuite été fixée à +1 par fusion de récoltes et
 +0,1 par fusion de multiplicatrices, avec les plafonds +12 et ×2,2.
-La branche feature ajoute les deux vues, l'inspection superposée à la boutique,
+L'évolution précédente ajoute les deux vues, l'inspection superposée à la boutique,
 les contributions marginales et les aperçus de rendement sans effet sur la partie.
+L'évolution actuelle ajoute 18 rochers, les pioches et une collection de minéraux.
+
+### Ajout : terrain constructible et excavation
+
+La colonne de source et les trois lignes centrales sont dégagées au départ :
+la première récolte peut produire sans excavation. Les 18 rochers des autres
+cases bloquent les impulsions au contact et refusent toute gemme.
+Une pioche apparaît aléatoirement en boutique (20 % par tirage tant qu'il reste
+des pierres). Elle se consomme sur une pierre, au glisser ou à la sélection :
+8 Éclats fixes, paiement atomique, sans incrément des achats de gemmes. Creuser
+sans revenu préserve le budget de première récolte. Après le dernier rocher,
+les autres outils proposés sont remplacés par des gemmes.
+
+Une excavation peut révéler un Quartz rose, une Fluorite, une Pyrite ou une
+Azurite : 25 % de chance, garantie toutes les quatre excavations, priorité aux
+espèces absentes. La collection accessible via le cristal du bandeau conserve
+les quantités, sans bonus économique. La découverte s'annonce sur l'en-tête de
+boutique sans déplacer la grille. Terrain et hasard d'excavation sont sauvegardés.
+Les anciennes parties restent libres de pierres ; il faut recommencer pour
+essayer le nouveau terrain. Les anciennes offres `gem` sont migrées vers `item`.
+
+L'excavation conserve les vagues en cours. Une pierre retirée avant contact
+laisse passer ; une branche déjà éclatée n'est pas relancée. Les analyses
+statiques et les aperçus prennent en compte le terrain, sans révéler de minéraux.
+Ces paramètres de répartition, prix et fréquence sont une première base
+d'équilibrage, pas une validation par des sessions humaines prolongées.
+Un petit correctif distinct arrondit ensuite le rendement principal à deux
+décimales maximum ; ses détails au toucher/clavier conservent le taux complet,
+le gain par émission et la cadence, sans modifier les calculs.
+L'excavation reçoit ensuite un feedback visuel : neuf fragments, poussière et
+halo pendant 700 ms, remplacés par un flash fixe de 250 ms en mode réduit. Le
+ticker PixiJS rejoue uniquement les transactions validées ; les effets ne sont
+pas sauvegardés et n'affectent pas la simulation, même en pause.
 
 Les sources sont le code, les tests, l'historique Git disponible et les
 documents du dépôt : [prompt initial](<OVERGEMS - MASTER DEV PROMPT V01.md>),
@@ -43,7 +77,7 @@ aussi renouveler les offres ou recycler une gemme contre la moitié de son coût
 Il peut intervenir pendant les passages : le circuit est évalué au fil du temps,
 et non figé au départ de chaque émission.
 
-Une partie neuve commence avec **30 Éclats, une grille vide et trois offres** :
+Une partie neuve commence avec **30 Éclats, 18 rochers, aucune gemme et trois offres** :
 `+1` à 6 Éclats, `×1,1` horizontal à 10 et `+1` à 6. Il faut placer une récolte
 sur un chemin traversé pour commencer à produire. La réserve de douze places
 existe dans les données, mais aucun accès n’est proposé dans l’interface.
@@ -588,16 +622,16 @@ retestée dans cet audit.
 
 | Vérification | Résultat constaté le 15/11/2026 |
 | --- | --- |
-| `npm run check` | Réussi : Oxlint, 130 tests Vitest, compilation TypeScript et build Vite. |
-| `npm run test:mobile` | Réussi : 59 scénarios Chromium, environ 1 min 40 s ; vues, inspection, rendement et régressions existantes. |
-| `npm run test:mobile -- tests/mobile/layout.spec.ts` | 12 scénarios dont les huit pages d'aide et les paramètres en paysage. |
+| `npm run check` | Réussi : Oxlint, 149 tests Vitest, compilation TypeScript et build Vite. |
+| `npm run test:mobile` | 70 scénarios Chromium : 59 régressions existantes, 10 scénarios terrain et 1 correctif de précision ; relances ciblées des scénarios concernés après chaque ajout. |
+| `npm run test:mobile -- tests/mobile/layout.spec.ts` | 12 scénarios dont les dix pages d'aide et les paramètres en paysage. |
 | `npm run test:mobile -- tests/mobile/palette.spec.ts` | 3 scénarios après amplification des palettes : contraste, distances de couleur, portrait/paysage, glisser, fusion et rechargement. |
 | Examen des captures | Captures initiales : grille neuve, paysage et réseau vivant. Puis palettes des 24 gemmes en portrait 390 × 844 et paysage 568 × 320. |
 | Sondes initiales, puis tests de régression | Les deux problèmes initiaux ont été reproduits, corrigés puis couverts par des assertions moteur et navigateur. |
 
 Les tests produisent des artefacts ignorés dans `test-results/` et le build dans
 `dist/`. Après les deux corrections et leur explication dans l'aide, les dernières
-modifications portent sur les vues, l'inspection et les analyses de rendement.
+modifications portent sur les rochers, l'excavation et les minéraux.
 Le build produit notamment deux chunks d'environ 256 et 261 ko avant compression
 (environ 81 et 77 ko gzip), plus les chunks partagés ; ce n’est pas une mesure
 du téléchargement total ni des performances d’un mobile.
@@ -611,13 +645,15 @@ du téléchargement total ni des performances d’un mobile.
 | `src/game/live.test.ts` | 15 | Propagation vivante, conservation des flux, suspension ; effet non répété d’une récolte/multiplicatrice déplacée, héritage indépendant des activations et réactivation à l’émission suivante. |
 | `src/game/impacts.test.ts` | 7 | Puissance composée/affichage ; collisions au contact ; branches sœurs ; obstacle ajouté, déplacé ou posé après une arrivée. |
 | `src/game/analysis.test.ts` | 10 | Taux du plateau fixe, contributions positives/négatives et bifurcations, aperçus et refus, limites, migration du mode et conservation des parcours/gains. |
-| `tests/mobile/layout.spec.ts` | 12 | Neuf tailles, redimensionnement, insets simulés, huit pages d’aide et paramètres en paysage, absence d’interdiction du zoom. |
+| `src/game/terrain.test.ts` | 19 | Départ productif sur cinq graines, outils aléatoires, transactions, découvertes, migrations, collisions, excavation avant/après contact sans réinitialisation et feedback transitoire après validation seulement. |
+| `tests/mobile/terrain.spec.ts` | 10 | Pioche tactile/clavier, refus et annulation, collection portrait/paysage, grille fixe, collision pierre, migration, débris animés et flash réduit sans rejeu. |
+| `tests/mobile/layout.spec.ts` | 12 | Neuf tailles, redimensionnement, insets simulés, dix pages d’aide et paramètres en paysage, absence d’interdiction du zoom. |
 | `tests/mobile/gameplay.spec.ts` | 12 | Achat à la pose, fusion, souris/tactile/clavier, sauvegarde, effets réels, reset confirmé, mode réduit, réserve historique et erreurs de stockage. |
 | `tests/mobile/balance.spec.ts` | 7 | Renouvellement sauvegardé puis refus sans perte, achat encore possible ; recyclage et annulation, palier et remboursement après fusion. |
 | `tests/mobile/live.spec.ts` | 7 | Bulles, pose/déplacement, taille/vitesse/arrondi, couches, collisions ; absence de répétition d’effet après deux déplacements de la même récolte ou multiplicatrice. |
 | `tests/mobile/palette.spec.ts` | 3 | 24 palettes distinctes, luminosité croissante, contraste d'au moins 4,5:1 ; distances CIELAB ≥3 entre voisins et ≥40 entre N1/N12 ; portrait/paysage, glisser, fusion et persistance. |
 | `tests/mobile/fusion.spec.ts` | 2 | Pour chaque catégorie : fusion au quatrième niveau sans saut, achat avec fusion, plafond N12, refus sans perte et sauvegarde/rechargement. |
-| `tests/mobile/advanced.spec.ts` | 16 | Modes et persistance, éclat/bulle sur la même impulsion, distinction des rendements, inspection et clavier, aperçus souris/tactile, annulation, limites et superposition sans mouvement de grille sur neuf formats. |
+| `tests/mobile/advanced.spec.ts` | 17 | Modes et persistance, éclat/bulle sur la même impulsion, distinction des rendements, précision principale et détails, inspection et clavier, aperçus souris/tactile, annulation, limites et superposition sans mouvement de grille sur neuf formats. |
 
 Les neuf viewports sont 320 × 568, 360 × 640, 390 × 664, 390 × 844,
 412 × 915, 568 × 320, 844 × 390, 768 × 1024 et 1280 × 800. Les contrôles de mise
@@ -693,12 +729,13 @@ Aucun échec n’a été observé dans les suites relancées. Cela ne suffit pas
 | Lignes, coudes, T et croix bidirectionnels | Onze variantes | Réalisé. |
 | Duplication entière, croisements, boucles bornées | Présents et testés | Réalisé, avec budgets explicites. |
 | Vide bloquant, fréquence suggérée 2 s | Vide conducteur, fréquence 5 s, pas de 800 ms | Règles volontairement remplacées par les règles actuelles. |
-| Départ déjà productif | Grille vide et 30 Éclats | Arbitrage opposé au prompt initial ; onboarding à réévaluer. |
+| Départ déjà productif | Sans gemmes, 18 rochers et 30 Éclats ; passage central libre | Arbitrage opposé au prompt initial ; onboarding à réévaluer. |
 | Boutique → inventaire et réserve visible | Boutique → plateau atomique ; réserve dormante | Parcours remplacé ; données/opérations historiques conservées. |
 | Fusion stricte entre toutes zones | Complète dans le moteur ; parcours actifs plateau et boutique | Partiel côté interface pour la réserve. |
 | Progression des valeurs configurable | +1 par fusion pour les récoltes, +0,1 pour les facteurs ; douze niveaux | Catalogue initial remplacé par la progression linéaire demandée. |
-| Tutoriel contextuel, progression mémorisée | Aide facultative de huit pages ; champ historique non utilisé | Partiel. |
-| Fiche concise et indicateurs réels | Inspection avancée, dernier flux réel, rendement théorique et aperçus | Réalisé sur la branche feature ; moyenne récente toujours non affichée. |
+| Tutoriel contextuel, progression mémorisée | Aide facultative de dix pages ; champ historique non utilisé | Partiel. |
+| Fiche concise et indicateurs réels | Inspection avancée, dernier flux réel, rendement théorique et aperçus | Intégré à develop ; moyenne récente toujours non affichée. |
+| Espace constructible et minéraux | Rochers bloquants, pioche aléatoire et quatre minéraux sans bonus | Réalisé sur la nouvelle branche feature ; équilibrage humain à valider. |
 | Gemmes évoluant visuellement avec leur niveau | Nuances et luminosité progressives sur douze niveaux ; silhouette et attaches stables | Progression chromatique réalisée ; ornements et halos de niveau non ajoutés. |
 | Simulation pure, calculs indépendants des animations | Moteur, runtime et rendu séparés | Réalisé ; le plateau reste vivant pendant les flux. |
 | Sauvegarde versionnée, pas de gains hors ligne | Présente avec migrations locales | Réalisé ; parcours transitoires non conservés. |

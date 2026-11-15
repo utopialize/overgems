@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { GameBoard } from './components/GameBoard'
-import { GemView } from './components/GemView'
+import { ItemView, MineralIcon } from './components/TerrainViews'
+import { CollectionDialog } from './components/CollectionDialog'
 import { GemInspector } from './components/GemInspector'
 import { HelpDialog } from './components/HelpDialog'
 import { SettingsDialog } from './components/SettingsDialog'
 import { useGemInteractions } from './components/useGemInteractions'
-import { RULES, exactNumberLabel, gemDescription, gemLabel, numberLabel, rateLabel, recycleValue, rerollPrice, signedRateLabel } from './game/catalog'
+import { RULES, exactNumberLabel, gemDescription, itemDescription, itemLabel, isGem, numberLabel, rateLabel, recycleValue, rerollPrice, signedRateLabel } from './game/catalog'
+import { MINERALS } from './game/terrain'
 import { estimateCircuit, estimateGemContribution, previewPlacement } from './game/analysis'
 import { buyOfferOnBoard, createInitialGame, transferGem } from './game/state'
 import type { GemOrigin, Slot } from './game/types'
@@ -20,6 +22,7 @@ export default function App() {
   const [hovered, setHovered] = useState<number | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
+  const [collectionOpen, setCollectionOpen] = useState(false)
   const [systemReducedMotion, setSystemReducedMotion] = useState(() => matchMedia('(prefers-reduced-motion: reduce)').matches)
   useEffect(() => {
     const media = matchMedia('(prefers-reduced-motion: reduce)')
@@ -29,12 +32,19 @@ export default function App() {
   }, [])
   const reducedMotion = systemReducedMotion || game.settings.reducedMotion
   const advanced = game.settings.viewMode === 'advanced'
-  const theoretical = useMemo(() => advanced ? estimateCircuit(game.board) : null, [advanced, game.board])
-  const selectedGem = selected ? selected.area === 'shop'
-    ? game.offers[selected.index]?.gem ?? null
+  const theoretical = useMemo(() => advanced ? estimateCircuit(game.board, game.stones) : null, [advanced, game.board, game.stones])
+  const selectedItem = selected ? selected.area === 'shop'
+    ? game.offers[selected.index]?.item ?? null
     : game[selected.area][selected.index] ?? null : null
   const contribution = useMemo(() => theoretical && selected?.area === 'board'
-    ? estimateGemContribution(game.board, selected.index, theoretical) : null, [selected, game.board, theoretical])
+    ? estimateGemContribution(game.board, selected.index, theoretical, game.stones) : null, [selected, game.board, game.stones, theoretical])
+  const discovery = session.discovery ? MINERALS.find(({ id }) => id === session.discovery!.mineral) : null
+  const collected = MINERALS.filter(({ id }) => game.minerals[id] > 0).length
+  useEffect(() => {
+    if (!session.discovery) return
+    const timer = window.setTimeout(() => dispatch({ type: 'dismiss-discovery' }), 4000)
+    return () => clearTimeout(timer)
+  }, [session.discovery, dispatch])
   function focusBoard(index?: number) {
     document.querySelector<HTMLButtonElement>(index === undefined
       ? '.board-cell[tabindex="0"]' : `[data-area="board"][data-index="${index}"]`)?.focus()
@@ -71,8 +81,11 @@ export default function App() {
     if (selected?.area === slot.area && selected.index === slot.index) {
       clearSelection(); return
     }
-    if (selected && selectedGem) drop(selected, slot)
+    if (selected && selectedItem) drop(selected, slot)
     else {
+      if (game.stones[slot.index]) {
+        dispatch({ type: 'notice', message: 'Pioche nécessaire pour libérer cette case.', error: true }); return
+      }
       const gem = game[slot.area][slot.index]
       if (gem) {
         setSelected(slot)
@@ -83,7 +96,7 @@ export default function App() {
   }
   const warning = saveError || loadWarning || (session.warning ? 'Limite de sécurité atteinte : simplifiez le circuit.' : '')
   const status = warning || (advanced || session.noticeError ? session.notice : '') || (advanced ? 'Glissez une gemme sur la grille, face à la source.' : '')
-  const inspecting = Boolean(advanced && selectedGem && !ghost)
+  const inspecting = Boolean(advanced && selectedItem && isGem(selectedItem) && !ghost)
   const previewText = preview ? preview.ok
     ? `${preview.recycling ? 'Après recyclage' : 'Après pose'} : ${preview.estimate.limited ? '≥ ' : ''}${rateLabel(preview.estimate.perSecond)} ✧/s · ${preview.deltaPerSecond === null ? 'Écart indéterminé (limite)' : 'Δ ' + signedRateLabel(preview.deltaPerSecond) + ' ✧/s'}`
     : 'Pose impossible · ' + preview.message : ''
@@ -92,7 +105,10 @@ export default function App() {
     <main className={['game-shell', reducedMotion ? 'reduce-motion' : '', advanced ? 'advanced-view' : 'simple-view'].join(' ')} {...pointerHandlers}
       onKeyDown={(event) => { if (event.key === 'Escape') clearSelection() }}>
       <header className="game-header">
-        <div className="brand"><span className="brand-mark" aria-hidden="true">◇</span><h1>OVERGEMS</h1></div>
+        <div className="brand"><button type="button" className="brand-mark collection-button" title="Collection de minéraux"
+          aria-label={'Ouvrir la collection de minéraux, ' + collected + ' sur ' + MINERALS.length} onClick={() => setCollectionOpen(true)}>
+          <MineralIcon /><span className="collection-count">{collected}/{MINERALS.length}</span>
+        </button><h1>OVERGEMS</h1></div>
         <div className="header-actions">
           <button type="button" className="view-toggle" aria-label={advanced ? 'Passer en vue épurée' : 'Passer en vue avancée'}
             title={advanced ? 'Masquer les détails · Vue épurée' : 'Afficher les détails · Vue avancée'}
@@ -110,11 +126,20 @@ export default function App() {
         {advanced && <div className="production"><span>Dernier flux réel</span><strong data-testid="last-gain" title={exactNumberLabel(game.stats.lastGain)}>
           {game.stats.emissions ? '+' + numberLabel(game.stats.lastGain) : '—'}</strong><small>Dernière émission terminée</small></div>
         }
-        {theoretical && <div className="production theoretical"><span>Rendement théorique</span>
+        {theoretical && <><button type="button" className="production theoretical" popoverTarget="yield-details"
+          aria-label="Détails du rendement théorique" aria-haspopup="dialog"><span>Rendement théorique</span>
           <strong data-testid="theoretical-rate" data-limited={theoretical.limited}
-            title={`${exactNumberLabel(theoretical.perEmission)} Éclats par émission · ${RULES.periodMs / 1000} s${theoretical.limited ? ' · Estimation partielle : limite de simulation atteinte' : ''}`}>
-            {theoretical.limited ? '≥ ' : ''}{rateLabel(theoretical.perSecond)} <span>✧/s</span></strong>
-          <small>{theoretical.limited ? 'Estimation partielle' : 'Plateau actuel'}</small></div>}
+            title={`${exactNumberLabel(theoretical.perSecond)} Éclats/s · ${exactNumberLabel(theoretical.perEmission)} Éclats par émission · ${RULES.periodMs / 1000} s${theoretical.limited ? ' · Estimation partielle : limite de simulation atteinte' : ''}`}>
+            {theoretical.limited ? '≥ ' : ''}{rateLabel(theoretical.perSecond, 2)} <span>✧/s</span></strong>
+          <small>{theoretical.limited ? 'Estimation partielle' : 'Plateau actuel'}</small></button>
+          <div id="yield-details" popover="auto" className="yield-details" role="dialog" aria-labelledby="yield-title">
+            <div className="panel-heading"><h2 id="yield-title">Rendement théorique</h2>
+              <button type="button" className="icon-button" popoverTarget="yield-details" popoverTargetAction="hide" aria-label="Fermer les détails du rendement">✕</button></div>
+            <dl><div><dt>Précision complète</dt><dd data-testid="theoretical-exact">{theoretical.limited ? '≥ ' : ''}{exactNumberLabel(theoretical.perSecond)} ✧/s</dd></div>
+              <div><dt>Par émission</dt><dd>{exactNumberLabel(theoretical.perEmission)} ✧</dd></div>
+              <div><dt>Cadence</dt><dd>{RULES.periodMs / 1000} s</dd></div></dl>
+            <p className="muted">{theoretical.limited ? 'Estimation partielle : limite de simulation atteinte.' : 'Une émission sur la configuration actuelle du plateau, à cadence nominale.'}</p>
+          </div></>}
       </section>
 
       <section className="circuit-section" aria-labelledby="circuit-title">
@@ -122,49 +147,56 @@ export default function App() {
           <span className="circuit-rhythm" aria-label={game.settings.paused ? 'Circuit en pause' : 'Puissance 1, une impulsion toutes les 5 secondes'}>
             <i className={game.settings.paused ? 'paused' : ''} />{game.settings.paused ? advanced ? 'En pause' : 'Ⅱ' : (advanced ? 'Puissance 1 · ' : '') + RULES.periodMs / 1000 + ' s'}
           </span></div>
-        <GameBoard board={game.board} selected={selected} selectedGem={ghost?.gem ?? selectedGem} emissions={session.pending}
+        <GameBoard board={game.board} stones={game.stones} selected={selected} selectedItem={ghost?.item ?? selectedItem} emissions={session.pending}
+          excavationEffects={session.excavationEffects}
           reducedMotion={reducedMotion} advanced={advanced} mergedId={session.mergedId} onChoose={choose}
           previewIndex={showPreview ? previewDestination : null} onPreview={(index) => { if (advanced && selected) setHovered(index) }} />
       </section>
 
       <section className={'workbench' + (ghost?.origin.area === 'board' ? ' recycling-active' : '')} aria-label="Boutique de gemmes">
-        <div className="shop-heading" inert={inspecting} aria-hidden={inspecting}><h2 className={advanced ? '' : 'sr-only'}>Boutique</h2>
+        <div className="shop-heading" inert={inspecting || Boolean(discovery)} aria-hidden={inspecting || Boolean(discovery)}><h2 className={advanced ? '' : 'sr-only'}>Boutique</h2>
           <div className="shop-actions">
-          {selected?.area === 'board' && selectedGem && <button type="button" className="recycle-button"
-            aria-label={'Recycler la gemme sélectionnée pour ' + numberLabel(recycleValue(selectedGem)) + ' Éclats'}
-            onClick={() => recycle(selected, selectedGem.id)}>♲ +{numberLabel(recycleValue(selectedGem))} ✧</button>}
+          {selected?.area === 'board' && selectedItem && isGem(selectedItem) && <button type="button" className="recycle-button"
+            aria-label={'Recycler la gemme sélectionnée pour ' + numberLabel(recycleValue(selectedItem)) + ' Éclats'}
+            onClick={() => recycle(selected, selectedItem.id)}>♲ +{numberLabel(recycleValue(selectedItem))} ✧</button>}
           <button type="button" className="reroll-button" aria-label={'Renouveler les offres pour ' + renewalCost + ' Éclats'}
             onClick={() => { dispatch({ type: 'reroll' }); setSelected(null) }} disabled={game.coins < renewalCost}>↻ <span>{numberLabel(renewalCost)} ✧</span></button>
           </div>
         </div>
         <div className="shop-offers" inert={inspecting} aria-hidden={inspecting}>{game.offers.map((offer, index) => (
-          <button type="button" key={offer.gem.id} data-area="shop" data-index={index} data-testid={'offer-' + index}
-            className={'offer' + (selected?.area === 'shop' && selected.offerId === offer.gem.id ? ' selected' : '')}
-            aria-pressed={selected?.area === 'shop' && selected.offerId === offer.gem.id}
+          <button type="button" key={offer.item.id} data-area="shop" data-index={index} data-testid={'offer-' + index}
+            className={'offer' + (selected?.area === 'shop' && selected.offerId === offer.item.id ? ' selected' : '')}
+            aria-pressed={selected?.area === 'shop' && selected.offerId === offer.item.id}
             disabled={game.coins < offer.price}
-            aria-label={'Choisir ' + gemDescription(offer.gem) + ' pour ' + offer.price + ' Éclats, puis déposer sur le circuit'}
+            aria-label={'Choisir ' + itemDescription(offer.item) + ' pour ' + offer.price + ' Éclats, puis déposer sur ' + (isGem(offer.item) ? 'le circuit' : 'un rocher')}
             onClick={() => {
               if (suppressClick.current) return
-              setSelected({ area: 'shop', index, offerId: offer.gem.id })
+              setSelected({ area: 'shop', index, offerId: offer.item.id })
               if (advanced) focusBoard()
               setHovered(null)
-              dispatch({ type: 'notice', message: gemLabel(offer.gem) + ' · Déposez sur une case pour acheter (' + offer.price + ' Éclats).' })
+              dispatch({ type: 'notice', message: itemLabel(offer.item) + ' · Déposez sur ' + (isGem(offer.item) ? 'une case' : 'un rocher') + ' pour acheter (' + offer.price + ' Éclats).' })
             }}>
-            <GemView gem={offer.gem} /><span className="offer-level">N{offer.gem.level + 1}</span>
+            <ItemView item={offer.item} />{isGem(offer.item) && <span className="offer-level">N{offer.item.level + 1}</span>}
             <span className="offer-price">{numberLabel(offer.price)} <span aria-hidden="true">✧</span></span>
           </button>
         ))}</div>
-        {ghost?.origin.area === 'board' && <div className={'recycle-target' + (ghost.recycling ? ' active' : '')} data-testid="recycle-target">
-          <strong>♲ {advanced ? 'Recycler · ' : ''}+{numberLabel(recycleValue(ghost.gem))} ✧</strong>
+        {ghost?.origin.area === 'board' && isGem(ghost.item) && <div className={'recycle-target' + (ghost.recycling ? ' active' : '')} data-testid="recycle-target">
+          <strong>♲ {advanced ? 'Recycler · ' : ''}+{numberLabel(recycleValue(ghost.item))} ✧</strong>
           <span className={advanced ? '' : 'sr-only'}>Relâchez hors du plateau · 50 % de la valeur d’achat</span>
         </div>}
-        {inspecting && selectedGem && <GemInspector gem={selectedGem} onBoard={selected?.area === 'board'} contribution={contribution} onClose={clearSelection}
-          onRecycle={() => { if (selected?.area === 'board') recycle(selected, selectedGem.id) }} />}
+        {inspecting && selectedItem && isGem(selectedItem) && <GemInspector gem={selectedItem} onBoard={selected?.area === 'board'} contribution={contribution} onClose={clearSelection}
+          onRecycle={() => { if (selected?.area === 'board') recycle(selected, selectedItem.id) }} />}
+        {discovery && !inspecting && <div className="discovery-toast" role="status" data-testid="discovery-toast">
+          <button type="button" className="discovery-open" onClick={() => { setCollectionOpen(true); dispatch({ type: 'dismiss-discovery' }) }}>
+            <MineralIcon color={discovery.color} /><span>{discovery.name} découvert !</span></button>
+          <button type="button" className="icon-button" aria-label="Fermer la découverte" onClick={() => dispatch({ type: 'dismiss-discovery' })}>✕</button>
+        </div>}
       </section>
       <p className={'notice' + (warning ? ' save-warning' : '') + (preview && !warning ? ' placement-preview' : '')}
         data-testid={preview && !warning ? 'placement-preview' : 'game-notice'} role={warning ? 'alert' : 'status'} aria-live="polite"
         title={previewText && !warning ? previewText : status}>{previewText && !warning ? previewText : status}</p>
-      {ghost && <div className={'drag-ghost' + (ghost.recycling ? ' recycling' : '')} style={{ left: ghost.x, top: ghost.y }}><GemView gem={ghost.gem} /></div>}
+      {ghost && <div className={'drag-ghost' + (ghost.recycling ? ' recycling' : '')} style={{ left: ghost.x, top: ghost.y }}><ItemView item={ghost.item} /></div>}
+      {collectionOpen && <CollectionDialog minerals={game.minerals} excavations={game.excavations} onClose={() => setCollectionOpen(false)} />}
       {helpOpen && <HelpDialog onClose={() => setHelpOpen(false)} />}
       {settingsOpen && <SettingsDialog settings={game.settings} onChange={(patch) => dispatch({ type: 'settings', patch })}
         onClose={() => setSettingsOpen(false)} onReset={() => {

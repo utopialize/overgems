@@ -67,6 +67,7 @@ describe('analyse sans effet sur la partie', () => {
   })
   test('une estimation tronquée est signalée et ne produit pas de fausse différence', () => {
     const game = createInitialGame()
+    game.stones.fill(false)
     game.board = game.board.map((_, index) => ({ id: 'gem-' + (100 + index), kind: 'multiplier', level: 0, setting: 'NESW' }))
     expect(estimateCircuit(game.board).limited).toBe(true)
     expect(estimateGemContribution(game.board, 28)).toBeNull()

@@ -2,16 +2,16 @@ import { useEffect, useRef, useState } from 'react'
 import { Application } from 'pixi.js'
 import { createFlowScene } from '../pixi/createFlowScene'
 import type { FlowSnapshot } from '../pixi/createFlowScene'
-import type { ActiveEmission } from '../game/runtime'
+import type { ActiveEmission, ExcavationFeedback } from '../game/runtime'
 
-export function PixiCanvas({ emissions, reducedMotion, advanced }: { emissions: ActiveEmission[]; reducedMotion: boolean; advanced: boolean }) {
+export function PixiCanvas({ emissions, excavationEffects, reducedMotion, advanced }: { emissions: ActiveEmission[]; excavationEffects: ExcavationFeedback[]; reducedMotion: boolean; advanced: boolean }) {
   const hostRef = useRef<HTMLDivElement>(null)
-  const snapshot = useRef<FlowSnapshot>({ emissions, reducedMotion, advanced, offset: 20 })
+  const snapshot = useRef<FlowSnapshot>({ emissions, excavationEffects, reducedMotion, advanced, offset: 20 })
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    snapshot.current = { ...snapshot.current, emissions, reducedMotion, advanced }
-  }, [emissions, reducedMotion, advanced])
+    snapshot.current = { ...snapshot.current, emissions, excavationEffects, reducedMotion, advanced }
+  }, [emissions, excavationEffects, reducedMotion, advanced])
 
   useEffect(() => {
     const host = hostRef.current

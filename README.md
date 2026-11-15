@@ -35,6 +35,8 @@ gemme depuis la boutique sur la grille pour l'acheter : le paiement a lieu
 uniquement après un dépôt valide. La sélection suivie d'un toucher de destination
 fonctionne aussi, ainsi que le clavier. Un dépôt sur un double achète et fusionne
 en une seule action. Les attaches doivent être identiques ; aucune rotation.
+Chaque fusion augmente la récolte de **1** (`+1` à `+12`) ou le facteur de **0,1**
+(`×1,1` à `×2,2`). Les deux familles s'arrêtent au niveau 12.
 
 La source envoie une puissance de 1 toutes les 5 secondes. Les gemmes traversées
 brillent et affichent brièvement leur véritable gain ou leur multiplicateur.
@@ -121,6 +123,8 @@ utilise `RULES.rerollCost` et `RULES.rerollPriceStep`. Les anciennes sauvegardes
 conservent leur progression ; les offres sont recalées sur le nouveau barème et
 l'ancien réglage de vitesse est retiré. Une ancienne
 gemme sans coût d'achat enregistré utilise son prix catalogue pour le recyclage.
+Les valeurs sont déduites des niveaux : les parties existantes adoptent la
+progression linéaire sans remise à zéro des niveaux, du solde ni des coûts investis.
 La sauvegarde versionnée utilise la clé `overgems.save.v1`. Aucune variable
 d'environnement ni dépendance réseau n'est requise à l'exécution.
 

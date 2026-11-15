@@ -24,6 +24,9 @@ Les règles à jour et les arbitrages sont dans RULES.md.
   en avance lors d'une manipulation.
 - Achat à la pose, fusion stricte sans rotation, et recyclage hors plateau à
   50 % du coût payé. Les fusions cumulent les coûts ; les gestes annulés ne détruisent rien.
+- Progression linéaire sur douze niveaux : +1 par fusion de récoltes, jusqu'à
+  +12 ; +0,1 au facteur des multiplicatrices, de ×1,1 à ×2,2. Les niveaux
+  sauvegardés et les coûts investis sont conservés, avec les nouvelles valeurs.
 - Prix des gemmes : catalogue + **1 Éclat tous les 5 achats**. Les offres des
   anciennes sauvegardes sont recalées sans toucher au solde ni aux coûts investis.
 - Renouvellement : **5 Éclats, puis 6, 7…**, compteur séparé sauvegardé, aucun
@@ -44,7 +47,7 @@ Les règles à jour et les arbitrages sont dans RULES.md.
 
 ## Vérifications effectuées
 
-- `npm run check` : lint, **96 tests Vitest**, TypeScript et build.
+- `npm run check` : lint, **120 tests Vitest**, TypeScript et build.
 - Propagation dans les quatre directions, sertissages fixes, croisements,
   boucles, limites, déterminisme et exemple de référence à 22 Éclats.
 - Moteur incrémental et prévision statique concordants, passage à travers les
@@ -54,9 +57,11 @@ Les règles à jour et les arbitrages sont dans RULES.md.
   de gains anticipés ou hors ligne et dix minutes de temps simulé.
 - Hausse au cinquième achat, renouvellements progressifs, refus sans fonds,
   remboursements et migration des anciennes sauvegardes.
-- **41 scénarios Chromium** : achat et recyclage souris/tactile/clavier,
+- **43 scénarios Chromium** : achat et recyclage souris/tactile/clavier,
   sauvegarde, suppression du sélecteur, évolution du prix de renouvellement,
   tarifs au palier et conservation des coûts payés.
+- Progression : les onze paliers de chaque catégorie, plafonds +12/×2,2,
+  conservation des sauvegardes, fusions sur le plateau et achats avec fusion.
 - Régressions : renouvellement protégé sans débit ni modification de sauvegarde,
   achat encore possible après refus ; déplacement répété d'une récolte ou d'une
   multiplicatrice sans répétition d'effet. Les tests purs vérifient aussi les

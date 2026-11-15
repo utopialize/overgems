@@ -25,27 +25,40 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 568, height: 320 }
     await expect(page.locator('.board-cell .gem-view')).toHaveCount(24)
 
     const colors = await page.locator('.board-cell .gem-view').evaluateAll((gems) => {
-      const luminance = (color: string) => {
-        const channels = color.match(/[\d.]+/g)!.slice(0, 3).map((value) => {
+      const linearRgb = (color: string) => color.match(/[\d.]+/g)!.slice(0, 3).map((value) => {
           const channel = Number(value) / 255
           return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4
-        })
+      })
+      const luminance = (color: string) => {
+        const channels = linearRgb(color)
         return channels[0]! * 0.2126 + channels[1]! * 0.7152 + channels[2]! * 0.0722
+      }
+      // CIELAB distance checks a visible colour change, beyond unique RGB strings.
+      const lab = (color: string) => {
+        const [r, g, b] = linearRgb(color) as [number, number, number]
+        const f = (value: number) => value > 216 / 24389 ? Math.cbrt(value) : 841 / 108 * value + 4 / 29
+        const x = f((0.4124564 * r + 0.3575761 * g + 0.1804375 * b) / 0.95047)
+        const y = f(0.2126729 * r + 0.7151522 * g + 0.072175 * b)
+        const z = f((0.0193339 * r + 0.119192 * g + 0.9503041 * b) / 1.08883)
+        return [116 * y - 16, 500 * (x - y), 200 * (y - z)]
       }
       return gems.map((gem) => {
         const ink = luminance(getComputedStyle(gem.querySelector('.gem-value')!).color)
         const facets = ['main', 'light', 'mid', 'dark'].map((facet) =>
           getComputedStyle(gem.querySelector(`path[fill="var(--gem-${facet})"]`)!).fill)
-        return { facets, mainLuminance: luminance(facets[0]!),
+        return { facets, mainLuminance: luminance(facets[0]!), lab: lab(facets[0]!),
           contrast: Math.min(...facets.map((color) => (luminance(color) + 0.05) / (ink + 0.05))) }
       })
     })
     expect(new Set(colors.map(({ facets }) => facets.join('|'))).size).toBe(24)
     for (const color of colors) expect(color.contrast).toBeGreaterThanOrEqual(4.5)
     for (const family of [colors.slice(0, 12), colors.slice(12)]) {
+      const distance = (first: number[], second: number[]) => Math.hypot(...first.map((value, i) => value - second[i]!))
       for (let level = 1; level < family.length; level++) {
         expect(family[level]!.mainLuminance).toBeGreaterThan(family[level - 1]!.mainLuminance)
+        expect(distance(family[level]!.lab, family[level - 1]!.lab)).toBeGreaterThanOrEqual(3)
       }
+      expect(distance(family[0]!.lab, family[11]!.lab)).toBeGreaterThanOrEqual(40)
     }
     expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight + 1
       && document.documentElement.scrollWidth <= innerWidth)).toBe(true)

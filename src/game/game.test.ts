@@ -18,7 +18,7 @@ const emit = (board: (Gem | null)[]) => simulateEmission(board, { source: { x: -
 function createProducingGame() {
   const game = createInitialGame()
   game.board[28] = { id: 'gem-1', kind: 'harvest', level: 1 }
-  game.board[29] = { id: 'gem-2', kind: 'multiplier', level: 3, setting: 'ESW' }
+  game.board[29] = { id: 'gem-2', kind: 'multiplier', level: 4, setting: 'ESW' }
   game.board[30] = { id: 'gem-3', kind: 'harvest', level: 0 }
   game.board[31] = { id: 'gem-4', kind: 'harvest', level: 0 }
   game.board[36] = { id: 'gem-5', kind: 'harvest', level: 0 }
@@ -30,7 +30,7 @@ function createProducingGame() {
 describe('récolte et propagation', () => {
   test.each(DIRECTIONS)('traversée %s, énergie inchangée et gain proportionnel', (direction) => {
     const board = emptyBoard()
-    board[at(3, 3)] = harvest(3)
+    board[at(3, 3)] = harvest(4)
     const [dx, dy] = DELTA[direction]
     const result = simulateEmission(board, { power: 20, source: { x: 3 - dx, y: 3 - dy, direction } })
     expect(result.gain).toBe(100)
@@ -40,9 +40,9 @@ describe('récolte et propagation', () => {
   test('exemple de référence : +2 → ×2 en T → deux +5 = 22 Éclats', () => {
     const board = emptyBoard()
     board[0] = harvest(1)
-    board[1] = multiplier('ESW', 5)
-    board[2] = harvest(3)
-    board[8] = harvest(3)
+    board[1] = multiplier('ESW', 9)
+    board[2] = harvest(4)
+    board[8] = harvest(4)
     const result = emit(board)
     expect(result.gain).toBe(22)
     expect(result.events.filter((e) => e.type === 'harvest').map((e) => e.gain)).toEqual([2, 10, 10])
@@ -51,7 +51,7 @@ describe('récolte et propagation', () => {
   test.each(SETTINGS)('sertissage %s : les quatre entrées sont vérifiées', (setting) => {
     for (const direction of DIRECTIONS) {
       const board = emptyBoard()
-      board[at(3, 3)] = multiplier(setting, 5)
+      board[at(3, 3)] = multiplier(setting, 9)
       const [dx, dy] = DELTA[direction]
       const result = simulateEmission(board, { power: 10, source: { x: 3 - dx, y: 3 - dy, direction } })
       const entrance = DIRECTIONS[(DIRECTIONS.indexOf(direction) + 2) % 4]!
@@ -70,7 +70,7 @@ describe('récolte et propagation', () => {
     board[at(2, 0)] = multiplier('SW')
     board[at(0, 1)] = multiplier('NE')
     board[at(1, 1)] = harvest(1)
-    board[at(2, 1)] = harvest(3)
+    board[at(2, 1)] = harvest(4)
     const result = emit(board)
     const crossings = result.events.filter((e) => e.type === 'harvest' && e.to.x === 2 && e.to.y === 1)
     expect(crossings).toHaveLength(2)
@@ -79,7 +79,7 @@ describe('récolte et propagation', () => {
   })
   test('ordre des gemmes : amplifier avant la récolte est plus rentable', () => {
     const board = emptyBoard()
-    board[0] = multiplier('EW', 5); board[1] = harvest(3)
+    board[0] = multiplier('EW', 9); board[1] = harvest(4)
     expect(emit(board).gain).toBe(10)
     ;[board[0], board[1]] = [board[1]!, board[0]!]
     expect(emit(board).gain).toBe(5)
@@ -118,6 +118,28 @@ describe('récolte et propagation', () => {
 })
 
 describe('fusion et intégrité des objets', () => {
+  test.each(Array.from({ length: 11 }, (_, level) => level))('récolte au niveau d’indice %s : chaque fusion ajoute exactement 1', (level) => {
+    const first = harvest(level), second = harvest(level)
+    const result = mergeGems(first, second)!
+    expect(gemValue(first)).toBe(level + 1)
+    expect(gemValue(result)).toBe(level + 2)
+    expect(gemValue(result) - gemValue(first)).toBe(1)
+    expect(result.level).toBe(level + 1)
+  })
+  test.each(Array.from({ length: 11 }, (_, level) => level))('multiplicatrice au niveau d’indice %s : chaque fusion ajoute exactement 0,1 au facteur', (level) => {
+    const first = multiplier('ESW', level), second = multiplier('ESW', level)
+    const result = mergeGems(first, second)!
+    expect(gemValue(first)).toBe((level + 11) / 10)
+    expect(gemValue(result)).toBe((level + 12) / 10)
+    expect(gemValue(result) - gemValue(first)).toBeCloseTo(0.1, 12)
+    expect(result).toMatchObject({ level: level + 1, setting: 'ESW' })
+  })
+  test('les deux catégories s’arrêtent au niveau 12 : +12 et ×2,2', () => {
+    expect(gemValue(harvest(11))).toBe(12)
+    expect(gemValue(multiplier('EW', 11))).toBe(2.2)
+    expect(mergeGems(harvest(11), harvest(11))).toBeNull()
+    expect(mergeGems(multiplier('EW', 11), multiplier('EW', 11))).toBeNull()
+  })
   test('fusion de deux récoltes identiques', () => {
     const result = mergeGems(harvest(), harvest())!
     expect(result.kind).toBe('harvest')
@@ -158,6 +180,17 @@ describe('fusion et intégrité des objets', () => {
 })
 
 describe('économie, horloge et sauvegarde', () => {
+  test('une sauvegarde existante garde niveaux, objets, monnaie et investissements avec les nouvelles valeurs linéaires', () => {
+    const game = createInitialGame()
+    game.coins = 123.456
+    game.board[28] = { id: 'gem-1', kind: 'harvest', level: 11, invested: 700 }
+    game.inventory[0] = { id: 'gem-2', kind: 'multiplier', level: 11, setting: 'ESW', invested: 900 }
+    const restored = decodeSave(JSON.stringify(game))
+    expect(restored.warning).toBe('')
+    expect(restored.game).toEqual(game)
+    expect(gemValue(restored.game.board[28]!)).toBe(12)
+    expect(gemValue(restored.game.inventory[0]!)).toBe(2.2)
+  })
   test('nouvelle partie : grille vide, réserve dormante vide et premier achat abordable', () => {
     const game = createInitialGame()
     expect(game.board.every((gem) => gem === null)).toBe(true)

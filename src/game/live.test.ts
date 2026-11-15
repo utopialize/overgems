@@ -114,7 +114,7 @@ describe('impulsions vivantes', () => {
   })
   test('recycler un amplificateur déjà traversé ne retire pas la puissance acquise', () => {
     const game = createInitialGame()
-    game.board[28] = { id: 'gem-1', kind: 'multiplier', level: 5, setting: 'EW', invested: 10 }
+    game.board[28] = { id: 'gem-1', kind: 'multiplier', level: 9, setting: 'EW', invested: 10 }
     game.board[30] = { id: 'gem-2', kind: 'harvest', level: 0 }
     let session = sessionReducer(createSession(game, 0), { type: 'tick', now: 5000 })
     session = sessionReducer(session, { type: 'tick', now: 5800 })
@@ -138,7 +138,7 @@ describe('impulsions vivantes', () => {
   })
   test('une bifurcation crée des branches de puissance intégrale et des historiques distincts', () => {
     const game = createInitialGame()
-    game.board[28] = { id: 'gem-1', kind: 'multiplier', level: 5, setting: 'ESW' }
+    game.board[28] = { id: 'gem-1', kind: 'multiplier', level: 9, setting: 'ESW' }
     const initial = createEmission()
     const next = advanceEmission(game.board, initial)
     expect(next.frontier.map((pulse) => pulse.energy)).toEqual([2, 2])
@@ -150,8 +150,8 @@ describe('impulsions vivantes', () => {
   })
   test('les arrivées incrémentales et la prévision statique donnent exactement les mêmes événements', () => {
     const game = createInitialGame()
-    game.board[30] = { id: 'gem-1', kind: 'multiplier', level: 5, setting: 'ESW' }
-    game.board[32] = { id: 'gem-2', kind: 'harvest', level: 3 }
+    game.board[30] = { id: 'gem-1', kind: 'multiplier', level: 9, setting: 'ESW' }
+    game.board[32] = { id: 'gem-2', kind: 'harvest', level: 4 }
     game.board[44] = { id: 'gem-3', kind: 'harvest', level: 1 }
     let running = createEmission()
     while (!running.done) running = advanceEmission(game.board, running)
@@ -170,7 +170,7 @@ describe('impulsions vivantes', () => {
   test('suspendre sauvegarde seulement les gains déjà récoltés, sans simuler les futures rencontres', () => {
     const game = createInitialGame()
     game.board[28] = { id: 'gem-1', kind: 'harvest', level: 0 }
-    game.board[34] = { id: 'gem-2', kind: 'harvest', level: 3 }
+    game.board[34] = { id: 'gem-2', kind: 'harvest', level: 4 }
     let session = sessionReducer(createSession(game, 0), { type: 'tick', now: 5000 })
     session = sessionReducer(session, { type: 'tick', now: 5800 })
     expect(session.game.coins).toBe(31)

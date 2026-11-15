@@ -79,6 +79,13 @@ la source est libérée. La catégorie, le niveau et le sertissage exact doivent
 correspondre. Les niveaux maximaux ne fusionnent plus. Une destination occupée
 incompatible n'est jamais écrasée.
 
+Les douze niveaux suivent une progression linéaire : la récolte vaut le niveau
+affiché (`+1`, `+2`… `+12`) et le facteur vaut `1 + niveau affiché / 10`
+(`×1,1`, `×1,2`… `×2,2`). Une fusion ajoute donc toujours 1 à la récolte ou
+0,1 au facteur. Au niveau 12, la fusion est refusée et conserve les deux gemmes.
+Les sauvegardes stockent les niveaux et adoptent automatiquement ces valeurs,
+sans changer le solde, les objets, leurs attaches ou leurs coûts investis.
+
 ## Affichage
 
 Le plateau et la boutique tiennent dans la hauteur dynamique du viewport, sans

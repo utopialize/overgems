@@ -23,6 +23,8 @@
   avec Vitest. Le rendu PixiJS ne doit jamais créditer d'Éclats.
 - Les sertissages sont fixes : ne pas ajouter de rotation ni rendre compatibles
   des fusions dont les attaches diffèrent. Préserver les objets sur action refusée.
+- La progression des douze niveaux est linéaire : récoltes de +1 à +12 (+1 par
+  fusion), multiplicatrices de ×1,1 à ×2,2 (+0,1 par fusion). Ne pas dépasser N12.
 - Le jeu doit tenir dans un seul écran (`100dvh`), sans scroll de la page ni du
   plateau. La grille s'adapte à l'espace restant ; ses cases peuvent devenir plus
   petites que 44 px sur les écrans courts. Garder les autres contrôles à 44 px.

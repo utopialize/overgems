@@ -6,8 +6,8 @@ export const RULES = {
   maxEnergy: 1e12, maxCoins: 1e15, rerollCost: 5, rerollPriceStep: 1,
   purchasePriceStep: 1, purchasesPerPriceStep: 5,
 } as const
-export const HARVEST_VALUES = [1, 2, 3, 5, 8, 12, 18, 27, 40, 60, 90, 135] as const
-export const MULTIPLIER_VALUES = [1.1, 1.2, 1.3, 1.5, 1.7, 2, 2.5, 3, 3.5, 4, 5, 6] as const
+export const HARVEST_VALUES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const
+export const MULTIPLIER_VALUES = [1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2, 2.1, 2.2] as const
 export const DIRECTIONS: readonly Direction[] = ['N', 'E', 'S', 'W']
 export const SETTINGS: readonly Setting[] = ['EW', 'NS', 'NE', 'ES', 'SW', 'NW', 'NES', 'ESW', 'NSW', 'NEW', 'NESW']
 export const OPPOSITE: Record<Direction, Direction> = { N: 'S', E: 'W', S: 'N', W: 'E' }

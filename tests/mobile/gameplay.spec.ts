@@ -118,8 +118,8 @@ test('achat et déplacement au clavier, sans scroll', async ({ page }) => {
 
 test('à 5 secondes, brillance et valeurs flottantes correspondent au vrai flux', async ({ page }, testInfo) => {
   const game = createInitialGame()
-  game.board[28] = { id: 'gem-1', kind: 'multiplier', level: 3, setting: 'EW' }
-  game.board[29] = { id: 'gem-2', kind: 'harvest', level: 3 }
+  game.board[28] = { id: 'gem-1', kind: 'multiplier', level: 4, setting: 'EW' }
+  game.board[29] = { id: 'gem-2', kind: 'harvest', level: 4 }
   await page.addInitScript((state) => { localStorage.setItem('overgems.save.v1', JSON.stringify(state)) }, game)
   await page.goto('/')
   await expect(page.locator('canvas')).toHaveCount(1)

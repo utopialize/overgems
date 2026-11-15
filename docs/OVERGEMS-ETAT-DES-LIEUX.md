@@ -1,7 +1,7 @@
 # OVERGEMS — Audit d’avancement et état des lieux V0.1
 
 Date : **15 novembre 2026**. État examiné : branche `develop`, base Git
-`35e147c`, puis ajout local des palettes de gemmes par niveau. Le commit `35e147c`
+`ec34a77`, puis passage local à la progression linéaire des gemmes. Le commit `35e147c`
 contient l'audit et les deux corrections de gameplay décrites ci-dessous ; le
 premier MVP correspond à `57afe23`. `package.json` porte
 encore la version technique `0.0.0`. « V0.1 » désigne ici le périmètre produit.
@@ -12,6 +12,8 @@ deux corrections ont ensuite été réalisées : protection du renouvellement sa
 revenu et activation économique unique d’une gemme par branche. Le présent état
 des lieux décrit le code corrigé et conserve la trace des constats initiaux.
 À la demande suivante, la progression chromatique sur douze niveaux a été ajoutée.
+La progression économique a ensuite été fixée à +1 par fusion de récoltes et
++0,1 par fusion de multiplicatrices, avec les plafonds +12 et ×2,2.
 
 Les sources sont le code, les tests, l'historique Git disponible et les
 documents du dépôt : [prompt initial](<OVERGEMS - MASTER DEV PROMPT V01.md>),
@@ -129,21 +131,22 @@ continuent à router et bifurquer, sans appliquer de nouveau le facteur.
 
 Le catalogue fixe douze niveaux communs aux deux catégories. L’indice stocké
 dans les données commence à zéro ; le niveau présenté au joueur commence à un.
+La récolte vaut le niveau affiché ; le facteur vaut `1 + niveau affiché / 10`.
 
 | Niveau affiché | Récolte | Multiplicatrice |
 | --- | --- | --- |
 | 1 | +1 | ×1,1 |
 | 2 | +2 | ×1,2 |
 | 3 | +3 | ×1,3 |
-| 4 | +5 | ×1,5 |
-| 5 | +8 | ×1,7 |
-| 6 | +12 | ×2 |
-| 7 | +18 | ×2,5 |
-| 8 | +27 | ×3 |
-| 9 | +40 | ×3,5 |
-| 10 | +60 | ×4 |
-| 11 | +90 | ×5 |
-| 12 | +135 | ×6 |
+| 4 | +4 | ×1,4 |
+| 5 | +5 | ×1,5 |
+| 6 | +6 | ×1,6 |
+| 7 | +7 | ×1,7 |
+| 8 | +8 | ×1,8 |
+| 9 | +9 | ×1,9 |
+| 10 | +10 | ×2 |
+| 11 | +11 | ×2,1 |
+| 12 | +12 | ×2,2 |
 
 La puissance utilise les nombres JavaScript, sans arrondi volontaire après chaque
 amplification. Les montants monétaires sont arrondis à **six décimales** par
@@ -217,6 +220,8 @@ Sources : `src/game/fusion.ts`, `state.ts`.
 Deux instances différentes fusionnent uniquement si leur catégorie, leur niveau
 et leur valeur sont identiques. Pour les multiplicatrices, la chaîne de
 sertissage doit être exactement la même. Le niveau 12 ne fusionne plus.
+Une fusion ajoute exactement 1 à la récolte ou 0,1 au facteur, sans exception
+sur les paliers élevés. Le refus au plafond conserve les deux objets.
 
 La destination reçoit la gemme du niveau suivant, conserve son identité et son
 sertissage ; la source est libérée. Le coût investi devient la somme des coûts
@@ -334,6 +339,9 @@ aussi à la suspension/page quittée. La validation vérifie notamment dimension
 nombres finis bornés, niveaux, sertissages et unicité des identifiants. Les
 anciennes sauvegardes V1 sans compteurs reçoivent zéro, l’ancien réglage de vitesse
 est retiré et les prix d’offres sont recalculés au barème actuel.
+Les valeurs des gemmes étant calculées depuis leurs niveaux, les anciennes
+parties adoptent le catalogue linéaire en conservant niveaux, identifiants,
+investissements et solde. Aucune nouvelle version de sauvegarde n'est nécessaire.
 
 Une sauvegarde invalide est signalée et remplacée par une partie neuve ; la
 sauvegarde automatique peut ensuite écraser la donnée invalide. Aucun exemplaire
@@ -353,7 +361,7 @@ Changer d’hôte, de protocole ou de port ouvre un autre espace localStorage.
 
 ## 3. Évolutions reconstituables
 
-L’historique disponible contient **cinq commits**. Il ne permet pas de dater
+L’historique disponible contient **six commits**. Il ne permet pas de dater
 chaque itération de gameplay à l’intérieur du MVP : presque tout le jeu est
 regroupé dans le commit MVP. Aucun échange de conversation n’est nécessaire
 pour les constats ci-dessous, et aucune chronologie intermédiaire n’est inventée.
@@ -365,6 +373,7 @@ pour les constats ci-dessous, et aucune chronologie intermédiaire n’est inven
 | `68758af`, 14/11 à 23:58 | Socle responsive, safe areas, adaptation du canvas et installation de Playwright. L’écran reste une démonstration PixiJS. |
 | `57afe23`, 15/11 à 11:36 | Remplacement de la démo par le jeu : moteur, économie, interactions, persistance, habillage, documentation et tests. Publication du MVP ; `main` et `develop` pointent initialement dessus. |
 | `35e147c`, 15/11 à 11:56 | Audit et corrections du renouvellement sans revenu et de la répétition d'effet d'une gemme déplacée. |
+| `ec34a77`, 15/11 à 12:20 | Palettes visuelles par niveau, contrôles de contraste, tests mobiles et documentation. |
 
 Les arbitrages visibles par rapport au prompt original sont substantiels :
 
@@ -389,8 +398,10 @@ renouvellement qui épuiserait le budget d’un circuit sans revenu, avec récol
 abordable garantie dans un tirage accepté ; mémorisation des gemmes activées par
 branche pour empêcher la réutilisation économique d’une instance déplacée.
 Les règles, l’aide et les scénarios de régression ont été mis à jour.
-L'évolution locale suivante donne aux gemmes une palette propre à chacun des
-douze niveaux, sans changement d'économie ni de propagation.
+L'évolution suivante donne aux gemmes une palette propre à chacun des douze
+niveaux. La modification locale actuelle remplace le catalogue non linéaire
+par +1 à +12 et ×1,1 à ×2,2. Le barème des prix et la composition multiplicative
+de la puissance lors des traversées restent ceux décrits dans ce document.
 
 Les régressions désormais protégées par les tests concernent notamment le double
 débit, les pertes sur refus ou annulation tactile, le paiement avant dépôt, le
@@ -529,15 +540,15 @@ retestée dans cet audit.
 
 | Vérification | Résultat constaté le 15/11/2026 |
 | --- | --- |
-| `npm run check` | Réussi après correction : Oxlint, 96 tests Vitest, compilation TypeScript et build Vite. |
-| `npm run test:mobile` | Réussi après ajout des palettes : 41 scénarios Chromium, environ 1 min 20 s. |
+| `npm run check` | Réussi après progression linéaire : Oxlint, 120 tests Vitest, compilation TypeScript et build Vite. |
+| `npm run test:mobile` | Réussi après progression linéaire : 43 scénarios Chromium, environ 1 min 20 s. |
 | `npm run test:mobile -- tests/mobile/layout.spec.ts` | 12 scénarios réussis après la mise à jour de l’aide ; ses sept pages tiennent en paysage. |
 | Examen des captures | Captures initiales : grille neuve, paysage et réseau vivant. Puis palettes des 24 gemmes en portrait 390 × 844 et paysage 568 × 320. |
 | Sondes initiales, puis tests de régression | Les deux problèmes initiaux ont été reproduits, corrigés puis couverts par des assertions moteur et navigateur. |
 
 Les tests produisent des artefacts ignorés dans `test-results/` et le build dans
 `dist/`. Après les deux corrections et leur explication dans l'aide, les dernières
-modifications portent sur les palettes par niveau et leurs vérifications. Le build
+modifications portent sur les palettes, la progression linéaire et leurs vérifications. Le build
 produit notamment deux chunks d’environ 249 et 261 ko avant compression
 (environ 79 et 77 ko gzip), plus les chunks partagés ; ce n’est pas une mesure
 du téléchargement total ni des performances d’un mobile.
@@ -546,7 +557,7 @@ du téléchargement total ni des performances d’un mobile.
 
 | Fichier | Cas exécutés | Ce qu’ils vérifient principalement |
 | --- | --- | --- |
-| `src/game/game.test.ts` | 54 | Quatre directions de récolte ; onze sertissages et leurs entrées ; branchements, croisements, ordre économique, boucles, limites, déterminisme ; fusion, intégrité, achats, horloge, persistance et dix minutes simulées. |
+| `src/game/game.test.ts` | 78 | Propagation, sertissages, référence à 22, fusion et économie ; onze paliers linéaires par catégorie, plafonds +12/×2,2, restauration des niveaux avec le nouveau catalogue, horloge et dix minutes simulées. |
 | `src/game/balance.test.ts` | 20 | Paliers, compteurs, remboursements, migrations ; refus du renouvellement bloquant, six graines avec budget limité/niveaux débloqués, circuit productif, récolte hors trajet et inflation. |
 | `src/game/live.test.ts` | 15 | Propagation vivante, conservation des flux, suspension ; effet non répété d’une récolte/multiplicatrice déplacée, héritage indépendant des activations et réactivation à l’émission suivante. |
 | `src/game/impacts.test.ts` | 7 | Puissance composée/affichage ; collisions au contact ; branches sœurs ; obstacle ajouté, déplacé ou posé après une arrivée. |
@@ -555,6 +566,7 @@ du téléchargement total ni des performances d’un mobile.
 | `tests/mobile/balance.spec.ts` | 7 | Renouvellement sauvegardé puis refus sans perte, achat encore possible ; recyclage et annulation, palier et remboursement après fusion. |
 | `tests/mobile/live.spec.ts` | 7 | Bulles, pose/déplacement, taille/vitesse/arrondi, couches, collisions ; absence de répétition d’effet après deux déplacements de la même récolte ou multiplicatrice. |
 | `tests/mobile/palette.spec.ts` | 3 | 24 palettes distinctes, luminosité croissante, contraste d'au moins 4,5:1 sur toutes les facettes au repos en portrait/paysage ; cohérence du glisser, évolution à la fusion et persistance. |
+| `tests/mobile/fusion.spec.ts` | 2 | Pour chaque catégorie : fusion au quatrième niveau sans saut, achat avec fusion, plafond N12, refus sans perte et sauvegarde/rechargement. |
 
 Les neuf viewports sont 320 × 568, 360 × 640, 390 × 664, 390 × 844,
 412 × 915, 568 × 320, 844 × 390, 768 × 1024 et 1280 × 800. Les contrôles de mise
@@ -633,6 +645,7 @@ Aucun échec n’a été observé dans les suites relancées. Cela ne suffit pas
 | Départ déjà productif | Grille vide et 30 Éclats | Arbitrage opposé au prompt initial ; onboarding à réévaluer. |
 | Boutique → inventaire et réserve visible | Boutique → plateau atomique ; réserve dormante | Parcours remplacé ; données/opérations historiques conservées. |
 | Fusion stricte entre toutes zones | Complète dans le moteur ; parcours actifs plateau et boutique | Partiel côté interface pour la réserve. |
+| Progression des valeurs configurable | +1 par fusion pour les récoltes, +0,1 pour les facteurs ; douze niveaux | Catalogue initial remplacé par la progression linéaire demandée. |
 | Tutoriel contextuel, progression mémorisée | Aide facultative de sept pages ; champ historique non utilisé | Partiel. |
 | Fiche concise et indicateurs réels | Description en statut/noms accessibles ; solde et dernier flux | Partiel ; pas de fiche dédiée ni moyenne récente visible. |
 | Gemmes évoluant visuellement avec leur niveau | Nuances et luminosité progressives sur douze niveaux ; silhouette et attaches stables | Progression chromatique réalisée ; ornements et halos de niveau non ajoutés. |

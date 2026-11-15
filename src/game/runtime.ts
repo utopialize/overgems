@@ -2,10 +2,10 @@ import { RULES, roundCoins } from './catalog'
 import { createEmission, advanceEmission, collisionReason, resolveImpacts, CONTACT_PROGRESS } from './engine'
 import type { RunningEmission } from './engine'
 import { buyOfferOnBoard, rerollOffers, transferGem, recycleGem } from './state'
-import type { GameState, Settings, Slot } from './types'
+import type { GameState, Settings, Slot, MineralId } from './types'
 
 export type ActiveEmission = RunningEmission & { id: number; start: number; stepMs: number; completedAt: number | null }
-export type Session = { game: GameState; pending: ActiveEmission[]; nextAt: number; serial: number; notice: string; noticeError: boolean; warning: boolean; mergedId: string | null; boardChangedAt: number }
+export type Session = { game: GameState; pending: ActiveEmission[]; nextAt: number; serial: number; notice: string; noticeError: boolean; warning: boolean; mergedId: string | null; boardChangedAt: number; discovery: { mineral: MineralId } | null }
 export type Action =
   | { type: 'tick'; now: number }
   | { type: 'suspend'; now: number }
@@ -16,15 +16,16 @@ export type Action =
   | { type: 'recycle'; index: number; gemId: string; now?: number }
   | { type: 'settings'; patch: Partial<Settings> }
   | { type: 'tutorial'; step: number }
-  | { type: 'notice'; message: string }
+  | { type: 'notice'; message: string; error?: boolean }
+  | { type: 'dismiss-discovery' }
   | { type: 'reset'; game: GameState; now: number }
 
 export function createSession(game: GameState, now: number): Session {
-  return { game, pending: [], nextAt: now + RULES.periodMs, serial: 0, notice: '', noticeError: false, warning: false, mergedId: null, boardChangedAt: now }
+  return { game, pending: [], nextAt: now + RULES.periodMs, serial: 0, notice: '', noticeError: false, warning: false, mergedId: null, boardChangedAt: now, discovery: null }
 }
 
 function nextImpact(session: Session, wave: ActiveEmission): number {
-  return wave.completedAt === null && wave.frontier.some((pulse) => collisionReason(session.game.board, pulse))
+  return wave.completedAt === null && wave.frontier.some((pulse) => collisionReason(session.game.board, pulse, session.game.stones))
     ? Math.max(session.boardChangedAt, wave.start + (wave.step + CONTACT_PROGRESS) * RULES.stepMs) : Infinity
 }
 
@@ -53,8 +54,8 @@ function advanceSession(session: Session, now: number): Session {
     if (index === -1 || arrival > now) break
     const previous = pending[index]!
     const advanced = arrival === nextImpact(session, previous)
-      ? resolveImpacts(game.board, previous, Math.min(1, (arrival - previous.start) / RULES.stepMs - previous.step))
-      : advanceEmission(game.board, previous)
+      ? resolveImpacts(game.board, previous, Math.min(1, (arrival - previous.start) / RULES.stepMs - previous.step), game.stones)
+      : advanceEmission(game.board, previous, game.stones)
     const earned = roundCoins(advanced.result.gain - previous.result.gain)
     if (earned > 0) game = { ...game, coins: roundCoins(game.coins + earned),
       stats: { ...game.stats, earned: roundCoins(game.stats.earned + earned) } }
@@ -77,7 +78,8 @@ function advanceSession(session: Session, now: number): Session {
 
 export function sessionReducer(session: Session, action: Action): Session {
   if (action.type === 'reset') return createSession(action.game, action.now)
-  if (action.type === 'notice') return { ...session, notice: action.message, noticeError: false }
+  if (action.type === 'notice') return { ...session, notice: action.message, noticeError: Boolean(action.error) }
+  if (action.type === 'dismiss-discovery') return { ...session, discovery: null }
   if (action.type === 'suspend' || action.type === 'resume') return { ...suspendSession(session), nextAt: action.now + RULES.periodMs }
   if (action.type === 'tick') return advanceSession(session, action.now)
   if (action.type === 'settings') {
@@ -94,6 +96,7 @@ export function sessionReducer(session: Session, action: Action): Session {
     : transferGem(session.game, action.from, action.to)
   // Editing the board NEVER clears, settles, restarts or recalculates an existing wave.
   const updated = { ...session, game: transaction.game, notice: transaction.message, noticeError: !transaction.ok,
+    discovery: transaction.found ? { mineral: transaction.found } : session.discovery,
     boardChangedAt: transaction.ok && action.type !== 'reroll' ? action.now ?? session.boardChangedAt : session.boardChangedAt,
     mergedId: transaction.merged ? (action.type === 'buy'
       ? transaction.game.board[action.destination]!.id

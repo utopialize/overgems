@@ -4,7 +4,7 @@
 
 Une source extérieure à gauche de la ligne 5 émet une puissance de 1 toutes les
 5 secondes. Le plateau compte 7 colonnes et 9 lignes. Une case vide laisse le
-flux continuer tout droit, sans gain ni amplification. Une connectique fermée
+flux continuer tout droit, sans gain ni amplification. Un rocher, une connectique fermée
 ou le bord termine une branche.
 
 Une récolte **+v** accepte les quatre directions, rapporte
@@ -34,9 +34,42 @@ propre historique. La limite globale d'événements est 4096, la puissance
 maximale par branche 10¹² et le solde maximal 10¹⁵. Une alerte signale une limite
 exceptionnelle ; les effets peuvent être simplifiés sans changer les gains.
 
-## Collection
+## Terrain et minéraux
 
-Une nouvelle partie possède une grille vide et 30 Éclats. Le joueur glisse
+Une nouvelle partie possède 18 rochers, répartis à partir de la graine de partie.
+La colonne d'entrée de la source et les trois lignes centrales restent libres.
+Les cases de pierre refusent achats et déplacements de gemmes ; les rochers ne
+se déplacent pas, ne fusionnent pas et bloquent réellement les impulsions au contact.
+
+La pioche apparaît aléatoirement en boutique : 20 % des tirages tant qu'il reste
+des rochers. Les trois offres de départ restent les gemmes de démarrage.
+La pioche coûte 8 Éclats fixes et se consomme directement sur une pierre, par
+glisser ou sélection puis destination. Paiement, retrait du rocher et remplacement
+de l'offre sont atomiques. Une pose refusée, annulée ou périmée ne change rien.
+L'outil n'entre jamais en réserve ou sur le plateau et ne compte pas dans les
+achats de gemmes. Au dernier rocher, les autres outils proposés sont remplacés.
+Sans revenu du circuit, l'excavation doit laisser le prix courant d'une récolte N1.
+
+Chaque excavation a 25 % de chance de révéler un minéral, avec une découverte
+garantie toutes les quatre excavations. Les espèces encore absentes sont
+prioritaires : Quartz rose, Fluorite, Pyrite et Azurite. Après les quatre espèces,
+les doublons augmentent leurs quantités. Aucun bonus ni revenu n'y est attaché.
+Le hasard d'excavation est séparé de celui des offres et sauvegardé. Un aperçu
+n'avance aucun tirage réel et ne révèle pas de trouvaille. La collection s'ouvre
+via le cristal du bandeau ; une découverte s'annonce brièvement sur l'en-tête de
+boutique, sans déplacer la grille ni couvrir les offres.
+
+Creuser avant le contact laisse continuer la branche déjà partie. Après le
+contact, une branche éclatée reste terminée. Les autres branches ne sont pas
+interrompues. Théorie, contribution et aperçus tiennent compte des rochers actuels.
+
+Les sauvegardes antérieures sans terrain sont migrées avec des cases libres,
+sans obstacle ajouté sous les gemmes. L'ancien champ d'offre `gem` devient `item` ;
+la progression est conservée. Seule une nouvelle partie introduit les rochers.
+
+## Achats et fusions
+
+Une nouvelle partie possède une grille sans gemmes et 30 Éclats. Le joueur glisse
 une offre de la boutique vers une case vide du plateau pour acheter. Le paiement,
 la pose et le remplacement de l'offre constituent une seule transaction. Un
 dépôt annulé, incompatible, périmé ou sans fonds ne coûte rien. Une offre peut
@@ -166,7 +199,7 @@ La puissance n'est pas arrondie à chaque multiplication. Par exemple, trois ×1
 produisent 1,1, puis 1,21, puis 1,331 ; la bulle affiche 1,1, 1,2, puis 1,3. Un
 quatrième ×1,1 donne 1,4641, affiché 1,5. Les récoltes utilisent la puissance interne.
 
-Une branche heurtant un bord ou une connexion fermée termine au contact, sans
+Une branche heurtant un rocher, un bord ou une connexion fermée termine au contact, sans
 attendre le centre de la cellule extérieure ou de la gemme bloquante. La bulle
 disparaît et six petites particules se dissipent en 280 ms. Les branches sœurs
 continuent leur route. Les particules sont omises en mode réduit.
@@ -178,7 +211,7 @@ Le moteur calcule chaque arrivée sur la case concernée au moment de son passag
 arrivée. La statistique du dernier flux est mise à jour lorsque toutes ses
 branches sont terminées. Les animations PixiJS ne produisent aucune monnaie.
 
-Les placements, déplacements, fusions et recyclages conservent les impulsions :
+Les excavations, placements, déplacements, fusions et recyclages conservent les impulsions :
 identité, puissance acquise, historique et trajet en cours. La prochaine case
 rencontrera la gemme présente à l'arrivée. Aucun gain futur n'est attribué en
 avance lors d'une manipulation du plateau.
@@ -188,6 +221,7 @@ conservant seulement les gains déjà récoltés. Aucun rattrapage hors ligne ni
 réexécution de ces parcours n'est effectué à la reprise.
 
 Les valeurs, attaches, positions, réserve, offres, solde, statistiques,
+terrain, compteur et hasard d'excavation, collection de minéraux,
 compteurs d'achats et de renouvellements, investissements, paramètres et étape
 du tutoriel sont sauvegardés localement. Les sauvegardes
 invalides sont signalées et remplacées par une partie initiale. Un stockage

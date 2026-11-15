@@ -17,6 +17,7 @@ const emit = (board: (Gem | null)[]) => simulateEmission(board, { source: { x: -
 // An explicit producing fixture keeps propagation tests independent of the empty start.
 function createProducingGame() {
   const game = createInitialGame()
+  game.stones.fill(false)
   game.board[28] = { id: 'gem-1', kind: 'harvest', level: 1 }
   game.board[29] = { id: 'gem-2', kind: 'multiplier', level: 4, setting: 'ESW' }
   game.board[30] = { id: 'gem-3', kind: 'harvest', level: 0 }
@@ -195,25 +196,25 @@ describe('économie, horloge et sauvegarde', () => {
     const game = createInitialGame()
     expect(game.board.every((gem) => gem === null)).toBe(true)
     expect(game.inventory.every((gem) => gem === null)).toBe(true)
-    expect(game.offers[0]!.gem.kind).toBe('harvest')
+    expect(game.offers[0]!.item.kind).toBe('harvest')
     expect(game.coins).toBeGreaterThanOrEqual(game.offers[0]!.price)
     expect(validateGame(game)).toBe(true)
   })
   test('achat directement posé : un seul débit, sans passage par la réserve', () => {
     const game = createInitialGame()
     const offer = game.offers[0]!
-    const result = buyOfferOnBoard(game, 0, 28, offer.gem.id)
+    const result = buyOfferOnBoard(game, 0, 28, offer.item.id)
     expect(result.ok).toBe(true)
-    expect(result.game.board[28]).toEqual({ ...offer.gem, invested: offer.price })
+    expect(result.game.board[28]).toEqual({ ...offer.item, invested: offer.price })
     expect(result.game.coins).toBe(game.coins - offer.price)
     expect(result.game.inventory).toBe(game.inventory)
-    expect(result.game.offers[0]!.gem.id).not.toBe(offer.gem.id)
+    expect(result.game.offers[0]!.item.id).not.toBe(offer.item.id)
     expect(validateGame(result.game)).toBe(true)
   })
   test('achat et fusion en une pose : niveau augmenté, prix unique', () => {
     const game = createInitialGame()
     game.board[28] = { id: 'gem-1', kind: 'harvest', level: 0 }
-    const result = buyOfferOnBoard(game, 0, 28, game.offers[0]!.gem.id)
+    const result = buyOfferOnBoard(game, 0, 28, game.offers[0]!.item.id)
     expect(result.merged).toBe(true)
     expect(result.game.board[28]).toEqual({ id: 'gem-1', kind: 'harvest', level: 1, invested: 12 })
     expect(result.game.coins).toBe(24)
@@ -223,12 +224,12 @@ describe('économie, horloge et sauvegarde', () => {
     const game = createInitialGame()
     game.board[28] = { id: 'gem-1', kind: 'multiplier', level: 0, setting: 'EW' }
     for (const destination of [28, -1, 63, 0.5, NaN]) {
-      expect(buyOfferOnBoard(game, 0, destination, game.offers[0]!.gem.id).game).toBe(game)
+      expect(buyOfferOnBoard(game, 0, destination, game.offers[0]!.item.id).game).toBe(game)
     }
     expect(buyOfferOnBoard(game, 0, 29, 'gem-0').game).toBe(game)
     expect(buyOfferOnBoard(game, 99, 29, 'gem-0').game).toBe(game)
     game.coins = 0
-    expect(buyOfferOnBoard(game, 0, 29, game.offers[0]!.gem.id).game).toBe(game)
+    expect(buyOfferOnBoard(game, 0, 29, game.offers[0]!.item.id).game).toBe(game)
   })
   test('l’horloge émet exactement à 5 secondes, avec une puissance initiale de 1', () => {
     const session = createSession(createInitialGame(), 0)
@@ -244,13 +245,13 @@ describe('économie, horloge et sauvegarde', () => {
   })
   test('un achat périmé ne redébite pas et une pose refusée ne coupe pas le flux', () => {
     let session = createSession(createProducingGame(), 0)
-    const offerId = session.game.offers[0]!.gem.id
+    const offerId = session.game.offers[0]!.item.id
     session = sessionReducer(session, { type: 'buy', index: 0, destination: 0, offerId })
     const balance = session.game.coins
     const duplicate = sessionReducer(session, { type: 'buy', index: 0, destination: 1, offerId })
     expect(duplicate.game.coins).toBe(balance)
     const emitting = sessionReducer(session, { type: 'tick', now: 5000 })
-    const denied = sessionReducer(emitting, { type: 'buy', index: 2, destination: 29, offerId: emitting.game.offers[2]!.gem.id })
+    const denied = sessionReducer(emitting, { type: 'buy', index: 2, destination: 29, offerId: emitting.game.offers[2]!.item.id })
     expect(denied.game).toBe(emitting.game)
     expect(denied.pending).toBe(emitting.pending)
   })
@@ -263,8 +264,8 @@ describe('économie, horloge et sauvegarde', () => {
     const game = createProducingGame()
     const next = buyOffer(game, 0).game
     expect(next.coins).toBe(24)
-    expect(next.inventory[2]).toEqual({ ...game.offers[0]!.gem, invested: game.offers[0]!.price })
-    expect(next.offers[0]!.gem.id).not.toBe(game.offers[0]!.gem.id)
+    expect(next.inventory[2]).toEqual({ ...game.offers[0]!.item, invested: game.offers[0]!.price })
+    expect(next.offers[0]!.item.id).not.toBe(game.offers[0]!.item.id)
     expect(next.offers.slice(1)).toEqual(game.offers.slice(1))
     expect(validateGame(next)).toBe(true)
   })
@@ -281,7 +282,7 @@ describe('économie, horloge et sauvegarde', () => {
     const game = createProducingGame()
     expect(rerollOffers(game)).toEqual(rerollOffers(game))
     expect(rerollOffers(game).game.coins).toBe(game.coins - RULES.rerollCost)
-    expect(new Set(rerollOffers(game).game.offers.map((o) => o.gem.id)).size).toBe(3)
+    expect(new Set(rerollOffers(game).game.offers.map((o) => o.item.id)).size).toBe(3)
   })
   test('les récoltes arrivent au passage et la statistique de fin est créditée une seule fois', () => {
     const initial = createSession(createProducingGame(), 0)

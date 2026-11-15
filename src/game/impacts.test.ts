@@ -56,7 +56,7 @@ describe('puissance et collisions', () => {
   })
   test('poser un obstacle sur une boule en mouvement provoque le contact immédiatement', () => {
     const game = createInitialGame()
-    game.offers[1]!.gem = { id: 'gem-9', kind: 'multiplier', level: 0, setting: 'NS' }
+    game.offers[1]!.item = { id: 'gem-9', kind: 'multiplier', level: 0, setting: 'NS' }
     let session = sessionReducer(createSession(game, 0), { type: 'tick', now: 5000 })
     session = sessionReducer(session, { type: 'buy', index: 1, destination: 29, offerId: 'gem-9', now: 6450 })
     expect(session.pending[0]!.completedAt).toBe(6450)
@@ -75,7 +75,7 @@ describe('puissance et collisions', () => {
   })
   test('un placement après une arrivée ne peut pas bloquer rétroactivement la boule', () => {
     const game = createInitialGame()
-    game.offers[1]!.gem = { id: 'gem-9', kind: 'multiplier', level: 0, setting: 'NS' }
+    game.offers[1]!.item = { id: 'gem-9', kind: 'multiplier', level: 0, setting: 'NS' }
     let session = sessionReducer(createSession(game, 0), { type: 'tick', now: 5000 })
     session = sessionReducer(session, { type: 'buy', index: 1, destination: 28, offerId: 'gem-9', now: 5900 })
     expect(session.pending[0]!.done).toBe(false)

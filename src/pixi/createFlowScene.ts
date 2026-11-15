@@ -102,7 +102,7 @@ export function createFlowScene(app: Application, snapshot: { current: FlowSnaps
       const firstStep = Math.max(0, Math.floor(age - 1 - RULES.feedbackMs / RULES.stepMs))
       for (let step = firstStep; step <= Math.floor(age); step++) {
         for (const { event, index } of timeline.steps.get(step) ?? []) {
-          if (event.type === 'end' && (event.reason === 'edge' || event.reason === 'connection') && !reducedMotion) {
+          if (event.type === 'end' && (event.reason === 'edge' || event.reason === 'connection' || event.reason === 'stone') && !reducedMotion) {
             const elapsed = now - emission.start - (event.atStep ?? event.step + 1) * RULES.stepMs
             if (elapsed < 0 || elapsed >= PULSE_VISUALS.burstMs || activeImpacts.size >= 40) continue
             const key = emission.id + ':' + index

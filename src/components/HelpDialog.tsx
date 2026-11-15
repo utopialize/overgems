@@ -9,6 +9,8 @@ const LESSONS = [
   ['Un circuit vivant', 'Les boules rencontrent les gemmes présentes à leur arrivée. Une même gemme ne récolte ou n’amplifie qu’une fois par branche : la déplacer ne réactive pas son effet.'],
   ['Jouer au toucher ou au clavier', 'Vous pouvez sélectionner une offre ou une gemme, puis toucher la destination. Au clavier : Entrée sélectionne, les flèches parcourent le plateau, Échap annule.'],
   ['Observer et optimiser', 'Le bouton œil active la vue avancée : puissances, gains, inspection sur la boutique et rendement du plateau fixe. Avant de relâcher une gemme, l’aperçu indique l’écart prévu en Éclats par seconde.'],
+  ['Dégager le terrain', 'Les rochers arrêtent les impulsions. Une pioche peut apparaître au hasard en boutique : déposez-la sur un rocher pour libérer la case contre 8 Éclats. Chaque pioche ne sert qu’une fois. Le passage central reste libre au départ.'],
+  ['Découvrir des minéraux', 'Creuser peut révéler un minéral rare, avec une découverte garantie tous les quatre rochers. Touchez le cristal en haut à gauche pour ouvrir votre collection. Ces trouvailles ne donnent aucun bonus économique.'],
 ]
 
 export function HelpDialog({ onClose }: { onClose: () => void }) {

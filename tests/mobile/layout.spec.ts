@@ -51,6 +51,7 @@ for (const viewport of [
     await expect(page.locator('[data-area=board]')).toHaveCount(63)
     await expect(page.locator('[data-area=inventory]')).toHaveCount(0)
     await expect(page.locator('.board-cell.occupied')).toHaveCount(0)
+    await expect(page.locator('.board-cell.stone')).toHaveCount(18)
     await page.mouse.wheel(0, 800)
     await expectOneScreen(page)
     expect(errors).toEqual([])
@@ -77,9 +78,9 @@ test('aide et paramètres accessibles sans défilement en paysage', async ({ pag
   await page.getByRole('button', { name: 'Comment jouer' }).click()
   const help = page.getByRole('dialog')
   await expect(help).toBeVisible()
-  for (let step = 0; step < 8; step++) {
+  for (let step = 0; step < 10; step++) {
     expect(await help.evaluate((dialog) => dialog.scrollHeight <= dialog.clientHeight + 1)).toBe(true)
-    if (step < 7) await page.getByRole('button', { name: 'Suivant' }).click()
+    if (step < 9) await page.getByRole('button', { name: 'Suivant' }).click()
   }
   await page.getByRole('button', { name: 'Fermer l’aide' }).click()
   await page.getByRole('button', { name: 'Ouvrir les paramètres' }).click()

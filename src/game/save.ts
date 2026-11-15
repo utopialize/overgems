@@ -1,6 +1,7 @@
-import { HARVEST_VALUES, RULES, SETTINGS, shopPrice } from './catalog'
+import { HARVEST_VALUES, RULES, SETTINGS, offerPrice } from './catalog'
 import { createInitialGame } from './state'
-import type { GameState, Gem } from './types'
+import { emptyCollection, initialExcavationSeed, MINERALS } from './terrain'
+import type { GameState, Gem, ShopItem } from './types'
 
 export const SAVE_KEY = 'overgems.save.v1'
 function record(value: unknown): value is Record<string, unknown> {
@@ -16,9 +17,15 @@ function validGem(value: unknown): value is Gem {
     && (value.invested === undefined || finite(value.invested))
     && (value.kind === 'harvest' || (value.kind === 'multiplier' && SETTINGS.includes(value.setting as never)))
 }
+function validItem(value: unknown): value is ShopItem {
+  return validGem(value) || (record(value) && value.kind === 'pickaxe' && typeof value.id === 'string' && /^tool-\d+$/.test(value.id))
+}
 export function validateGame(value: unknown): value is GameState {
   if (!record(value) || value.version !== 1 || !Array.isArray(value.board) || value.board.length !== 63
     || !Array.isArray(value.inventory) || value.inventory.length !== RULES.inventorySize
+    || !Array.isArray(value.stones) || value.stones.length !== 63 || !value.stones.every((stone) => typeof stone === 'boolean')
+    || !integer(value.excavationSeed) || value.excavationSeed > 0xffffffff || !integer(value.excavations) || value.excavations > 63
+    || !record(value.minerals) || Object.keys(value.minerals).length !== MINERALS.length
     || !Array.isArray(value.offers) || value.offers.length !== 3 || !finite(value.coins)
     || !integer(value.purchases) || !integer(value.rerolls)
     || !integer(value.seed) || value.seed > 0xffffffff || !integer(value.nextId) || value.nextId < 1
@@ -28,15 +35,20 @@ export function validateGame(value: unknown): value is GameState {
     || !record(value.stats) || !integer(value.stats.emissions) || !finite(value.stats.earned)
     || !finite(value.stats.lastGain) || !Array.isArray(value.stats.recent)
     || value.stats.recent.length > 10 || !value.stats.recent.every(finite)) return false
+  if (!MINERALS.every(({ id }) => integer((value.minerals as Record<string, unknown>)[id]))
+    || Object.values(value.minerals).reduce<number>((sum, count) => sum + Number(count), 0) > value.excavations) return false
   const gems: unknown[] = [...value.board, ...value.inventory]
+  if (!gems.every((gem) => gem === null || validGem(gem))
+    || value.board.some((gem, index) => gem !== null && (value.stones as boolean[])[index])) return false
+  const items: unknown[] = [...gems]
   for (const offer of value.offers) {
-    if (!record(offer) || !finite(offer.price) || !validGem(offer.gem)) return false
-    gems.push(offer.gem)
+    if (!record(offer) || !finite(offer.price) || !validItem(offer.item)) return false
+    items.push(offer.item)
   }
   const ids = new Set<string>()
-  for (const gem of gems) {
+  for (const gem of items) {
     if (gem === null) continue
-    if (!validGem(gem) || ids.has(gem.id) || Number(gem.id.slice(4)) >= value.nextId) return false
+    if (!validItem(gem) || ids.has(gem.id) || Number(gem.id.split('-')[1]) >= value.nextId) return false
     ids.add(gem.id)
   }
   return true
@@ -49,11 +61,17 @@ export function decodeSave(raw: string | null): { game: GameState; warning: stri
     if (record(value) && value.version === 1) {
       value = { ...value, purchases: value.purchases === undefined ? 0 : value.purchases,
         rerolls: value.rerolls === undefined ? 0 : value.rerolls,
+        stones: value.stones === undefined ? Array.from({ length: 63 }, () => false) : value.stones,
+        excavationSeed: value.excavationSeed === undefined ? initialExcavationSeed(typeof value.seed === 'number' ? value.seed : 0) : value.excavationSeed,
+        excavations: value.excavations === undefined ? 0 : value.excavations,
+        minerals: value.minerals === undefined ? emptyCollection() : value.minerals,
+        offers: Array.isArray(value.offers) ? value.offers.map((offer) => record(offer) && offer.item === undefined
+          ? { item: offer.gem, price: offer.price } : offer) : value.offers,
         settings: record(value.settings) ? { paused: value.settings.paused, reducedMotion: value.settings.reducedMotion,
           viewMode: value.settings.viewMode === undefined ? 'simple' : value.settings.viewMode } : value.settings }
     }
     if (validateGame(value)) return { game: { ...value,
-      offers: value.offers.map((offer) => ({ ...offer, price: shopPrice(offer.gem, value.purchases) })) }, warning: '' }
+      offers: value.offers.map((offer) => ({ item: offer.item, price: offerPrice(offer.item, value.purchases) })) }, warning: '' }
   } catch { /* Invalid JSON uses the same explicit recovery as invalid schemas. */ }
   return { game: createInitialGame(), warning: 'Sauvegarde invalide ou incompatible : une nouvelle partie a été créée.' }
 }

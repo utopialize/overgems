@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { gemPrice, recycleValue, rerollPrice } from './catalog'
+import { gemPrice, offerPrice, recycleValue, rerollPrice } from './catalog'
 import { createInitialGame, buyOfferOnBoard, recycleGem, rerollOffers } from './state'
 import { decodeSave, validateGame } from './save'
 import { simulateEmission } from './engine'
@@ -14,9 +14,9 @@ describe('prix progressifs et recyclage', () => {
     expect(denied.game).toBe(game)
     expect(denied.message).toContain('Gardez 6 Éclats')
     expect(game.rerolls).toBe(3)
-    const index = game.offers.findIndex((offer) => offer.gem.kind === 'harvest' && offer.price <= game.coins)
+    const index = game.offers.findIndex((offer) => offer.item.kind === 'harvest' && offer.price <= game.coins)
     expect(index).toBeGreaterThanOrEqual(0)
-    const bought = buyOfferOnBoard(game, index, 28, game.offers[index]!.gem.id)
+    const bought = buyOfferOnBoard(game, index, 28, game.offers[index]!.item.id)
     expect(bought.ok).toBe(true)
     expect(simulateEmission(bought.game.board).gain).toBeGreaterThan(0)
     expect(decodeSave(JSON.stringify(game)).game).toEqual(game)
@@ -30,7 +30,7 @@ describe('prix progressifs et recyclage', () => {
     const transaction = rerollOffers(game)
     expect(transaction.ok).toBe(true)
     expect(transaction.game.coins).toBe(8)
-    expect(transaction.game.offers.some((offer) => offer.gem.kind === 'harvest' && offer.price <= 8)).toBe(true)
+    expect(transaction.game.offers.some((offer) => offer.item.kind === 'harvest' && offer.price <= 8)).toBe(true)
     expect(transaction.game.nextId).toBe(game.nextId + 3)
     expect(validateGame(transaction.game)).toBe(true)
     expect(JSON.stringify(game)).toBe(before)
@@ -61,15 +61,16 @@ describe('prix progressifs et recyclage', () => {
   test('les prix montent de 1 Éclat tous les cinq achats et les nouveaux tirages suivent le palier', () => {
     let game = createInitialGame()
     game.coins = 200
+    game.stones.fill(false)
     for (let i = 0; i < 5; i++) {
-      game = buyOfferOnBoard(game, 0, i, game.offers[0]!.gem.id).game
+      game = buyOfferOnBoard(game, 0, i, game.offers[0]!.item.id).game
       expect(game.purchases).toBe(i + 1)
       expect(game.offers[1]!.price).toBe(i === 4 ? 11 : 10)
-      expect(game.offers[0]!.price).toBe(gemPrice(game.offers[0]!.gem) + Math.floor((i + 1) / 5))
+      expect(game.offers[0]!.price).toBe(offerPrice(game.offers[0]!.item, i + 1))
     }
     const rerolled = rerollOffers(game).game
     expect(rerolled.purchases).toBe(5)
-    expect(rerolled.offers.every((offer) => offer.price === gemPrice(offer.gem) + 1)).toBe(true)
+    expect(rerolled.offers.every((offer) => offer.price === offerPrice(offer.item, 5))).toBe(true)
   })
   test('chaque renouvellement réussi augmente son propre tarif et conserve le palier des gemmes', () => {
     const initial = createInitialGame()
@@ -89,14 +90,14 @@ describe('prix progressifs et recyclage', () => {
   })
   test('un achat refusé ne modifie ni les prix ni le compteur', () => {
     const initial = createInitialGame()
-    expect(buyOfferOnBoard(initial, 0, -1, initial.offers[0]!.gem.id).game).toBe(initial)
-    const bought = buyOfferOnBoard(initial, 1, 28, initial.offers[1]!.gem.id).game
-    expect(buyOfferOnBoard(bought, 0, 28, bought.offers[0]!.gem.id).game).toBe(bought)
-    expect(buyOfferOnBoard(bought, 1, 29, initial.offers[1]!.gem.id).game).toBe(bought)
+    expect(buyOfferOnBoard(initial, 0, -1, initial.offers[0]!.item.id).game).toBe(initial)
+    const bought = buyOfferOnBoard(initial, 1, 28, initial.offers[1]!.item.id).game
+    expect(buyOfferOnBoard(bought, 0, 28, bought.offers[0]!.item.id).game).toBe(bought)
+    expect(buyOfferOnBoard(bought, 1, 29, initial.offers[1]!.item.id).game).toBe(bought)
   })
   test('recycler détruit la gemme et rembourse une seule fois 50 % du prix payé', () => {
     const initial = createInitialGame()
-    const bought = buyOfferOnBoard(initial, 0, 28, initial.offers[0]!.gem.id).game
+    const bought = buyOfferOnBoard(initial, 0, 28, initial.offers[0]!.item.id).game
     const gem = bought.board[28]!
     expect(gem.invested).toBe(6)
     const sold = recycleGem(bought, 28, gem.id).game
@@ -111,8 +112,8 @@ describe('prix progressifs et recyclage', () => {
   test('le remboursement conserve le coût historique, même après inflation et fusion', () => {
     const initial = createInitialGame()
     initial.purchases = 4
-    const first = buyOfferOnBoard(initial, 0, 28, initial.offers[0]!.gem.id).game
-    const fused = buyOfferOnBoard(first, 2, 28, first.offers[2]!.gem.id).game
+    const first = buyOfferOnBoard(initial, 0, 28, initial.offers[0]!.item.id).game
+    const fused = buyOfferOnBoard(first, 2, 28, first.offers[2]!.item.id).game
     expect(fused.board[28]!.level).toBe(1)
     expect(fused.board[28]!.invested).toBe(13)
     expect(recycleValue(fused.board[28]!)).toBe(6.5)
@@ -121,7 +122,7 @@ describe('prix progressifs et recyclage', () => {
   })
   test('une référence de gemme périmée ou hors grille ne détruit rien', () => {
     const game = createInitialGame()
-    const bought = buyOfferOnBoard(game, 0, 28, game.offers[0]!.gem.id).game
+    const bought = buyOfferOnBoard(game, 0, 28, game.offers[0]!.item.id).game
     expect(recycleGem(bought, 28, 'gem-0').game).toBe(bought)
     for (const index of [-1, 63, NaN, 1.5]) expect(recycleGem(bought, index, bought.board[28]!.id).game).toBe(bought)
   })
@@ -157,12 +158,12 @@ describe('prix progressifs et recyclage', () => {
     game.rerolls = 3
     game.coins = 590.7
     game.board[28] = { id: 'gem-1', kind: 'harvest', level: 0, invested: 25 }
-    game.offers = game.offers.map((offer) => ({ ...offer, price: gemPrice(offer.gem) + 12 }))
+    game.offers = game.offers.map((offer) => ({ ...offer, price: offerPrice(offer.item, 0) + 12 }))
     const restored = decodeSave(JSON.stringify({ ...game, settings: { ...game.settings, stepMs: 1200 } }))
     expect(restored.warning).toBe('')
     expect(restored.game.coins).toBe(590.7)
     expect(restored.game.purchases).toBe(12)
-    expect(restored.game.offers.every((offer) => offer.price === gemPrice(offer.gem) + 2)).toBe(true)
+    expect(restored.game.offers.every((offer) => offer.price === offerPrice(offer.item, 12))).toBe(true)
     expect(recycleValue(restored.game.board[28]!)).toBe(12.5)
     expect(rerollPrice(restored.game.rerolls)).toBe(8)
     expect(restored.game.settings).not.toHaveProperty('stepMs')

@@ -3,6 +3,9 @@ export type Setting = 'EW' | 'NS' | 'NE' | 'ES' | 'SW' | 'NW' | 'NES' | 'ESW' | 
 export type Gem = { readonly invested?: number } & (
   | { readonly id: string; readonly kind: 'harvest'; readonly level: number }
   | { readonly id: string; readonly kind: 'multiplier'; readonly level: number; readonly setting: Setting })
+export type ExcavationTool = { readonly id: string; readonly kind: 'pickaxe' }
+export type ShopItem = Gem | ExcavationTool
+export type MineralId = 'quartz' | 'fluorite' | 'pyrite' | 'azurite'
 export type Slot = { area: 'board' | 'inventory'; index: number }
 export type GemOrigin = Slot | { area: 'shop'; index: number; offerId: string }
 export type Point = { x: number; y: number }
@@ -18,7 +21,7 @@ export type FlowEvent = {
   factor?: number
   progress?: number
   atStep?: number
-  reason?: 'edge' | 'connection' | 'loop' | 'power'
+  reason?: 'edge' | 'connection' | 'stone' | 'loop' | 'power'
 }
 export type Emission = {
   events: FlowEvent[]
@@ -26,12 +29,16 @@ export type Emission = {
   limited: boolean
   maxStep: number
 }
-export type Offer = { gem: Gem; price: number }
+export type Offer = { item: ShopItem; price: number }
 export type Settings = { reducedMotion: boolean; paused: boolean; viewMode: 'simple' | 'advanced' }
 export type GameState = {
   version: 1
   board: (Gem | null)[]
   inventory: (Gem | null)[]
+  stones: boolean[]
+  excavationSeed: number
+  excavations: number
+  minerals: Record<MineralId, number>
   coins: number
   purchases: number
   rerolls: number
@@ -42,4 +49,4 @@ export type GameState = {
   settings: Settings
   tutorial: number
 }
-export type Transaction = { game: GameState; message: string; ok: boolean; merged?: boolean }
+export type Transaction = { game: GameState; message: string; ok: boolean; merged?: boolean; found?: MineralId }

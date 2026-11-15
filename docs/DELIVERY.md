@@ -5,12 +5,22 @@ Les règles à jour et les arbitrages sont dans RULES.md.
 
 ## Comportement actuel
 
-- Nouvelle partie : plateau 7 × 9 vide et 30 Éclats, réserve masquée.
+- Nouvelle partie : plateau 7 × 9 sans gemmes, 18 rochers et 30 Éclats, réserve masquée.
+- Terrain constructible : source et trois lignes centrales dégagées ; rochers
+  bloquants au contact et impossibles à recouvrir par une gemme.
+- Pioche aléatoire (20 % par tirage), usage unique directement sur un rocher :
+  8 Éclats, sans inflation des gemmes. Un refus ou une annulation ne coûte rien.
+  Le budget de première récolte reste protégé si le circuit ne produit pas.
+- Quatre minéraux de collection sans bonus : chance de 25 %, découverte garantie
+  tous les quatre rochers, espèces manquantes prioritaires. Collection et terrain
+  sauvegardés ; ancienne partie migrée sans obstacle ajouté.
+- Excavation avant contact sans redémarrage des vagues ; une branche déjà
+  éclatée reste terminée. Les analyses incluent le terrain courant.
 - Source de puissance 1 toutes les 5 secondes ; propagation fixe à **800 ms/case**.
   Le réglage de débug a été retiré, y compris des sauvegardes restaurées.
 - Chaque impulsion est un éclat lumineux en vue épurée, ou une boule affichant
   sa puissance en vue avancée. Elle
-  traverse les cases vides jusqu'au bord ou à une connexion fermée. Les branches
+  traverse les cases vides jusqu'à un rocher, au bord ou à une connexion fermée. Les branches
   conservent leur puissance entière et leur historique indépendant.
 - En vue avancée : bulles de diamètre constant 18 px, derrière les gemmes, avec une seule décimale
   affichée. La puissance composée reste précise dans le moteur ; trois ×1,1
@@ -55,7 +65,7 @@ Les règles à jour et les arbitrages sont dans RULES.md.
 
 ## Vérifications effectuées
 
-- `npm run check` : lint, **130 tests Vitest**, TypeScript et build.
+- `npm run check` : lint, **148 tests Vitest**, TypeScript et build.
 - Propagation dans les quatre directions, sertissages fixes, croisements,
   boucles, limites, déterminisme et exemple de référence à 22 Éclats.
 - Moteur incrémental et prévision statique concordants, passage à travers les
@@ -65,9 +75,15 @@ Les règles à jour et les arbitrages sont dans RULES.md.
   de gains anticipés ou hors ligne et dix minutes de temps simulé.
 - Hausse au cinquième achat, renouvellements progressifs, refus sans fonds,
   remboursements et migration des anciennes sauvegardes.
-- **59 scénarios Chromium** : achat et recyclage souris/tactile/clavier,
+- **67 scénarios Chromium** : achat et recyclage souris/tactile/clavier,
   sauvegarde, suppression du sélecteur, évolution du prix de renouvellement,
   tarifs au palier et conservation des coûts payés.
+- Terrain : cinq graines, départ productif, tirages aléatoires, excavation
+  atomique, refus et protection de budget, dernière pierre et retrait des outils.
+- Collection : garanties, quatre espèces, absence de bonus, hasard reproductible
+  après sauvegarde, migrations et validation des nouveaux champs.
+- Mobile : pioche tactile annulée/refusée/posée, sélection et clavier avancé,
+  grille immobile, collection en portrait/paysage, persistance et collision pierre.
 - Analyses : comparaison avec la case vide, contributions positives/négatives,
   bifurcations, refus et limites ; la préférence de vue et les aperçus conservent
   les émissions, échéances, monnaie et statistiques réelles.

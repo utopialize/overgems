@@ -1,10 +1,12 @@
-import type { Direction, Gem, Setting } from './types'
+import type { Direction, Gem, Setting, ShopItem } from './types'
 
 export const RULES = {
   columns: 7, rows: 9, sourceRow: 4, inventorySize: 12,
   periodMs: 5000, stepMs: 800, feedbackMs: 750, maxEvents: 4096,
   maxEnergy: 1e12, maxCoins: 1e15, rerollCost: 5, rerollPriceStep: 1,
   purchasePriceStep: 1, purchasesPerPriceStep: 5,
+  initialStones: 18, pickaxePrice: 8, toolChanceDivisor: 5,
+  mineralChanceDivisor: 4, mineralGuaranteeEvery: 4,
 } as const
 export const HARVEST_VALUES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const
 export const MULTIPLIER_VALUES = [1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2, 2.1, 2.2] as const
@@ -16,6 +18,14 @@ export const DIRECTION_NAMES: Record<Direction, string> = { N: 'haut', E: 'droit
 
 export function gemValue(gem: Gem): number {
   return (gem.kind === 'harvest' ? HARVEST_VALUES : MULTIPLIER_VALUES)[gem.level]!
+}
+export function isGem(item: ShopItem): item is Gem { return item.kind !== 'pickaxe' }
+export function itemLabel(item: ShopItem): string { return isGem(item) ? gemLabel(item) : 'Pioche' }
+export function itemDescription(item: ShopItem): string {
+  return isGem(item) ? gemDescription(item) : 'Pioche à usage unique, libère une case de pierre'
+}
+export function offerPrice(item: ShopItem, purchases: number): number {
+  return isGem(item) ? shopPrice(item, purchases) : RULES.pickaxePrice
 }
 export function gemLabel(gem: Gem): string {
   return `${gem.kind === 'harvest' ? '+' : '×'}${gemValue(gem).toLocaleString('fr-FR')}`

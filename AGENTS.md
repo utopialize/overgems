@@ -30,7 +30,15 @@
   petites que 44 px sur les écrans courts. Garder les autres contrôles à 44 px.
 - La réserve est dormante : conserver ses données et opérations sans l'afficher.
   Les achats actifs se font directement à la pose sur la grille, de façon atomique.
-- Une nouvelle partie commence sur une grille vide. La source émet une puissance
+- Une nouvelle partie commence sans gemmes, avec 18 rochers. La colonne de la
+  source et les trois lignes centrales restent libres. Les rochers bloquent au
+  contact ; les gemmes ne peuvent pas occuper leur case.
+- La pioche est une offre aléatoire à usage unique, achetée uniquement à la pose
+  sur un rocher. Prix fixe de 8 Éclats, sans incrément du compteur des gemmes.
+  L'excavation conserve les vagues ; les anciens terrains restent sans rochers.
+- Les minéraux d'excavation sont collectionnés sans bonus économique. Préserver
+  leur hasard séparé sauvegardé ; un aperçu ne doit jamais révéler une trouvaille.
+- La source émet une puissance
   de 1 toutes les 5 secondes. Les effets rejouent les vrais gains/facteurs du moteur.
 - La propagation est fixée à 800 ms par case ; aucun sélecteur de vitesse. Les
   cases vides conduisent les impulsions jusqu'aux obstacles ou aux bords.

@@ -1,13 +1,13 @@
 import { useRef, useState } from 'react'
 import type { PointerEvent } from 'react'
-import type { GameState, Gem, GemOrigin, Slot } from '../game/types'
+import type { GameState, ShopItem, GemOrigin, Slot } from '../game/types'
 import { validSlot } from '../game/state'
 
 export function useGemInteractions(game: GameState, onDrop: (from: GemOrigin, to: Slot) => void,
   onRecycle: (from: Slot, gemId: string) => void) {
-  const pointer = useRef<{ id: number; from: GemOrigin; x: number; y: number; gem: Gem; moved: boolean } | null>(null)
+  const pointer = useRef<{ id: number; from: GemOrigin; x: number; y: number; item: ShopItem; moved: boolean } | null>(null)
   const suppressClick = useRef(false)
-  const [ghost, setGhost] = useState<{ gem: Gem; origin: GemOrigin; x: number; y: number; recycling: boolean; target: Slot | null } | null>(null)
+  const [ghost, setGhost] = useState<{ item: ShopItem; origin: GemOrigin; x: number; y: number; recycling: boolean; target: Slot | null } | null>(null)
   function slotAt(element: Element | null): Slot | null {
     const target = element?.closest<HTMLElement>('[data-area][data-index]')
     if (!target) return null
@@ -27,7 +27,7 @@ export function useGemInteractions(game: GameState, onDrop: (from: GemOrigin, to
         const target = slotAt(element)
         if (target) onDrop(current.from, target)
         else if (current.from.area === 'board' && element && !element.closest('.board-grid')) {
-          onRecycle(current.from, current.gem.id)
+          onRecycle(current.from, current.item.id)
         }
       }
     }
@@ -44,9 +44,9 @@ export function useGemInteractions(game: GameState, onDrop: (from: GemOrigin, to
         const index = Number(target?.dataset.index)
         const offer = target?.dataset.area === 'shop' ? game.offers[index] : null
         if (offer && game.coins < offer.price) return
-        const from: GemOrigin | null = offer ? { area: 'shop', index, offerId: offer.gem.id } : slotAt(event.target as Element)
-        const gem = from ? from.area === 'shop' ? offer?.gem : game[from.area][from.index] : null
-        if (from && gem) pointer.current = { id: event.pointerId, from, gem, x: event.clientX, y: event.clientY, moved: false }
+        const from: GemOrigin | null = offer ? { area: 'shop', index, offerId: offer.item.id } : slotAt(event.target as Element)
+        const gem = from ? from.area === 'shop' ? offer?.item : game[from.area][from.index] : null
+        if (from && gem) pointer.current = { id: event.pointerId, from, item: gem, x: event.clientX, y: event.clientY, moved: false }
       },
       onPointerMove(event: PointerEvent<HTMLElement>) {
         const current = pointer.current
@@ -56,7 +56,7 @@ export function useGemInteractions(game: GameState, onDrop: (from: GemOrigin, to
         event.currentTarget.setPointerCapture(event.pointerId)
         const element = document.elementFromPoint(event.clientX, event.clientY)
         const outside = Boolean(element && !element.closest('.board-grid'))
-        setGhost({ gem: current.gem, origin: current.from, x: event.clientX, y: event.clientY,
+        setGhost({ item: current.item, origin: current.from, x: event.clientX, y: event.clientY,
           recycling: current.from.area === 'board' && outside, target: slotAt(element) })
       },
       onPointerUp: (event: PointerEvent<HTMLElement>) => end(event),

@@ -135,6 +135,7 @@ test('au clavier, une offre inspectée conserve l’accès au plateau et le recy
 test('les limites produisent une estimation partielle et une contribution indisponible', async ({ page }) => {
   const game = fixture()
   game.nextId = 200
+  game.stones.fill(false)
   game.board = game.board.map((_, index) => ({ id: 'gem-' + (100 + index), kind: 'multiplier', level: 0, setting: 'NESW' }))
   await seed(page, game)
   await expect(page.getByTestId('theoretical-rate')).toHaveAttribute('data-limited', 'true')

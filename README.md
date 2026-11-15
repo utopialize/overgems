@@ -40,8 +40,10 @@ Chaque fusion augmente la récolte de **1** (`+1` à `+12`) ou le facteur de **0
 
 La source envoie une puissance de 1 toutes les 5 secondes. Les gemmes traversées
 brillent et affichent brièvement leur véritable gain ou leur multiplicateur.
-Les douze niveaux possèdent des nuances distinctes, progressivement plus claires :
-cuivre à champagne pour les récoltes, améthyste à lavande pâle pour les multiplicatrices.
+Les douze niveaux possèdent des nuances marquées, progressivement plus claires :
+cuivre corail, ambre, or puis champagne pour les récoltes ; indigo, améthyste
+puis orchidée claire pour les multiplicatrices. Les écarts de teinte et de
+saturation rendent chaque montée de niveau plus visible.
 L'interface tient sur un seul écran ; l'aide est accessible avec le bouton « ? ».
 La réserve est masquée et ses données historiques restent conservées.
 

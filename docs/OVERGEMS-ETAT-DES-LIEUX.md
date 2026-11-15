@@ -445,11 +445,13 @@ catégories. Les récoltes sont ambre/pêche, les multiplicatrices mauves ; les
 attaches SVG champagne/gris chaud sont dérivées des connexions du catalogue.
 Le plateau est sombre, discret, sans pistes électroniques décoratives.
 
-Chaque niveau possède désormais une nuance distincte : les récoltes vont du
-cuivre au champagne, les multiplicatrices de l'améthyste à la lavande pâle.
-`src/components/gemPalette.ts` calcule quatre couleurs HSL par gemme : teinte
-de 26° à 43° pour les récoltes, de 266° à 289° pour les multiplicatrices, avec
-une luminosité centrale de 65 % à 81 %. Les facettes claires, intermédiaires et
+Chaque niveau possède une nuance plus marquée : cuivre corail, ambre, or puis
+champagne pour les récoltes ; indigo, améthyste puis orchidée claire pour les
+multiplicatrices. `src/components/gemPalette.ts` calcule quatre couleurs HSL par
+gemme : teinte de 12° à 54° pour les récoltes, de 246° à 306° pour les
+multiplicatrices. La luminosité centrale progresse de 61 % à 85 % pour les récoltes,
+de 68 % à 86 % pour les multiplicatrices. La saturation est renforcée et culmine
+aux niveaux intermédiaires pour accentuer les écarts. Les facettes claires, intermédiaires et
 sombres gardent leur relief. Les valeurs utilisent une encre sombre `#10131E`.
 Le même composant applique ces couleurs dans la boutique, le fantôme et le plateau ;
 elles évoluent à la fusion et sont retrouvées au chargement à partir du niveau.
@@ -543,6 +545,7 @@ retestée dans cet audit.
 | `npm run check` | Réussi après progression linéaire : Oxlint, 120 tests Vitest, compilation TypeScript et build Vite. |
 | `npm run test:mobile` | Réussi après progression linéaire : 43 scénarios Chromium, environ 1 min 20 s. |
 | `npm run test:mobile -- tests/mobile/layout.spec.ts` | 12 scénarios réussis après la mise à jour de l’aide ; ses sept pages tiennent en paysage. |
+| `npm run test:mobile -- tests/mobile/palette.spec.ts` | 3 scénarios après amplification des palettes : contraste, distances de couleur, portrait/paysage, glisser, fusion et rechargement. |
 | Examen des captures | Captures initiales : grille neuve, paysage et réseau vivant. Puis palettes des 24 gemmes en portrait 390 × 844 et paysage 568 × 320. |
 | Sondes initiales, puis tests de régression | Les deux problèmes initiaux ont été reproduits, corrigés puis couverts par des assertions moteur et navigateur. |
 
@@ -565,7 +568,7 @@ du téléchargement total ni des performances d’un mobile.
 | `tests/mobile/gameplay.spec.ts` | 12 | Achat à la pose, fusion, souris/tactile/clavier, sauvegarde, effets réels, reset confirmé, mode réduit, réserve historique et erreurs de stockage. |
 | `tests/mobile/balance.spec.ts` | 7 | Renouvellement sauvegardé puis refus sans perte, achat encore possible ; recyclage et annulation, palier et remboursement après fusion. |
 | `tests/mobile/live.spec.ts` | 7 | Bulles, pose/déplacement, taille/vitesse/arrondi, couches, collisions ; absence de répétition d’effet après deux déplacements de la même récolte ou multiplicatrice. |
-| `tests/mobile/palette.spec.ts` | 3 | 24 palettes distinctes, luminosité croissante, contraste d'au moins 4,5:1 sur toutes les facettes au repos en portrait/paysage ; cohérence du glisser, évolution à la fusion et persistance. |
+| `tests/mobile/palette.spec.ts` | 3 | 24 palettes distinctes, luminosité croissante, contraste d'au moins 4,5:1 ; distances CIELAB ≥3 entre voisins et ≥40 entre N1/N12 ; portrait/paysage, glisser, fusion et persistance. |
 | `tests/mobile/fusion.spec.ts` | 2 | Pour chaque catégorie : fusion au quatrième niveau sans saut, achat avec fusion, plafond N12, refus sans perte et sauvegarde/rechargement. |
 
 Les neuf viewports sont 320 × 568, 360 × 640, 390 × 664, 390 × 844,

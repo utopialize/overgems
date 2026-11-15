@@ -93,8 +93,10 @@ défilement de la page ni du plateau. Sur les écrans courts, les cases rétréc
 En paysage, la boutique passe à côté du circuit. L'aide et les paramètres sont
 des fenêtres compactes ; le tutoriel n'occupe plus l'écran de jeu.
 
-Les gemmes changent de nuances sur les douze niveaux : cuivre vers champagne pour
-les récoltes, améthyste vers lavande pâle pour les multiplicatrices. La teinte et
+Les gemmes changent de nuances marquées sur les douze niveaux : cuivre corail,
+ambre, or puis champagne pour les récoltes ; indigo, améthyste puis orchidée
+claire pour les multiplicatrices. La saturation est renforcée, surtout aux
+niveaux intermédiaires. La teinte et
 la luminosité des quatre couleurs de facettes progressent avec le niveau, sans
 changer la silhouette ni les attaches. La palette est centralisée dans
 `src/components/gemPalette.ts` et partagée par plateau, boutique et fantôme de

@@ -39,8 +39,9 @@ Les règles à jour et les arbitrages sont dans RULES.md.
   les émissions suivantes repartent sans ces activations.
 - Interface sur un seul écran en portrait et paysage, aide paginée, sauvegarde
   validée, réduction des animations, pause et remise à zéro confirmée.
-- Nuances par niveau : douze palettes cuivre/champagne et douze palettes
-  améthyste/lavande, partagées par plateau, boutique et glisser. Les fusions
+- Nuances par niveau : douze palettes cuivre/ambre/or/champagne et douze palettes
+  indigo/améthyste/orchidée, aux écarts de teinte et de saturation renforcés,
+  partagées par plateau, boutique et glisser. Les fusions
   actualisent les facettes sans changer les attaches ni la silhouette.
 - Au masquage de l'onglet ou à la pause, seuls les gains déjà collectés sont
   conservés ; les trajets inachevés sont abandonnés, sans production hors ligne.
@@ -69,6 +70,8 @@ Les règles à jour et les arbitrages sont dans RULES.md.
 - Palettes : 24 variantes distinctes, luminosité progressive et contraste des
   chiffres d'au moins 4,5:1 sur les quatre couleurs de facettes au repos, en
   portrait et paysage ; cohérence boutique/fantôme/plateau, fusion et rechargement.
+  Le contrôle ciblé des trois scénarios de palette vérifie également une distance
+  CIELAB d'au moins 3 entre niveaux voisins et de 40 entre N1 et N12.
 - Deux scénarios avec horloge contrôlée vérifient la boule chiffrée dans les
   cases vides et son maintien pendant une nouvelle pose puis un déplacement.
   La même boule affiche 1,0 puis 1,1 ; le gain réel de 1,1 est récolté à la nouvelle position.

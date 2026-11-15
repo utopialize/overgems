@@ -16,6 +16,14 @@ Elle multiplie l'énergie et envoie cette puissance entière vers chaque autre
 attache. Les connectiques sont bidirectionnelles, sans retour immédiat par
 l'entrée. Une multiplicatrice ne produit pas directement de monnaie.
 
+Une même instance de gemme ne récolte ou n'amplifie qu'une fois par branche.
+Déplacer une gemme déjà traversée devant cette branche ne réactive pas son effet :
+une récolte laisse passer sans gain et une multiplicatrice conserve son routage
+sans nouvelle amplification. Les branches filles héritent des activations de leur
+ascendance, avec leurs propres historiques. Les branches indépendantes peuvent
+activer une même gemme qu'elles n'ont pas encore traversée ; chaque nouvelle
+émission repart avec un historique vide.
+
 Les sertissages disponibles sont deux lignes, quatre coudes, quatre T et une
 croix. Ce sont onze variantes fixes : aucune rotation ni modification des
 attaches n'est disponible.
@@ -36,6 +44,13 @@ dépôt annulé, incompatible, périmé ou sans fonds ne coûte rien. Une offre 
 Renouveler change les trois offres. Le premier renouvellement coûte 5 Éclats,
 le deuxième 6, puis 7, etc. Son compteur propre augmente seulement après un
 renouvellement réussi et reste sauvegardé ; un refus faute de fonds ne coûte rien.
+
+Si une émission sur le plateau actuel ne produit aucun Éclat, le renouvellement
+doit laisser de quoi acheter une récolte de niveau 1 au tarif courant, inflation
+incluse. Sinon il est refusé sans aucun changement. Un tirage accepté dans cette
+situation conserve au moins une récolte abordable : à défaut, sa première offre
+est remplacée par une récolte de niveau 1, sans changer les identifiants ni ajouter
+de tirage. Un circuit déjà productif n'a pas cette restriction de budget.
 
 Chaque groupe de **5 achats réussis**, y compris les achats avec fusion,
 augmente de **1 Éclat** le prix des gemmes. Le compteur d'achats est sauvegardé ;

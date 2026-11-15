@@ -64,6 +64,28 @@ test('placements et déplacements conservent la boule et agissent sur ses procha
   await page.screenshot({ path: testInfo.outputPath('live-placement.png'), scale: 'css' })
 })
 
+for (const kind of ['harvest', 'multiplier'] as const) {
+  test('déplacer une même gemme ' + kind + ' devant la bulle ne répète pas son effet', async ({ page }) => {
+    const game = createInitialGame()
+    game.board[28] = kind === 'harvest' ? { id: 'gem-1', kind, level: 0 }
+      : { id: 'gem-1', kind, level: 0, setting: 'EW' }
+    await page.addInitScript((state) => localStorage.setItem('overgems.save.v1', JSON.stringify(state)), game)
+    await startFrozen(page)
+    const orb = page.locator('.pulse-orb[data-emission="1"][data-branch="0"]')
+    const original = (await orb.elementHandle())!
+    await page.clock.runFor(800)
+    for (let x = 0; x < 2; x++) {
+      await cell(page, 28 + x).click()
+      await cell(page, 29 + x).click()
+      await page.clock.runFor(800)
+      await expect(page.getByTestId('balance')).toHaveText(kind === 'harvest' ? '✧ 31' : '✧ 30')
+      await expect(orb).toHaveText(kind === 'harvest' ? '1,0' : '1,1')
+      expect(await original.evaluate((node) => node.isConnected)).toBe(true)
+      await expect(page.locator('.flow-number')).toHaveCount(0)
+    }
+  })
+}
+
 test('trois multiplicateurs ne changent ni la taille ni la vitesse, avec une décimale affichée', async ({ page }, testInfo) => {
   const game = createInitialGame()
   for (let x = 0; x < 3; x++) game.board[28 + x] = { id: 'gem-' + (x + 1), kind: 'multiplier', level: 0, setting: 'EW' }

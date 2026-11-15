@@ -51,6 +51,9 @@ boule dont le centre affiche sa puissance actuelle. Les cases vides la laissent
 passer ; un bord ou une entrée de gemme fermée l'arrête. Déplacer, poser, fusionner
 ou recycler une gemme conserve les impulsions en cours : chaque prochaine arrivée
 rencontre la gemme présente à cet instant. Les récoltes sont créditées au passage.
+Une même gemme ne récolte ou n’amplifie qu’une fois par branche, même déplacée
+devant la boule ; ses attaches continuent de router le flux. Les branches filles
+héritent de cet historique, et les émissions suivantes peuvent la réactiver.
 
 Les bulles ont un diamètre fixe de 18 px, indépendant de la puissance, et passent
 derrière les gemmes. Leur valeur affiche une seule décimale ; le moteur conserve
@@ -65,6 +68,9 @@ est disponible après sélection. Les coûts investis sont cumulés à la fusion
 Les prix des gemmes augmentent de **1 Éclat tous les 5 achats**. Le renouvellement
 coûte **5 Éclats au départ, puis 1 Éclat de plus à chaque renouvellement réussi**.
 Les deux compteurs sont sauvegardés ; un renouvellement ne compte pas comme un achat.
+Si le circuit ne produit rien, un renouvellement doit laisser le budget d’une
+récolte de niveau 1 et garantir une récolte achetable parmi les nouvelles offres.
+Sinon il est refusé sans paiement ni changement des offres ou des compteurs.
 
 ## Vérifier
 

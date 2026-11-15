@@ -3,7 +3,7 @@ import type { Direction, Emission, FlowEvent, Gem, Point } from './types'
 
 export type Pulse = {
   position: Point; from: Point; direction: Direction; energy: number
-  visited: Set<string>; branch: number; step: number
+  visited: Set<string>; activatedGems: Set<string>; branch: number; step: number
 }
 export type SimulationOptions = {
   power?: number; source?: Point & { direction: Direction }; maxEvents?: number; maxEnergy?: number
@@ -57,7 +57,7 @@ export function createEmission(options: SimulationOptions = {}): RunningEmission
   }
   const [dx, dy] = DELTA[source.direction]
   const first: Pulse = { position: { x: source.x + dx, y: source.y + dy }, from: source,
-    direction: source.direction, energy: power, visited: new Set(), branch: 0, step: 0 }
+    direction: source.direction, energy: power, visited: new Set(), activatedGems: new Set(), branch: 0, step: 0 }
   return { ...initial, frontier: [first], result: { ...result, events: [moveEvent(first)] } }
 }
 
@@ -89,7 +89,10 @@ export function advanceEmission(board: readonly (Gem | null)[], current: Running
       visit.push({ ...base, type: 'end', reason: 'connection' })
     } else {
       if (gem) visit.push({ ...base, type: 'enter' })
-      const outgoingEnergy = gem?.kind === 'multiplier' ? energy * gemValue(gem) : energy
+      // Moving an instance cannot make it harvest or amplify the same branch twice.
+      // Its fixed connections still route subsequent visits normally.
+      const activates = Boolean(gem && !pulse.activatedGems.has(gem.id))
+      const outgoingEnergy = gem?.kind === 'multiplier' && activates ? energy * gemValue(gem) : energy
       if (!Number.isFinite(outgoingEnergy) || outgoingEnergy > current.maxEnergy) {
         limited = true
         visit.push({ ...base, type: 'end', reason: 'power' })
@@ -97,20 +100,22 @@ export function advanceEmission(board: readonly (Gem | null)[], current: Running
         const outgoing = gem?.kind === 'multiplier'
           ? DIRECTIONS.filter((d) => gem.setting.includes(d) && d !== OPPOSITE[direction])
           : [direction]
-        if (gem?.kind === 'harvest') {
+        if (gem?.kind === 'harvest' && activates) {
           earned = energy * gemValue(gem)
           visit.push({ ...base, type: 'harvest', gain: earned })
-        } else if (gem?.kind === 'multiplier') {
+        } else if (gem?.kind === 'multiplier' && activates) {
           visit.push({ ...base, type: 'multiply', energy: outgoingEnergy, factor: gemValue(gem) })
-          if (outgoing.length > 1) visit.push({ ...base, type: 'split', energy: outgoingEnergy })
         }
+        if (outgoing.length > 1) visit.push({ ...base, type: 'split', energy: outgoingEnergy })
         // Empty cells also belong to each branch's history.
         const visited = new Set(pulse.visited).add(key)
+        const activatedGems = new Set(pulse.activatedGems)
+        if (gem) activatedGems.add(gem.id)
         for (const nextDirection of outgoing) {
           const [nx, ny] = DELTA[nextDirection]
           if (nextDirection !== direction) visit.push({ ...base, type: 'turn', direction: nextDirection, energy: outgoingEnergy })
           const child: Pulse = { position: { x: position.x + nx, y: position.y + ny }, from: position,
-            direction: nextDirection, energy: outgoingEnergy, visited: new Set(visited),
+            direction: nextDirection, energy: outgoingEnergy, visited: new Set(visited), activatedGems: new Set(activatedGems),
             branch: outgoing.length > 1 ? nextBranch++ : branch, step: step + 1 }
           children.push(child)
           visit.push(moveEvent(child))

@@ -1,5 +1,6 @@
 import { RULES, gemDescription, gemPrice, roundCoins, recycleValue, numberLabel, shopPrice, rerollPrice } from './catalog'
 import { generateOffer } from './economy'
+import { simulateEmission } from './engine'
 import { mergeGems } from './fusion'
 import type { GameState, Gem, Slot, Transaction } from './types'
 
@@ -81,10 +82,20 @@ export function recycleGem(game: GameState, index: number, gemId: string): Trans
 export function rerollOffers(game: GameState): Transaction {
   const price = rerollPrice(game.rerolls)
   if (game.coins < price) return { game, ok: false, message: 'Pas assez d’Éclats pour renouveler les offres.' }
-  let next = { ...game, offers: [], coins: roundCoins(game.coins - price), rerolls: Math.min(RULES.maxCoins, game.rerolls + 1) } as GameState
+  const producing = simulateEmission(game.board).gain > 0
+  const starterPrice = shopPrice({ id: 'gem-0', kind: 'harvest', level: 0 }, game.purchases)
+  const remaining = roundCoins(game.coins - price)
+  if (!producing && remaining < starterPrice) return { game, ok: false,
+    message: 'Gardez ' + numberLabel(starterPrice) + ' Éclats pour une récolte : le circuit ne produit pas.' }
+  let next = { ...game, offers: [], coins: remaining, rerolls: Math.min(RULES.maxCoins, game.rerolls + 1) } as GameState
   for (let i = 0; i < 3; i++) {
     const { offer, seed, nextId } = generateOffer(next)
     next = { ...next, seed, nextId, offers: [...next.offers, offer] }
+  }
+  // A non-producing circuit must retain an affordable way to start harvesting,
+  // including unlucky draws and the higher price tiers of existing saves.
+  if (!producing && !next.offers.some((offer) => offer.gem.kind === 'harvest' && offer.price <= remaining)) {
+    next.offers[0] = { gem: { id: next.offers[0]!.gem.id, kind: 'harvest', level: 0 }, price: starterPrice }
   }
   return { game: next, ok: true, message: 'Trois nouvelles gemmes vous attendent.' }
 }

@@ -6,7 +6,7 @@ const LESSONS = [
   ['Amplifier et bifurquer', 'Les gemmes × multiplient l’énergie et la redistribuent vers leurs autres attaches. Chaque branche garde toute la puissance. Les attaches sont fixes.'],
   ['Fusionner deux doubles', 'Glissez une gemme sur son double : même famille, même niveau et mêmes attaches. Vous pouvez aussi acheter directement sur un double pour fusionner.'],
   ['Recycler un cristal', 'Glissez une gemme hors du plateau pour récupérer 50 % de son prix d’achat. Les coûts fusionnés sont cumulés. Les gemmes augmentent de 1 Éclat tous les 5 achats ; chaque renouvellement coûte 1 Éclat de plus.'],
-  ['Un circuit vivant', 'Déplacez ou posez des gemmes pendant le passage des boules. Elles gardent leur puissance et leur trajet jusqu’à la prochaine case, où elles rencontrent la gemme présente à cet instant.'],
+  ['Un circuit vivant', 'Les boules rencontrent les gemmes présentes à leur arrivée. Une même gemme ne récolte ou n’amplifie qu’une fois par branche : la déplacer ne réactive pas son effet.'],
   ['Jouer au toucher ou au clavier', 'Vous pouvez sélectionner une offre ou une gemme, puis toucher la destination. Au clavier : Entrée sélectionne, les flèches parcourent le plateau, Échap annule.'],
 ]
 

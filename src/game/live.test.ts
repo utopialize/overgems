@@ -6,6 +6,54 @@ import { createSession, sessionReducer } from './runtime'
 import { decodeSave } from './save'
 
 describe('impulsions vivantes', () => {
+  test('déplacer la même récolte devant une branche ne la recrédite pas ; l’émission suivante peut la récolter', () => {
+    const game = createInitialGame()
+    game.board[28] = { id: 'gem-1', kind: 'harvest', level: 0 }
+    let session = sessionReducer(createSession(game, 0), { type: 'tick', now: 5000 })
+    session = sessionReducer(session, { type: 'tick', now: 5800 })
+    expect(session.game.coins).toBe(31)
+    for (let x = 0; x < 2; x++) {
+      session = sessionReducer(session, { type: 'transfer', from: { area: 'board', index: 28 + x },
+        to: { area: 'board', index: 29 + x }, now: 5801 + x * 800 })
+      session = sessionReducer(session, { type: 'tick', now: 6600 + x * 800 })
+      expect(session.game.coins).toBe(31)
+      expect(session.pending[0]!.result.events.filter((event) => event.type === 'harvest')).toHaveLength(1)
+      expect(session.pending[0]!.start).toBe(5000)
+    }
+    session = sessionReducer(session, { type: 'tick', now: 10000 })
+    session = sessionReducer(session, { type: 'tick', now: 12400 })
+    expect(session.game.coins).toBe(32)
+    expect(session.pending.find((wave) => wave.id === 2)!.result.gain).toBe(1)
+  })
+  test('une multiplicatrice déplacée route encore la branche sans amplifier une deuxième fois', () => {
+    const game = createInitialGame()
+    game.board[28] = { id: 'gem-1', kind: 'multiplier', level: 0, setting: 'EW' }
+    game.board[30] = { id: 'gem-2', kind: 'harvest', level: 0 }
+    let session = sessionReducer(createSession(game, 0), { type: 'tick', now: 5000 })
+    session = sessionReducer(session, { type: 'tick', now: 5800 })
+    session = sessionReducer(session, { type: 'transfer', from: { area: 'board', index: 28 }, to: { area: 'board', index: 29 }, now: 5801 })
+    session = sessionReducer(session, { type: 'tick', now: 6600 })
+    expect(session.pending[0]!.frontier[0]!.energy).toBe(1.1)
+    expect(session.pending[0]!.result.events.filter((event) => event.type === 'multiply')).toHaveLength(1)
+    session = sessionReducer(session, { type: 'tick', now: 7400 })
+    expect(session.game.coins).toBe(31.1)
+  })
+  test('les branches filles héritent des activations antérieures avec des ensembles indépendants', () => {
+    const game = createInitialGame()
+    const gem = { id: 'gem-1', kind: 'harvest' as const, level: 0 }
+    game.board[28] = gem
+    game.board[29] = { id: 'gem-2', kind: 'multiplier', level: 0, setting: 'ESW' }
+    const first = advanceEmission(game.board, createEmission())
+    const split = advanceEmission(game.board, first)
+    expect(split.frontier).toHaveLength(2)
+    expect(split.frontier[0]!.activatedGems).not.toBe(split.frontier[1]!.activatedGems)
+    expect(first.frontier[0]!.activatedGems).toEqual(new Set(['gem-1']))
+    game.board[28] = null
+    game.board[30] = gem
+    const next = advanceEmission(game.board, split)
+    expect(next.result.gain).toBe(1)
+    expect(next.result.events.filter((event) => event.type === 'harvest')).toHaveLength(1)
+  })
   test('800 ms par case, même à travers une grille entièrement vide', () => {
     const start = createSession(createInitialGame(), 0)
     const emitted = sessionReducer(start, { type: 'tick', now: 5000 })

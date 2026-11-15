@@ -28,6 +28,12 @@ Les règles à jour et les arbitrages sont dans RULES.md.
   anciennes sauvegardes sont recalées sans toucher au solde ni aux coûts investis.
 - Renouvellement : **5 Éclats, puis 6, 7…**, compteur séparé sauvegardé, aucun
   incrément ni paiement en cas de refus.
+- Protection contre la faillite par renouvellement sur circuit sans revenu :
+  budget d'une récolte N1 préservé et au moins une récolte abordable dans le tirage.
+  Le quatrième renouvellement d'une grille neuve est refusé ; le solde reste 12.
+- Une gemme ne récolte ou n'amplifie qu'une fois par branche, même déplacée devant
+  la boule. Le routage continue ; les branches filles héritent des activations,
+  les émissions suivantes repartent sans ces activations.
 - Interface sur un seul écran en portrait et paysage, aide paginée, sauvegarde
   validée, réduction des animations, pause et remise à zéro confirmée.
 - Au masquage de l'onglet ou à la pause, seuls les gains déjà collectés sont
@@ -35,7 +41,7 @@ Les règles à jour et les arbitrages sont dans RULES.md.
 
 ## Vérifications effectuées
 
-- `npm run check` : lint, **83 tests Vitest**, TypeScript et build.
+- `npm run check` : lint, **96 tests Vitest**, TypeScript et build.
 - Propagation dans les quatre directions, sertissages fixes, croisements,
   boucles, limites, déterminisme et exemple de référence à 22 Éclats.
 - Moteur incrémental et prévision statique concordants, passage à travers les
@@ -45,9 +51,13 @@ Les règles à jour et les arbitrages sont dans RULES.md.
   de gains anticipés ou hors ligne et dix minutes de temps simulé.
 - Hausse au cinquième achat, renouvellements progressifs, refus sans fonds,
   remboursements et migration des anciennes sauvegardes.
-- **36 scénarios Chromium** : achat et recyclage souris/tactile/clavier,
+- **38 scénarios Chromium** : achat et recyclage souris/tactile/clavier,
   sauvegarde, suppression du sélecteur, évolution du prix de renouvellement,
   tarifs au palier et conservation des coûts payés.
+- Régressions : renouvellement protégé sans débit ni modification de sauvegarde,
+  achat encore possible après refus ; déplacement répété d'une récolte ou d'une
+  multiplicatrice sans répétition d'effet. Les tests purs vérifient aussi les
+  tirages défavorables, l'inflation, l'héritage des branches et la vague suivante.
 - Deux scénarios avec horloge contrôlée vérifient la boule chiffrée dans les
   cases vides et son maintien pendant une nouvelle pose puis un déplacement.
   La même boule affiche 1,0 puis 1,1 ; le gain réel de 1,1 est récolté à la nouvelle position.

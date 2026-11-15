@@ -2,8 +2,62 @@ import { describe, expect, test } from 'vitest'
 import { gemPrice, recycleValue, rerollPrice } from './catalog'
 import { createInitialGame, buyOfferOnBoard, recycleGem, rerollOffers } from './state'
 import { decodeSave, validateGame } from './save'
+import { simulateEmission } from './engine'
 
 describe('prix progressifs et recyclage', () => {
+  test('un quatrième renouvellement sans production est refusé sans rien modifier et laisse une récolte achetable', () => {
+    let game = createInitialGame()
+    for (let i = 0; i < 3; i++) game = rerollOffers(game).game
+    expect(game.coins).toBe(12)
+    const denied = rerollOffers(game)
+    expect(denied.ok).toBe(false)
+    expect(denied.game).toBe(game)
+    expect(denied.message).toContain('Gardez 6 Éclats')
+    expect(game.rerolls).toBe(3)
+    const index = game.offers.findIndex((offer) => offer.gem.kind === 'harvest' && offer.price <= game.coins)
+    expect(index).toBeGreaterThanOrEqual(0)
+    const bought = buyOfferOnBoard(game, index, 28, game.offers[index]!.gem.id)
+    expect(bought.ok).toBe(true)
+    expect(simulateEmission(bought.game.board).gain).toBeGreaterThan(0)
+    expect(decodeSave(JSON.stringify(game)).game).toEqual(game)
+  })
+  test.each([0, 1, 2, 3, 42, 0xffffffff])('sans revenu, le tirage %s garde une récolte abordable même avec des niveaux débloqués', (seed) => {
+    const game = createInitialGame(seed)
+    game.purchases = 10
+    game.coins = 13 // 5 for renewal, 8 for a level-one harvest at this price tier.
+    game.board[0] = { id: 'gem-1', kind: 'harvest', level: 9 }
+    const before = JSON.stringify(game)
+    const transaction = rerollOffers(game)
+    expect(transaction.ok).toBe(true)
+    expect(transaction.game.coins).toBe(8)
+    expect(transaction.game.offers.some((offer) => offer.gem.kind === 'harvest' && offer.price <= 8)).toBe(true)
+    expect(transaction.game.nextId).toBe(game.nextId + 3)
+    expect(validateGame(transaction.game)).toBe(true)
+    expect(JSON.stringify(game)).toBe(before)
+  })
+  test('un circuit productif peut renouveler même en dépensant son dernier budget d’achat', () => {
+    const game = createInitialGame()
+    game.coins = 5
+    game.board[28] = { id: 'gem-1', kind: 'harvest', level: 0 }
+    const transaction = rerollOffers(game)
+    expect(transaction.ok).toBe(true)
+    expect(transaction.game.coins).toBe(0)
+    expect(simulateEmission(transaction.game.board).gain).toBe(1)
+  })
+  test('une récolte hors du trajet ne désactive pas la protection', () => {
+    const game = createInitialGame()
+    game.coins = 10
+    game.board[0] = { id: 'gem-1', kind: 'harvest', level: 0 }
+    expect(rerollOffers(game).game).toBe(game)
+  })
+  test('le budget protégé suit aussi l’inflation des achats', () => {
+    const game = createInitialGame()
+    game.purchases = 25
+    game.coins = 15
+    const transaction = rerollOffers(game)
+    expect(transaction.game).toBe(game)
+    expect(transaction.message).toContain('Gardez 11 Éclats')
+  })
   test('les prix montent de 1 Éclat tous les cinq achats et les nouveaux tirages suivent le palier', () => {
     let game = createInitialGame()
     game.coins = 200

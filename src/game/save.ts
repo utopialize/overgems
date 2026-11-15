@@ -24,6 +24,7 @@ export function validateGame(value: unknown): value is GameState {
     || !integer(value.seed) || value.seed > 0xffffffff || !integer(value.nextId) || value.nextId < 1
     || !integer(value.tutorial) || value.tutorial > 8 || !record(value.settings)
     || typeof value.settings.paused !== 'boolean' || typeof value.settings.reducedMotion !== 'boolean'
+    || !['simple', 'advanced'].includes(value.settings.viewMode as string)
     || !record(value.stats) || !integer(value.stats.emissions) || !finite(value.stats.earned)
     || !finite(value.stats.lastGain) || !Array.isArray(value.stats.recent)
     || value.stats.recent.length > 10 || !value.stats.recent.every(finite)) return false
@@ -48,7 +49,8 @@ export function decodeSave(raw: string | null): { game: GameState; warning: stri
     if (record(value) && value.version === 1) {
       value = { ...value, purchases: value.purchases === undefined ? 0 : value.purchases,
         rerolls: value.rerolls === undefined ? 0 : value.rerolls,
-        settings: record(value.settings) ? { paused: value.settings.paused, reducedMotion: value.settings.reducedMotion } : value.settings }
+        settings: record(value.settings) ? { paused: value.settings.paused, reducedMotion: value.settings.reducedMotion,
+          viewMode: value.settings.viewMode === undefined ? 'simple' : value.settings.viewMode } : value.settings }
     }
     if (validateGame(value)) return { game: { ...value,
       offers: value.offers.map((offer) => ({ ...offer, price: shopPrice(offer.gem, value.purchases) })) }, warning: '' }

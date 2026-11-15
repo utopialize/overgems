@@ -5,7 +5,7 @@ import type { ActiveEmission } from '../game/runtime'
 import type { Point, FlowEvent } from '../game/types'
 import { PULSE_VISUALS, powerLabel } from './pulseVisuals'
 
-export type FlowSnapshot = { emissions: ActiveEmission[]; reducedMotion: boolean; offset: number }
+export type FlowSnapshot = { emissions: ActiveEmission[]; reducedMotion: boolean; advanced: boolean; offset: number }
 type IndexedEvent = { event: FlowEvent; index: number }
 type Timeline = { indexed: number; steps: Map<number, IndexedEvent[]> }
 
@@ -30,7 +30,7 @@ export function createFlowScene(app: Application, snapshot: { current: FlowSnaps
 
   const draw = () => {
     light.clear()
-    const { emissions, reducedMotion, offset } = snapshot.current
+    const { emissions, reducedMotion, advanced, offset } = snapshot.current
     const cellWidth = (app.screen.width - offset) / 7
     const cellHeight = app.screen.height / 9
     const point = (p: Point, source = false) => ({ x: source ? offset / 2 : offset + (p.x + 0.5) * cellWidth, y: (p.y + 0.5) * cellHeight })
@@ -50,18 +50,25 @@ export function createFlowScene(app: Application, snapshot: { current: FlowSnaps
         if (drawn >= 120) break
         const progress = reducedMotion ? 0 : Math.max(0, Math.min(1, age - pulse.step))
         const from = point(pulse.from, pulse.step === 0), to = point(pulse.position)
-        const text = powerLabel(pulse.energy)
-        const radius = PULSE_VISUALS.radius
+        const text = advanced ? powerLabel(pulse.energy) : ''
+        const radius = advanced ? PULSE_VISUALS.radius : 3
         const x = from.x + (to.x - from.x) * progress
         const y = from.y + (to.y - from.y) * progress
         if (!reducedMotion) {
           light.moveTo(from.x + (to.x - from.x) * Math.max(0, progress - 0.25), from.y + (to.y - from.y) * Math.max(0, progress - 0.25))
             .lineTo(x, y).stroke({ width: 2.5, color: 0xe9b47d, alpha: 0.65 })
         }
-        light.circle(x, y, radius * 1.7).fill({ color: 0xe9b47d, alpha: 0.1 })
-          .circle(x, y, radius).fill({ color: 0xf4d6ae, alpha: 0.98 })
-          .circle(x, y, radius * 0.92).fill({ color: 0x6a4731, alpha: 0.98 })
-          .circle(x - radius * 0.42, y - radius * 0.46, radius * 0.12).fill({ color: 0xffffff, alpha: 0.7 })
+        if (advanced) {
+          light.circle(x, y, radius * 1.7).fill({ color: 0xe9b47d, alpha: 0.1 })
+            .circle(x, y, radius).fill({ color: 0xf4d6ae, alpha: 0.98 })
+            .circle(x, y, radius * 0.92).fill({ color: 0x6a4731, alpha: 0.98 })
+            .circle(x - radius * 0.42, y - radius * 0.46, radius * 0.12).fill({ color: 0xffffff, alpha: 0.7 })
+        } else {
+          light.circle(x, y, 10).fill({ color: 0xe9b47d, alpha: 0.12 })
+            .circle(x, y, 6).fill({ color: 0xe9b47d, alpha: 0.3 })
+            .circle(x, y, radius).fill({ color: 0xf4d6ae, alpha: 0.98 })
+            .circle(x, y, 1.25).fill({ color: 0xffffff, alpha: 0.95 })
+        }
         const key = emission.id + ':' + pulse.branch
         activeOrbs.add(key)
         let orb = orbs.get(key)
@@ -74,7 +81,9 @@ export function createFlowScene(app: Application, snapshot: { current: FlowSnaps
           orb.style.width = radius * 2 + 'px'; orb.style.height = radius * 2 + 'px'
           orbLayer.appendChild(orb)
         }
-        orb.textContent = text
+        orb.textContent = advanced ? text : ''
+        orb.dataset.appearance = advanced ? 'bubble' : 'spark'
+        orb.style.width = radius * 2 + 'px'; orb.style.height = radius * 2 + 'px'
         orb.dataset.energy = String(pulse.energy)
         orb.style.left = x + 'px'; orb.style.top = y + 'px'
         orb.style.fontSize = Math.min(9, (radius * 2 - 2) / Math.max(1, text.length * 0.6)) + 'px'
@@ -136,6 +145,7 @@ export function createFlowScene(app: Application, snapshot: { current: FlowSnaps
               .stroke({ width: 2, color: event.type === 'harvest' ? 0xf4d6ae : 0xd2bddc, alpha: (1 - t) * 0.9 })
             drawn++
           }
+          if (!advanced) continue
           const key = emission.id + ':' + index
           activeLabels.add(key)
           let label = labels.get(key)

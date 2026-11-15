@@ -47,6 +47,15 @@ export function recycleValue(gem: Gem): number {
 export function numberLabel(value: number): string {
   return value.toLocaleString('fr-FR', { maximumFractionDigits: 1, notation: value >= 100_000 ? 'compact' : 'standard' })
 }
+export function exactNumberLabel(value: number): string {
+  return value.toLocaleString('fr-FR', { maximumFractionDigits: 6 })
+}
+export function rateLabel(value: number): string {
+  return value.toLocaleString('fr-FR', { maximumFractionDigits: 6, notation: Math.abs(value) >= 100_000 ? 'compact' : 'standard' })
+}
+export function signedRateLabel(value: number): string {
+  return (value > 0 ? '+' : '') + rateLabel(value)
+}
 export function roundCoins(value: number): number {
   return Math.round(Math.min(RULES.maxCoins, value) * 1e6) / 1e6
 }

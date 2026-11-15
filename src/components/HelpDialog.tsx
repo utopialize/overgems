@@ -2,12 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 
 const LESSONS = [
   ['Votre premier cristal', 'Glissez une gemme ambre depuis la boutique sur la case face à la source, à gauche de la ligne centrale. L’achat est payé uniquement à la pose.'],
-  ['Un souffle toutes les 5 secondes', 'La source émet une boule de puissance 1, visible en son centre. Elle avance à 800 ms par case, traverse les espaces vides et s’arrête au bord ou devant une attache fermée.'],
+  ['Un souffle toutes les 5 secondes', 'La source émet une puissance de 1 : éclat lumineux en vue épurée, bulle chiffrée en vue avancée. Le flux avance à 800 ms par case jusqu’au bord ou à une attache fermée.'],
   ['Amplifier et bifurquer', 'Les gemmes × multiplient l’énergie et la redistribuent vers leurs autres attaches. Chaque branche garde toute la puissance. Les attaches sont fixes.'],
   ['Fusionner deux doubles', 'Même famille, niveau et attaches : chaque fusion ajoute +1 en récolte ou +0,1 au facteur, jusqu’à +12 ou ×2,2. Vous pouvez aussi acheter directement sur un double.'],
   ['Recycler un cristal', 'Glissez une gemme hors du plateau pour récupérer 50 % de son prix d’achat. Les coûts fusionnés sont cumulés. Les gemmes augmentent de 1 Éclat tous les 5 achats ; chaque renouvellement coûte 1 Éclat de plus.'],
   ['Un circuit vivant', 'Les boules rencontrent les gemmes présentes à leur arrivée. Une même gemme ne récolte ou n’amplifie qu’une fois par branche : la déplacer ne réactive pas son effet.'],
   ['Jouer au toucher ou au clavier', 'Vous pouvez sélectionner une offre ou une gemme, puis toucher la destination. Au clavier : Entrée sélectionne, les flèches parcourent le plateau, Échap annule.'],
+  ['Observer et optimiser', 'Le bouton œil active la vue avancée : puissances, gains, inspection sur la boutique et rendement du plateau fixe. Avant de relâcher une gemme, l’aperçu indique l’écart prévu en Éclats par seconde.'],
 ]
 
 export function HelpDialog({ onClose }: { onClose: () => void }) {

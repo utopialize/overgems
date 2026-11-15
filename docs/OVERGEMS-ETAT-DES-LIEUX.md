@@ -1,7 +1,8 @@
 # OVERGEMS — Audit d’avancement et état des lieux V0.1
 
-Date : **15 novembre 2026**. État examiné : branche `develop`, base Git
-`ec34a77`, puis passage local à la progression linéaire des gemmes. Le commit `35e147c`
+Date : **15 novembre 2026**. État examiné : branche
+`feature/advanced-inspection-yield`, issue de `develop` au commit `b107133`, avec
+les vues et outils d'optimisation en attente de validation avant fusion. Le commit `35e147c`
 contient l'audit et les deux corrections de gameplay décrites ci-dessous ; le
 premier MVP correspond à `57afe23`. `package.json` porte
 encore la version technique `0.0.0`. « V0.1 » désigne ici le périmètre produit.
@@ -14,6 +15,8 @@ des lieux décrit le code corrigé et conserve la trace des constats initiaux.
 À la demande suivante, la progression chromatique sur douze niveaux a été ajoutée.
 La progression économique a ensuite été fixée à +1 par fusion de récoltes et
 +0,1 par fusion de multiplicatrices, avec les plafonds +12 et ×2,2.
+La branche feature ajoute les deux vues, l'inspection superposée à la boutique,
+les contributions marginales et les aperçus de rendement sans effet sur la partie.
 
 Les sources sont le code, les tests, l'historique Git disponible et les
 documents du dépôt : [prompt initial](<OVERGEMS - MASTER DEV PROMPT V01.md>),
@@ -73,7 +76,7 @@ Sources : `src/game/catalog.ts`, `engine.ts`, `runtime.ts`, `useGame.ts`.
 - Les émissions peuvent se chevaucher. Chaque émission possède une identité,
   des branches, une puissance et un historique distincts.
 - Les récoltes sont créditées à l’arrivée effective, une seule fois. Les effets
-  graphiques ne créditent rien. La statistique « Dernier flux » est actualisée
+  graphiques ne créditent rien. La statistique « Dernier flux réel » est actualisée
   quand toutes les branches de l’émission sont terminées, pas à son départ.
 - Achat, déplacement, fusion et recyclage conservent les parcours déjà lancés.
   La prochaine rencontre utilise la gemme présente au moment de l’arrivée.
@@ -361,7 +364,7 @@ Changer d’hôte, de protocole ou de port ouvre un autre espace localStorage.
 
 ## 3. Évolutions reconstituables
 
-L’historique disponible contient **six commits**. Il ne permet pas de dater
+L'historique de base examiné va jusqu'à `b107133`. Il ne permet pas de dater
 chaque itération de gameplay à l’intérieur du MVP : presque tout le jeu est
 regroupé dans le commit MVP. Aucun échange de conversation n’est nécessaire
 pour les constats ci-dessous, et aucune chronologie intermédiaire n’est inventée.
@@ -374,6 +377,8 @@ pour les constats ci-dessous, et aucune chronologie intermédiaire n’est inven
 | `57afe23`, 15/11 à 11:36 | Remplacement de la démo par le jeu : moteur, économie, interactions, persistance, habillage, documentation et tests. Publication du MVP ; `main` et `develop` pointent initialement dessus. |
 | `35e147c`, 15/11 à 11:56 | Audit et corrections du renouvellement sans revenu et de la répétition d'effet d'une gemme déplacée. |
 | `ec34a77`, 15/11 à 12:20 | Palettes visuelles par niveau, contrôles de contraste, tests mobiles et documentation. |
+| `226f4b8`, 15/11 à 12:30 | Progression linéaire des récoltes et multiplicatrices, plafonds N12 et tests de fusion. |
+| `b107133`, 15/11 à 12:31 | Amplification des écarts de couleur entre niveaux et contrôles de distance chromatique. |
 
 Les arbitrages visibles par rapport au prompt original sont substantiels :
 
@@ -402,6 +407,9 @@ L'évolution suivante donne aux gemmes une palette propre à chacun des douze
 niveaux. La modification locale actuelle remplace le catalogue non linéaire
 par +1 à +12 et ×1,1 à ×2,2. Le barème des prix et la composition multiplicative
 de la puissance lors des traversées restent ceux décrits dans ce document.
+La branche feature prépare maintenant une vue épurée par défaut et une vue avancée
+persistées, une inspection recouvrant la boutique, ainsi que des estimations et
+prévisualisations sans transaction réelle. La fusion vers `develop` reste à valider.
 
 Les régressions désormais protégées par les tests concernent notamment le double
 débit, les pertes sur refus ou annulation tactile, le paiement avant dépôt, le
@@ -414,10 +422,19 @@ chaque anomalie s’est historiquement produite.
 
 ### Organisation effective
 
-Sur smartphone portrait : marque et boutons aide/paramètres, solde et dernier
-flux, circuit central, trois offres et renouvellement, puis courte ligne de
-statut. La grille s’adapte à l’espace restant dans `100dvh`. Il n’y a ni onglet
-de réserve, ni moyenne récente affichée, ni panneau de tutoriel permanent.
+Sur smartphone portrait : marque, icône œil de changement de vue, aide/paramètres,
+solde, circuit, trois offres et renouvellement. La vue épurée, par défaut, masque
+les statistiques, titres secondaires et confirmations textuelles. Les refus et
+alertes restent signalés. La vue avancée ajoute dernier flux réel, rendement
+théorique, puissances et nombres flottants. La grille occupe le même espace dans
+les deux modes, dans `100dvh`. Il n'y a ni onglet de réserve ni moyenne récente.
+
+En vue avancée, la sélection ouvre une fiche sur la boutique : fonction, niveau,
+valeur, connexions, remboursement et contribution. Les contrôles recouverts sont
+inertes et masqués aux technologies d'assistance ; fermeture et recyclage restent
+accessibles. La grille n'est ni déplacée ni redimensionnée. Pendant un glisser,
+le panneau s'efface pour les indications du geste. Le clavier conserve l'accès
+au plateau après sélection d'une offre.
 
 À partir de 48 rem de largeur, ou de 35 rem en paysage, le circuit passe à gauche
 et l’économie/boutique à droite. La largeur maximale est 72 rem ; la présentation
@@ -432,10 +449,10 @@ interdit dans la balise viewport. Les zones de gemmes déplaçables utilisent
 cependant `touch-action: none` : le pincement commencé sur ces zones et son
 comportement sur appareils réels restent à vérifier.
 
-L’aide contient sept pages et se rouvre toujours à la première. Le champ
+L’aide contient huit pages et se rouvre toujours à la première. Le champ
 persisté `tutorial` et l’action associée ne pilotent pas cette aide : il ne
 s’agit pas d’un tutoriel contextuel mémorisant les actions accomplies. Les
-paramètres proposent animations réduites, pause et remise à zéro confirmée.
+paramètres proposent choix de vue, animations réduites, pause et remise à zéro confirmée.
 Ouvrir une fenêtre d’aide ou de paramètres ne met pas automatiquement en pause.
 
 ### Rendu et conformité
@@ -462,10 +479,13 @@ champagne `#F4D6AE`, texte `#F1EDF2`. Les chiffres sont tabulaires, les bordures
 fines et les coins modérément arrondis. Les captures portrait, paysage et réseau
 en activité produites par les tests ont été examinées pendant l’audit.
 
-Les bulles ont un corps de **18 px** entouré d’un halo plus large, une courte
-traînée et une valeur centrale. Elles passent derrière les SVG des gemmes, sans
+La vue épurée utilise un éclat lumineux de **6 px de cœur**, halo ambre et courte
+traînée, sans chiffre ni contour de bulle. La vue avancée utilise une bulle de
+**18 px** entourée d'un halo, avec une valeur centrale. Les deux passent derrière
+les SVG des gemmes, sans
 changer de diamètre ni de durée de pas selon leur puissance. Au passage, la
-gemme brille et un gain ou facteur réel flotte pendant **750 ms**. Une collision
+gemme brille ; en vue avancée seulement, un gain ou facteur réel flotte pendant
+**750 ms**. Une collision
 bord/attache fermée produit six particules pendant **280 ms**, pour la seule
 branche concernée. Les fins par boucle ou plafond de puissance n’utilisent pas
 cet effet de collision.
@@ -487,8 +507,33 @@ Les écarts ou réalisations partielles face à la charte sont :
 - Fusion plus simple que la convergence lumineuse et les particules envisagées.
 - Taille et intensité de la bulle stables, plutôt qu’intensité liée à l’énergie ;
   la vitesse est une constante de code plutôt qu’une option accessible.
-- Informations secondaires très petites et statut limité à deux lignes ; pas
-  de fiche détaillée de gemme ouvrable. La clarté sur petit écran reste à éprouver.
+- Informations secondaires très petites et statut limité à deux lignes ; la fiche
+  avancée privilégie les flèches pour les connexions. Le confort matériel reste à éprouver.
+
+### Mesure du rendement
+
+`src/game/analysis.ts` utilise le moteur pur pour une nouvelle émission sur un
+plateau fixe. Le rendement théorique vaut `gain / 5` Éclats/s, à cadence nominale,
+y compris en pause. Il n'inclut ni les parcours déjà en cours, ni les futures
+manipulations. « Dernier flux réel » reste la dernière émission effectivement
+terminée, avec son histoire de manipulations ; avant la première fin, il affiche
+un tiret. Ces deux indicateurs sont réservés à la vue avancée.
+
+La contribution d'une gemme est `(gain du plateau − gain avec sa case vide) / 5`,
+routage inclus. Une gemme bloquante peut donc avoir un impact négatif. Ces impacts
+ne sont pas des parts additives de la production totale. Une offre non posée
+n'a pas encore de contribution à une case donnée.
+
+Le glisser, le survol après sélection et les flèches du clavier affichent le
+rendement après pose et son écart avant validation. Le recyclage glissé possède
+aussi un aperçu. Les transactions candidates réutilisent les validations réelles,
+puis sont jetées : solde, offres, graine, statistiques et flux réels restent
+inchangés. Les calculs sont mémorisés selon les données ; aucun calcul de
+production ne s'exécute dans les animations.
+
+Une estimation tronquée par les limites affiche `≥` et « Estimation partielle ».
+Les contributions/différences qui compareraient des résultats limités sont
+indisponibles. Les taux utilisent jusqu'à six décimales et abrègent les grands nombres.
 
 ## 5. Architecture technique et dettes
 
@@ -503,6 +548,7 @@ les validations de cet audit tournent sur Node 22.22.1, npm 9.2.0.
 | `economy.ts`, `fusion.ts`, `state.ts` | Tirages reproductibles, fusion et transactions pures. |
 | `engine.ts` | Création/avancement des émissions, collisions, branches et événements. `simulateEmission` utilise le même moteur pour une prévision sur plateau fixe. |
 | `runtime.ts` | Ordonnancement chronologique, émissions simultanées, application unique des gains, actions sur la session. |
+| `analysis.ts` | Prévisions de plateau fixe, contributions marginales et aperçus sans effet sur l'état réel. |
 | `save.ts`, `useGame.ts` | Validation/migration et localStorage ; liaison à React, minuterie de simulation et suspension. |
 | `src/App.tsx`, `src/components/` | Interface HTML accessible, gemmes SVG, sélection, glisser et fenêtres. |
 | `src/components/gemPalette.ts` | Progression visuelle des teintes et facettes sur les douze niveaux, indépendante de l'économie. |
@@ -542,18 +588,18 @@ retestée dans cet audit.
 
 | Vérification | Résultat constaté le 15/11/2026 |
 | --- | --- |
-| `npm run check` | Réussi après progression linéaire : Oxlint, 120 tests Vitest, compilation TypeScript et build Vite. |
-| `npm run test:mobile` | Réussi après progression linéaire : 43 scénarios Chromium, environ 1 min 20 s. |
-| `npm run test:mobile -- tests/mobile/layout.spec.ts` | 12 scénarios réussis après la mise à jour de l’aide ; ses sept pages tiennent en paysage. |
+| `npm run check` | Réussi : Oxlint, 130 tests Vitest, compilation TypeScript et build Vite. |
+| `npm run test:mobile` | Réussi : 59 scénarios Chromium, environ 1 min 40 s ; vues, inspection, rendement et régressions existantes. |
+| `npm run test:mobile -- tests/mobile/layout.spec.ts` | 12 scénarios dont les huit pages d'aide et les paramètres en paysage. |
 | `npm run test:mobile -- tests/mobile/palette.spec.ts` | 3 scénarios après amplification des palettes : contraste, distances de couleur, portrait/paysage, glisser, fusion et rechargement. |
 | Examen des captures | Captures initiales : grille neuve, paysage et réseau vivant. Puis palettes des 24 gemmes en portrait 390 × 844 et paysage 568 × 320. |
 | Sondes initiales, puis tests de régression | Les deux problèmes initiaux ont été reproduits, corrigés puis couverts par des assertions moteur et navigateur. |
 
 Les tests produisent des artefacts ignorés dans `test-results/` et le build dans
 `dist/`. Après les deux corrections et leur explication dans l'aide, les dernières
-modifications portent sur les palettes, la progression linéaire et leurs vérifications. Le build
-produit notamment deux chunks d’environ 249 et 261 ko avant compression
-(environ 79 et 77 ko gzip), plus les chunks partagés ; ce n’est pas une mesure
+modifications portent sur les vues, l'inspection et les analyses de rendement.
+Le build produit notamment deux chunks d'environ 256 et 261 ko avant compression
+(environ 81 et 77 ko gzip), plus les chunks partagés ; ce n’est pas une mesure
 du téléchargement total ni des performances d’un mobile.
 
 ### Couverture fonctionnelle inventoriée
@@ -564,12 +610,14 @@ du téléchargement total ni des performances d’un mobile.
 | `src/game/balance.test.ts` | 20 | Paliers, compteurs, remboursements, migrations ; refus du renouvellement bloquant, six graines avec budget limité/niveaux débloqués, circuit productif, récolte hors trajet et inflation. |
 | `src/game/live.test.ts` | 15 | Propagation vivante, conservation des flux, suspension ; effet non répété d’une récolte/multiplicatrice déplacée, héritage indépendant des activations et réactivation à l’émission suivante. |
 | `src/game/impacts.test.ts` | 7 | Puissance composée/affichage ; collisions au contact ; branches sœurs ; obstacle ajouté, déplacé ou posé après une arrivée. |
-| `tests/mobile/layout.spec.ts` | 12 | Neuf tailles, redimensionnement, insets simulés, sept pages d’aide et paramètres en paysage, absence d’interdiction du zoom. |
+| `src/game/analysis.test.ts` | 10 | Taux du plateau fixe, contributions positives/négatives et bifurcations, aperçus et refus, limites, migration du mode et conservation des parcours/gains. |
+| `tests/mobile/layout.spec.ts` | 12 | Neuf tailles, redimensionnement, insets simulés, huit pages d’aide et paramètres en paysage, absence d’interdiction du zoom. |
 | `tests/mobile/gameplay.spec.ts` | 12 | Achat à la pose, fusion, souris/tactile/clavier, sauvegarde, effets réels, reset confirmé, mode réduit, réserve historique et erreurs de stockage. |
 | `tests/mobile/balance.spec.ts` | 7 | Renouvellement sauvegardé puis refus sans perte, achat encore possible ; recyclage et annulation, palier et remboursement après fusion. |
 | `tests/mobile/live.spec.ts` | 7 | Bulles, pose/déplacement, taille/vitesse/arrondi, couches, collisions ; absence de répétition d’effet après deux déplacements de la même récolte ou multiplicatrice. |
 | `tests/mobile/palette.spec.ts` | 3 | 24 palettes distinctes, luminosité croissante, contraste d'au moins 4,5:1 ; distances CIELAB ≥3 entre voisins et ≥40 entre N1/N12 ; portrait/paysage, glisser, fusion et persistance. |
 | `tests/mobile/fusion.spec.ts` | 2 | Pour chaque catégorie : fusion au quatrième niveau sans saut, achat avec fusion, plafond N12, refus sans perte et sauvegarde/rechargement. |
+| `tests/mobile/advanced.spec.ts` | 16 | Modes et persistance, éclat/bulle sur la même impulsion, distinction des rendements, inspection et clavier, aperçus souris/tactile, annulation, limites et superposition sans mouvement de grille sur neuf formats. |
 
 Les neuf viewports sont 320 × 568, 360 × 640, 390 × 664, 390 × 844,
 412 × 915, 568 × 320, 844 × 390, 768 × 1024 et 1280 × 800. Les contrôles de mise
@@ -627,9 +675,9 @@ volontaire peut avoir un impact important sans constituer un bug technique.
 | **Moyenne — choix observable** | Cases sous 44 px sur écrans courts ; petits textes, bulle de 18 px et police centrale réduite pour les grands nombres. Capture paysage : cases proches de 26 px. | Précision tactile et lisibilité incertaines malgré l’absence de scroll. Aucun essai matériel ne les valide. |
 | **Moyenne — compatibilité fonctionnelle** | Réserve historique sauvegardée mais inaccessible ; elle participe encore au calcul du niveau maximal possédé. Lecture du code et test de conservation. | Des objets d’anciens joueurs restent inutilisables, tout en influençant les offres. Leur devenir doit être explicité avant une diffusion élargie. |
 | **Moyenne — robustesse de progression** | Pas de sauvegarde de secours, export ou coordination multi-onglets ; donnée invalide remplacée et ensuite sauvegardée. Lecture du code. | Une corruption ou un changement d’origine peut être perçu comme une perte ; plusieurs onglets peuvent s’écraser mutuellement. |
-| **Moyenne — accompagnement partiel** | Aide paginée non contextuelle, pas de fiche de gemme, pas de moyenne affichée. Le statut est tronqué ; `loadWarning` demeure prioritaire jusqu’au rechargement. Lecture du code. | Les raisons d’un refus ou la description sélectionnée peuvent manquer de visibilité. Une alerte initiale peut masquer les retours suivants. |
+| **Moyenne — accompagnement partiel** | Aide paginée non contextuelle et pas de moyenne affichée. L'inspection existe en vue avancée ; le statut reste tronqué et `loadWarning` prioritaire jusqu'au rechargement. | Le confort de la fiche et la compréhension du rendement nominal restent à valider humainement. Une alerte initiale peut masquer les retours suivants. |
 | **Moyenne sur réseaux denses — limite certaine, gêne non mesurée** | Budgets visuels qui omettent des effets ; arrêt global à 4 096 événements. Pas de profil matériel. | Des gains peuvent être difficiles à relier aux effets visibles. Les réseaux très ramifiés peuvent être tronqués avec une alerte peu explicative. |
-| **Faible à moyenne — approximation graphique** | Contact logique fixé à 35 % d’un pas, sans dépendre du diamètre 18 px ni du contour SVG. Lecture du code. | L’éclatement n’est pas garanti au contact géométrique exact pour toutes les tailles ; à examiner surtout sur petites cases. |
+| **Faible à moyenne — approximation graphique** | Contact logique fixé à 35 % d’un pas, sans dépendre du diamètre 6/18 px ni du contour SVG. Lecture du code. | L’éclatement n’est pas garanti au contact géométrique exact pour toutes les tailles ; le temps de collision reste identique entre les vues. |
 | **Faible — cohérence de reprise** | Pause manuelle et suspension d’onglet n’ont pas exactement la même gestion d’échéance ; les flux non terminés sont abandonnés. Lecture du code et tests de suspension. | Cadence de reprise et dernier flux parfois difficiles à interpréter ; les récoltes déjà perçues restent acquises. |
 | **Faible — portabilité et livraison** | IP de développement fixe, version package `0.0.0`, absence de CI et de configuration de publication. Lecture du dépôt. | Le code est partagé, mais l’installation sur une autre machine et une livraison reproductible demandent une procédure explicite. |
 
@@ -649,8 +697,8 @@ Aucun échec n’a été observé dans les suites relancées. Cela ne suffit pas
 | Boutique → inventaire et réserve visible | Boutique → plateau atomique ; réserve dormante | Parcours remplacé ; données/opérations historiques conservées. |
 | Fusion stricte entre toutes zones | Complète dans le moteur ; parcours actifs plateau et boutique | Partiel côté interface pour la réserve. |
 | Progression des valeurs configurable | +1 par fusion pour les récoltes, +0,1 pour les facteurs ; douze niveaux | Catalogue initial remplacé par la progression linéaire demandée. |
-| Tutoriel contextuel, progression mémorisée | Aide facultative de sept pages ; champ historique non utilisé | Partiel. |
-| Fiche concise et indicateurs réels | Description en statut/noms accessibles ; solde et dernier flux | Partiel ; pas de fiche dédiée ni moyenne récente visible. |
+| Tutoriel contextuel, progression mémorisée | Aide facultative de huit pages ; champ historique non utilisé | Partiel. |
+| Fiche concise et indicateurs réels | Inspection avancée, dernier flux réel, rendement théorique et aperçus | Réalisé sur la branche feature ; moyenne récente toujours non affichée. |
 | Gemmes évoluant visuellement avec leur niveau | Nuances et luminosité progressives sur douze niveaux ; silhouette et attaches stables | Progression chromatique réalisée ; ornements et halos de niveau non ajoutés. |
 | Simulation pure, calculs indépendants des animations | Moteur, runtime et rendu séparés | Réalisé ; le plateau reste vivant pendant les flux. |
 | Sauvegarde versionnée, pas de gains hors ligne | Présente avec migrations locales | Réalisé ; parcours transitoires non conservés. |

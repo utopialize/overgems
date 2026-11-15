@@ -7,7 +7,7 @@ export function useGemInteractions(game: GameState, onDrop: (from: GemOrigin, to
   onRecycle: (from: Slot, gemId: string) => void) {
   const pointer = useRef<{ id: number; from: GemOrigin; x: number; y: number; gem: Gem; moved: boolean } | null>(null)
   const suppressClick = useRef(false)
-  const [ghost, setGhost] = useState<{ gem: Gem; origin: GemOrigin; x: number; y: number; recycling: boolean } | null>(null)
+  const [ghost, setGhost] = useState<{ gem: Gem; origin: GemOrigin; x: number; y: number; recycling: boolean; target: Slot | null } | null>(null)
   function slotAt(element: Element | null): Slot | null {
     const target = element?.closest<HTMLElement>('[data-area][data-index]')
     if (!target) return null
@@ -54,9 +54,10 @@ export function useGemInteractions(game: GameState, onDrop: (from: GemOrigin, to
         if (!current.moved && Math.hypot(event.clientX - current.x, event.clientY - current.y) < 8) return
         current.moved = true
         event.currentTarget.setPointerCapture(event.pointerId)
-        const outside = !document.elementFromPoint(event.clientX, event.clientY)?.closest('.board-grid')
+        const element = document.elementFromPoint(event.clientX, event.clientY)
+        const outside = Boolean(element && !element.closest('.board-grid'))
         setGhost({ gem: current.gem, origin: current.from, x: event.clientX, y: event.clientY,
-          recycling: current.from.area === 'board' && outside })
+          recycling: current.from.area === 'board' && outside, target: slotAt(element) })
       },
       onPointerUp: (event: PointerEvent<HTMLElement>) => end(event),
       onPointerCancel: (event: PointerEvent<HTMLElement>) => end(event, true),

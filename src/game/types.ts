@@ -27,7 +27,7 @@ export type Emission = {
   maxStep: number
 }
 export type Offer = { gem: Gem; price: number }
-export type Settings = { reducedMotion: boolean; paused: boolean }
+export type Settings = { reducedMotion: boolean; paused: boolean; viewMode: 'simple' | 'advanced' }
 export type GameState = {
   version: 1
   board: (Gem | null)[]

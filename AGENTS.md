@@ -34,9 +34,17 @@
   de 1 toutes les 5 secondes. Les effets rejouent les vrais gains/facteurs du moteur.
 - La propagation est fixée à 800 ms par case ; aucun sélecteur de vitesse. Les
   cases vides conduisent les impulsions jusqu'aux obstacles ou aux bords.
-- Les bulles gardent un diamètre de 18 px, indépendant de la puissance, et passent
+- En vue avancée, les bulles gardent un diamètre de 18 px, indépendant de la puissance, et passent
   derrière les gemmes. Leur affichage seul est arrondi à une décimale ; conserver
   la puissance composée pour la simulation et les gains.
+- La vue épurée est le défaut sauvegardé : éclat lumineux sans chiffres, contrôles
+  iconographiques, sans statistiques de rendement. Le bouton œil et les paramètres
+  basculent les vues sans toucher aux émissions ni aux gains.
+- L'inspection avancée se superpose à la boutique, sans déplacer ou redimensionner
+  la grille. Garder les contrôles couverts inertes et le recyclage accessible.
+- Rendement et aperçus restent purs dans `src/game/analysis.ts` : plateau fixe,
+  gain par émission divisé par 5 s ; contribution marginale par comparaison avec
+  la case vide. Ne jamais appliquer une transaction prévisualisée à la partie.
 - Traiter les collisions au contact, sans attendre le centre de la case bloquante
   ou extérieure. Un éclatement de 280 ms termine seulement la branche concernée.
 - Résoudre les rencontres au moment des arrivées sur le plateau courant. Un

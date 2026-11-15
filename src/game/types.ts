@@ -29,7 +29,9 @@ export type Emission = {
   gain: number
   limited: boolean
   maxStep: number
+  limits: LimitReason[]
 }
+export type LimitReason = 'events' | 'power' | 'coins' | 'invalid-power'
 export type Offer = { item: ShopItem; price: number }
 export type Settings = { reducedMotion: boolean; paused: boolean; viewMode: 'simple' | 'advanced' }
 export type GameState = {

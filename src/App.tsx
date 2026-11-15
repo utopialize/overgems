@@ -13,6 +13,7 @@ import { estimateCircuit, estimateGemContribution, previewPlacement } from './ga
 import { buyOfferAt, createInitialGame, transferGem } from './game/state'
 import type { GemOrigin, Slot } from './game/types'
 import { normalizeSlot } from './game/board'
+import { limitLabel } from './game/diagnostics'
 import { useGame } from './game/useGame'
 import './App.css'
 
@@ -96,7 +97,7 @@ export default function App() {
       }
     }
   }
-  const warning = saveError || loadWarning || (session.warning ? 'Limite de sécurité atteinte : simplifiez le circuit.' : '')
+  const warning = saveError || loadWarning || session.limitNotice
   const status = warning || (advanced || session.noticeError ? session.notice : '') || (advanced ? 'Glissez une gemme sur la grille, face à la source.' : '')
   const inspecting = Boolean(advanced && selectedItem && isGem(selectedItem) && !ghost && pane === 'shop')
   const previewText = preview ? preview.ok
@@ -140,7 +141,7 @@ export default function App() {
             <dl><div><dt>Précision complète</dt><dd data-testid="theoretical-exact">{theoretical.limited ? '≥ ' : ''}{exactNumberLabel(theoretical.perSecond)} ✧/s</dd></div>
               <div><dt>Par émission</dt><dd>{exactNumberLabel(theoretical.perEmission)} ✧</dd></div>
               <div><dt>Cadence</dt><dd>{RULES.periodMs / 1000} s</dd></div></dl>
-            <p className="muted">{theoretical.limited ? 'Estimation partielle : limite de simulation atteinte.' : 'Une émission sur la configuration actuelle du plateau, à cadence nominale.'}</p>
+            <p className="muted">{theoretical.limited ? 'Prévision du plateau actuel partielle : ' + limitLabel(theoretical.limits ?? []) + '.' : 'Une émission sur la configuration actuelle du plateau, à cadence nominale.'}</p>
           </div></>}
       </section>
 

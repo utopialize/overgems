@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useReducer, useRef, useState } from 'react'
 import { createSession, sessionReducer, suspendSession } from './runtime'
 import { loadGame, saveGame } from './save'
+import { installDiagnostics } from '../dev/diagnostics'
 
 export function useGame() {
   const [loaded] = useState(loadGame)
@@ -8,6 +9,7 @@ export function useGame() {
   const [saveError, setSaveError] = useState('')
   const ref = useRef(session)
   useLayoutEffect(() => { ref.current = session }, [session])
+  useEffect(() => { if (import.meta.env.DEV) return installDiagnostics(() => ref.current.game) }, [])
   useEffect(() => {
     const timer = window.setTimeout(() => setSaveError(saveGame(session.game)), 150)
     return () => clearTimeout(timer)

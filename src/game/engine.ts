@@ -1,10 +1,10 @@
 import { DELTA, DIRECTIONS, OPPOSITE, RULES, gemValue, roundCoins } from './catalog'
-import type { Direction, Emission, FlowEvent, Gem, Point } from './types'
+import type { Direction, Emission, FlowEvent, Gem, Point, LimitReason } from './types'
 import { occupantAt } from './board'
 
 export type Pulse = {
   position: Point; from: Point; direction: Direction; energy: number
-  visited: Set<string>; activatedGems: Set<string>; branch: number; step: number
+  visited: Set<number>; activatedGems: Set<string>; branch: number; step: number
 }
 export type SimulationOptions = {
   power?: number; source?: Point & { direction: Direction }; maxEvents?: number; maxEnergy?: number
@@ -16,6 +16,7 @@ export type RunningEmission = {
 }
 // The leading edge of a small pulse reaches a cell boundary before its centre.
 export const CONTACT_PROGRESS = 0.35
+const limit = (reasons: readonly LimitReason[], reason: LimitReason): LimitReason[] => reasons.includes(reason) ? [...reasons] : [...reasons, reason]
 
 export function collisionReason(board: readonly (Gem | null)[], pulse: Pulse, stones: readonly boolean[] = []): 'edge' | 'connection' | 'stone' | null {
   const { x, y } = pulse.position
@@ -34,7 +35,7 @@ export function resolveImpacts(board: readonly (Gem | null)[], current: RunningE
     const reason = collisionReason(board, pulse, stones)
     if (!reason) { frontier.push(pulse); continue }
     if (events.length >= current.maxEvents) return { ...current,
-      result: { ...current.result, events, limited: true }, frontier: [], done: true }
+      result: { ...current.result, events, limited: true, limits: limit(current.result.limits, 'events') }, frontier: [], done: true }
     events.push({ ...moveEvent(pulse), type: 'end', reason, progress,
       atStep: pulse.step + progress })
   }
@@ -53,10 +54,10 @@ export function createEmission(options: SimulationOptions = {}): RunningEmission
   const requested = options.maxEvents ?? RULES.maxEvents
   const maxEvents = Number.isFinite(requested) ? Math.max(1, Math.floor(requested)) : RULES.maxEvents
   const maxEnergy = options.maxEnergy ?? RULES.maxEnergy
-  const result: Emission = { events: [], gain: 0, limited: false, maxStep: 0 }
+  const result: Emission = { events: [], gain: 0, limited: false, maxStep: 0, limits: [] }
   const initial = { result, frontier: [] as Pulse[], step: 0, nextBranch: 1, maxEvents, maxEnergy, done: false }
   if (!Number.isFinite(power) || power <= 0 || !Number.isFinite(maxEnergy) || power > maxEnergy) {
-    return { ...initial, result: { ...result, limited: true }, done: true }
+    return { ...initial, result: { ...result, limited: true, limits: [!Number.isFinite(power) || power <= 0 || !Number.isFinite(maxEnergy) ? 'invalid-power' : 'power'] }, done: true }
   }
   const [dx, dy] = DELTA[source.direction]
   const first: Pulse = { position: { x: source.x + dx, y: source.y + dy }, from: source,
@@ -73,6 +74,7 @@ export function advanceEmission(board: readonly (Gem | null)[], current: Running
   const events = [...current.result.events]
   let gain = current.result.gain
   let limited = current.result.limited
+  let limits = current.result.limits
   let nextBranch = current.nextBranch
   let maxStep = current.result.maxStep
   const frontier: Pulse[] = []
@@ -85,7 +87,7 @@ export function advanceEmission(board: readonly (Gem | null)[], current: Running
     let earned = 0
     const inside = position.x >= 0 && position.x < RULES.columns && position.y >= 0 && position.y < RULES.rows
     const gem = inside ? occupantAt(board, position.y * RULES.columns + position.x)?.gem : null
-    const key = position.x + ',' + position.y + ',' + direction
+    const key = (position.y * RULES.columns + position.x) * 4 + DIRECTIONS.indexOf(direction)
     if (!inside) visit.push({ ...base, type: 'end', reason: 'edge' })
     else if (pulse.visited.has(key)) visit.push({ ...base, type: 'end', reason: 'loop' })
     else if (gem?.kind === 'multiplier' && !gem.setting.includes(OPPOSITE[direction])) {
@@ -98,6 +100,7 @@ export function advanceEmission(board: readonly (Gem | null)[], current: Running
       const outgoingEnergy = gem?.kind === 'multiplier' && activates ? energy * gemValue(gem) : energy
       if (!Number.isFinite(outgoingEnergy) || outgoingEnergy > current.maxEnergy) {
         limited = true
+        limits = limit(limits, 'power')
         visit.push({ ...base, type: 'end', reason: 'power' })
       } else {
         const outgoing = gem?.kind === 'multiplier'
@@ -111,15 +114,14 @@ export function advanceEmission(board: readonly (Gem | null)[], current: Running
         }
         if (outgoing.length > 1) visit.push({ ...base, type: 'split', energy: outgoingEnergy })
         // Empty cells also belong to each branch's history.
-        const visited = new Set(pulse.visited).add(key)
-        const activatedGems = new Set(pulse.activatedGems)
-        if (gem) activatedGems.add(gem.id)
         for (const nextDirection of outgoing) {
           const [nx, ny] = DELTA[nextDirection]
           if (nextDirection !== direction) visit.push({ ...base, type: 'turn', direction: nextDirection, energy: outgoingEnergy })
           const child: Pulse = { position: { x: position.x + nx, y: position.y + ny }, from: position,
-            direction: nextDirection, energy: outgoingEnergy, visited: new Set(visited), activatedGems: new Set(activatedGems),
+            direction: nextDirection, energy: outgoingEnergy, visited: new Set(pulse.visited).add(key),
+            activatedGems: !activates && outgoing.length === 1 ? pulse.activatedGems : new Set(pulse.activatedGems),
             branch: outgoing.length > 1 ? nextBranch++ : branch, step: step + 1 }
+          if (gem && activates) child.activatedGems.add(gem.id)
           children.push(child)
           visit.push(moveEvent(child))
         }
@@ -127,14 +129,15 @@ export function advanceEmission(board: readonly (Gem | null)[], current: Running
     }
     // Commit a whole visit or explicitly stop. No partially credited harvest.
     if (events.length + visit.length > current.maxEvents || gain + earned > RULES.maxCoins) {
-      return { ...current, result: { events, gain, limited: true, maxStep }, frontier: [], done: true, nextBranch }
+      return { ...current, result: { events, gain, limited: true, maxStep,
+        limits: limit(limits, events.length + visit.length > current.maxEvents ? 'events' : 'coins') }, frontier: [], done: true, nextBranch }
     }
     events.push(...visit)
     gain = roundCoins(gain + earned)
     frontier.push(...children)
     for (const child of children) maxStep = Math.max(maxStep, child.step)
   }
-  return { ...current, result: { events, gain, limited, maxStep }, frontier,
+  return { ...current, result: { events, gain, limited, maxStep, limits }, frontier,
     step: current.step + 1, nextBranch, done: frontier.length === 0 }
 }
 

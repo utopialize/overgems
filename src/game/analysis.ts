@@ -1,10 +1,10 @@
 import { RULES, roundCoins } from './catalog'
 import { simulateEmission } from './engine'
 import { buyOfferAt, recycleGem, transferGem } from './state'
-import type { GameState, Gem, GemOrigin, Slot } from './types'
+import type { GameState, Gem, GemOrigin, Slot, LimitReason } from './types'
 import { occupantAt, normalizeSlot } from './board'
 
-export type CircuitEstimate = { perEmission: number; perSecond: number; limited: boolean }
+export type CircuitEstimate = { perEmission: number; perSecond: number; limited: boolean; limits?: LimitReason[] }
 export type PlacementPreview =
   | { ok: false; message: string }
   | { ok: true; estimate: CircuitEstimate; deltaPerSecond: number | null; recycling: boolean }
@@ -14,7 +14,8 @@ const perSecond = (gain: number) => roundCoins(gain * 1000 / RULES.periodMs) || 
 /** One new emission on a frozen board. Never schedules a wave or credits money. */
 export function estimateCircuit(board: readonly (Gem | null)[], stones: readonly boolean[] = []): CircuitEstimate {
   const result = simulateEmission(board, { stones })
-  return { perEmission: result.gain, perSecond: perSecond(result.gain), limited: result.limited }
+  return { perEmission: result.gain, perSecond: perSecond(result.gain), limited: result.limited,
+    ...(result.limits.length ? { limits: result.limits } : {}) }
 }
 
 /** Marginal effect, including routing: full circuit minus the circuit with this cell empty. */

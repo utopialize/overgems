@@ -171,6 +171,12 @@ le changement de vue ne modifient les impulsions en cours.
 | `npm run build` | Build de production dans `dist/` |
 | `npm run preview` | Prévisualisation du build |
 
+Diagnostic du moteur en développement : `window.overgemsDiagnostics()` dans la
+console mesure la prévision actuelle et donne la cause d'une éventuelle limite.
+Le benchmark reproductible est `node scripts/benchmark-engine.mjs --baseline=8a704fc` ;
+options `--events=16384` (mesure seulement) et `--output=/tmp/rapport.json`.
+L'[audit moteur et extension](docs/ENGINE-WORLD.md) décrit les mesures et plafonds.
+
 Installer le navigateur de test une première fois :
 
 ```sh

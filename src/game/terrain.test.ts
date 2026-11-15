@@ -150,6 +150,22 @@ describe('terrain constructible et excavation', () => {
 })
 
 describe('rochers et impulsions vivantes', () => {
+  test('le feedback provient seulement des excavations validées et reste transitoire', () => {
+    const game = excavationGame(), index = game.stones.findIndex(Boolean)
+    game.settings.paused = true
+    const initial = createSession(game, 0)
+    const denied = sessionReducer(initial, { type: 'buy', index: 0, destination: 28, offerId: 'tool-8', now: 100 })
+    expect(denied.excavationEffects).toHaveLength(0)
+    const dug = sessionReducer(initial, { type: 'buy', index: 0, destination: index, offerId: 'tool-8', now: 123 })
+    expect(dug.excavationEffects).toEqual([{ id: 1, index, at: 123 }])
+    expect(dug.game.coins).toBe(22)
+    expect(dug.pending).toBe(initial.pending)
+    const duplicate = sessionReducer(dug, { type: 'buy', index: 0, destination: index, offerId: 'tool-8', now: 124 })
+    expect(duplicate.excavationEffects).toBe(dug.excavationEffects)
+    expect(createSession(decodeSave(JSON.stringify(dug.game)).game, 200).excavationEffects).toHaveLength(0)
+    expect(sessionReducer(dug, { type: 'suspend', now: 200 }).excavationEffects).toHaveLength(0)
+    expect(sessionReducer(dug, { type: 'reset', game: createInitialGame(), now: 200 }).excavationEffects).toHaveLength(0)
+  })
   test('le rocher arrête la branche au contact ; théorie, contribution et aperçu utilisent le terrain', () => {
     const game = blockedGame(), before = JSON.stringify(game)
     const flow = simulateEmission(game.board, { stones: game.stones })

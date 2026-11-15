@@ -38,6 +38,9 @@
   L'excavation conserve les vagues ; les anciens terrains restent sans rochers.
 - Les minéraux d'excavation sont collectionnés sans bonus économique. Préserver
   leur hasard séparé sauvegardé ; un aperçu ne doit jamais révéler une trouvaille.
+- L'éclatement des rochers est cosmétique, rejoué par le ticker PixiJS depuis
+  une excavation validée. Ne pas le sauvegarder ni relancer la scène à chaque
+  excavation ; en mode réduit, garder un flash fixe sans débris en mouvement.
 - La source émet une puissance
   de 1 toutes les 5 secondes. Les effets rejouent les vrais gains/facteurs du moteur.
 - La propagation est fixée à 800 ms par case ; aucun sélecteur de vitesse. Les

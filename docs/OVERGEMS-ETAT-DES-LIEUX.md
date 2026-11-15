@@ -47,6 +47,10 @@ d'équilibrage, pas une validation par des sessions humaines prolongées.
 Un petit correctif distinct arrondit ensuite le rendement principal à deux
 décimales maximum ; ses détails au toucher/clavier conservent le taux complet,
 le gain par émission et la cadence, sans modifier les calculs.
+L'excavation reçoit ensuite un feedback visuel : neuf fragments, poussière et
+halo pendant 700 ms, remplacés par un flash fixe de 250 ms en mode réduit. Le
+ticker PixiJS rejoue uniquement les transactions validées ; les effets ne sont
+pas sauvegardés et n'affectent pas la simulation, même en pause.
 
 Les sources sont le code, les tests, l'historique Git disponible et les
 documents du dépôt : [prompt initial](<OVERGEMS - MASTER DEV PROMPT V01.md>),
@@ -618,8 +622,8 @@ retestée dans cet audit.
 
 | Vérification | Résultat constaté le 15/11/2026 |
 | --- | --- |
-| `npm run check` | Réussi : Oxlint, 148 tests Vitest, compilation TypeScript et build Vite. |
-| `npm run test:mobile` | 68 scénarios Chromium : 59 régressions existantes, 8 scénarios terrain et 1 correctif de précision ; relance ciblée des 17 scénarios avancés après le correctif. |
+| `npm run check` | Réussi : Oxlint, 149 tests Vitest, compilation TypeScript et build Vite. |
+| `npm run test:mobile` | 70 scénarios Chromium : 59 régressions existantes, 10 scénarios terrain et 1 correctif de précision ; relances ciblées des scénarios concernés après chaque ajout. |
 | `npm run test:mobile -- tests/mobile/layout.spec.ts` | 12 scénarios dont les dix pages d'aide et les paramètres en paysage. |
 | `npm run test:mobile -- tests/mobile/palette.spec.ts` | 3 scénarios après amplification des palettes : contraste, distances de couleur, portrait/paysage, glisser, fusion et rechargement. |
 | Examen des captures | Captures initiales : grille neuve, paysage et réseau vivant. Puis palettes des 24 gemmes en portrait 390 × 844 et paysage 568 × 320. |
@@ -641,8 +645,8 @@ du téléchargement total ni des performances d’un mobile.
 | `src/game/live.test.ts` | 15 | Propagation vivante, conservation des flux, suspension ; effet non répété d’une récolte/multiplicatrice déplacée, héritage indépendant des activations et réactivation à l’émission suivante. |
 | `src/game/impacts.test.ts` | 7 | Puissance composée/affichage ; collisions au contact ; branches sœurs ; obstacle ajouté, déplacé ou posé après une arrivée. |
 | `src/game/analysis.test.ts` | 10 | Taux du plateau fixe, contributions positives/négatives et bifurcations, aperçus et refus, limites, migration du mode et conservation des parcours/gains. |
-| `src/game/terrain.test.ts` | 18 | Départ productif sur cinq graines, outils aléatoires, transactions, découvertes, migrations, collisions et excavation avant/après contact sans réinitialisation. |
-| `tests/mobile/terrain.spec.ts` | 8 | Pioche tactile/clavier, refus et annulation, collection portrait/paysage, grille fixe, collision pierre et migration. |
+| `src/game/terrain.test.ts` | 19 | Départ productif sur cinq graines, outils aléatoires, transactions, découvertes, migrations, collisions, excavation avant/après contact sans réinitialisation et feedback transitoire après validation seulement. |
+| `tests/mobile/terrain.spec.ts` | 10 | Pioche tactile/clavier, refus et annulation, collection portrait/paysage, grille fixe, collision pierre, migration, débris animés et flash réduit sans rejeu. |
 | `tests/mobile/layout.spec.ts` | 12 | Neuf tailles, redimensionnement, insets simulés, dix pages d’aide et paramètres en paysage, absence d’interdiction du zoom. |
 | `tests/mobile/gameplay.spec.ts` | 12 | Achat à la pose, fusion, souris/tactile/clavier, sauvegarde, effets réels, reset confirmé, mode réduit, réserve historique et erreurs de stockage. |
 | `tests/mobile/balance.spec.ts` | 7 | Renouvellement sauvegardé puis refus sans perte, achat encore possible ; recyclage et annulation, palier et remboursement après fusion. |

@@ -16,6 +16,9 @@ Les règles à jour et les arbitrages sont dans RULES.md.
   sauvegardés ; ancienne partie migrée sans obstacle ajouté.
 - Excavation avant contact sans redémarrage des vagues ; une branche déjà
   éclatée reste terminée. Les analyses incluent le terrain courant.
+- Éclatement d'excavation : neuf fragments, poussière et halo pendant 700 ms,
+  ou flash fixe de 250 ms en mode réduit. Ticker PixiJS, effet transitoire,
+  compatible pause et deux vues, sans changement économique.
 - Source de puissance 1 toutes les 5 secondes ; propagation fixe à **800 ms/case**.
   Le réglage de débug a été retiré, y compris des sauvegardes restaurées.
 - Chaque impulsion est un éclat lumineux en vue épurée, ou une boule affichant
@@ -67,7 +70,7 @@ Les règles à jour et les arbitrages sont dans RULES.md.
 
 ## Vérifications effectuées
 
-- `npm run check` : lint, **148 tests Vitest**, TypeScript et build.
+- `npm run check` : lint, **149 tests Vitest**, TypeScript et build.
 - Propagation dans les quatre directions, sertissages fixes, croisements,
   boucles, limites, déterminisme et exemple de référence à 22 Éclats.
 - Moteur incrémental et prévision statique concordants, passage à travers les
@@ -77,7 +80,7 @@ Les règles à jour et les arbitrages sont dans RULES.md.
   de gains anticipés ou hors ligne et dix minutes de temps simulé.
 - Hausse au cinquième achat, renouvellements progressifs, refus sans fonds,
   remboursements et migration des anciennes sauvegardes.
-- **68 scénarios Chromium** : achat et recyclage souris/tactile/clavier,
+- **70 scénarios Chromium** : achat et recyclage souris/tactile/clavier,
   sauvegarde, suppression du sélecteur, évolution du prix de renouvellement,
   tarifs au palier et conservation des coûts payés.
 - Terrain : cinq graines, départ productif, tirages aléatoires, excavation
@@ -86,6 +89,8 @@ Les règles à jour et les arbitrages sont dans RULES.md.
   après sauvegarde, migrations et validation des nouveaux champs.
 - Mobile : pioche tactile annulée/refusée/posée, sélection et clavier avancé,
   grille immobile, collection en portrait/paysage, persistance et collision pierre.
+- Feedback d'excavation : débris mobiles et poussière, flash réduit fixe, centrage
+  sur la case, disparition, scène conservée et absence de rejeu après rechargement.
 - Analyses : comparaison avec la case vide, contributions positives/négatives,
   bifurcations, refus et limites ; la préférence de vue et les aperçus conservent
   les émissions, échéances, monnaie et statistiques réelles.

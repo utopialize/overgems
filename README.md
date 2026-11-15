@@ -65,6 +65,9 @@ le rocher : **8 Éclats**, une case libérée, un seul usage. Les dépôts refus
 annulés ne coûtent rien. Les outils ne font pas monter le prix des gemmes.
 Sans production, creuser doit laisser le budget d'une première récolte.
 Après le dernier rocher, les autres pioches proposées sont remplacées par des gemmes.
+La pierre éclate en fragments et poussière pendant 700 ms, avec un halo sur la
+case libérée. Le mode réduit garde seulement un flash fixe de 250 ms. Ce feedback
+reste purement visuel et fonctionne également lorsque le circuit est en pause.
 
 L'excavation peut révéler un **Quartz rose, une Fluorite, une Pyrite ou une Azurite** :
 25 % de chance, avec une découverte garantie tous les quatre rochers et priorité
@@ -170,6 +173,7 @@ reste autorisé. Essayer aussi sur de vrais appareils iOS/Safari et Android/Chro
 - `src/components/` : interface HTML, gemmes SVG et Pointer Events.
 - `src/components/gemPalette.ts` : nuances et luminosité des facettes par niveau.
 - `src/pixi/` : lecture visuelle des événements, sans calcul de production.
+- `src/pixi/createExcavationFeedback.ts` : fragments, poussière et halo d'excavation pilotés par le ticker.
 - `src/index.css` : palette et tokens ; `src/App.css` : mise en page mobile first.
 
 Les coûts, niveaux, périodes et limites se règlent dans `src/game/catalog.ts`.

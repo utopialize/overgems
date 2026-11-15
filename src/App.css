@@ -115,6 +115,12 @@ button.theoretical { padding: 0; border-color: transparent; background: transpar
 .pulse-orb { position: absolute; z-index: 1; display: grid; place-items: center; transform: translate(-50%, -50%); color: #fff2d4; font-weight: 750; line-height: 1; white-space: nowrap; text-shadow: 0 1px 2px #281b14; pointer-events: none; }
 .pulse-impact { position: absolute; pointer-events: none; }
 .pulse-impact i { position: absolute; display: block; inline-size: 1.5px; block-size: 1.5px; border-radius: 50%; background: var(--champagne); box-shadow: 0 0 3px #e9b47d70; }
+.excavation-feedback { position: absolute; inset: 0; z-index: 5; overflow: hidden; pointer-events: none; }
+.stone-burst, .stone-burst > * { position: absolute; pointer-events: none; }
+.stone-flash { border: 1.5px solid var(--champagne); border-radius: 50%; background: #f4d6ae25; transform: translate(-50%, -50%); box-shadow: 0 0 9px #f4d6ae55; }
+.stone-dust { border-radius: 50%; background: radial-gradient(circle, #aab3bd99, #73829155 45%, #73829100 70%); }
+.stone-fragment { background: #8d9daa; clip-path: polygon(12% 0, 77% 8%, 100% 51%, 60% 100%, 0 74%); box-shadow: inset 2px 2px #b9c4cd70; }
+.stone-fragment:nth-child(2n) { background: #5e6e7d; }
 .scene-error { position: absolute; inset-inline: 0.5rem; bottom: 0.5rem; padding: 0.5rem; background: var(--night); font-size: 0.6875rem; color: var(--champagne); }
 .workbench { position: relative; grid-area: shop; display: grid; grid-template-rows: 2.75rem minmax(0, 1fr); gap: 0.25rem; }
 .shop-actions { display: flex; gap: 0.25rem; }

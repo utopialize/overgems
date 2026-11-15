@@ -5,7 +5,8 @@ import { buyOfferOnBoard, rerollOffers, transferGem, recycleGem } from './state'
 import type { GameState, Settings, Slot, MineralId } from './types'
 
 export type ActiveEmission = RunningEmission & { id: number; start: number; stepMs: number; completedAt: number | null }
-export type Session = { game: GameState; pending: ActiveEmission[]; nextAt: number; serial: number; notice: string; noticeError: boolean; warning: boolean; mergedId: string | null; boardChangedAt: number; discovery: { mineral: MineralId } | null }
+export type ExcavationFeedback = { id: number; index: number; at: number }
+export type Session = { game: GameState; pending: ActiveEmission[]; nextAt: number; serial: number; notice: string; noticeError: boolean; warning: boolean; mergedId: string | null; boardChangedAt: number; discovery: { mineral: MineralId } | null; excavationEffects: ExcavationFeedback[] }
 export type Action =
   | { type: 'tick'; now: number }
   | { type: 'suspend'; now: number }
@@ -21,7 +22,7 @@ export type Action =
   | { type: 'reset'; game: GameState; now: number }
 
 export function createSession(game: GameState, now: number): Session {
-  return { game, pending: [], nextAt: now + RULES.periodMs, serial: 0, notice: '', noticeError: false, warning: false, mergedId: null, boardChangedAt: now, discovery: null }
+  return { game, pending: [], nextAt: now + RULES.periodMs, serial: 0, notice: '', noticeError: false, warning: false, mergedId: null, boardChangedAt: now, discovery: null, excavationEffects: [] }
 }
 
 function nextImpact(session: Session, wave: ActiveEmission): number {
@@ -31,7 +32,7 @@ function nextImpact(session: Session, wave: ActiveEmission): number {
 
 /** Stop transient journeys on suspension. Already collected gains stay saved; no future gain is invented. */
 export function suspendSession(session: Session): Session {
-  return session.pending.length ? { ...session, pending: [] } : session
+  return session.pending.length || session.excavationEffects.length ? { ...session, pending: [], excavationEffects: [] } : session
 }
 
 function advanceSession(session: Session, now: number): Session {
@@ -96,6 +97,9 @@ export function sessionReducer(session: Session, action: Action): Session {
     : transferGem(session.game, action.from, action.to)
   // Editing the board NEVER clears, settles, restarts or recalculates an existing wave.
   const updated = { ...session, game: transaction.game, notice: transaction.message, noticeError: !transaction.ok,
+    excavationEffects: transaction.ok && action.type === 'buy' && transaction.game.excavations > session.game.excavations
+      ? [...session.excavationEffects.slice(-15), { id: transaction.game.excavations, index: action.destination, at: action.now ?? session.boardChangedAt }]
+      : session.excavationEffects,
     discovery: transaction.found ? { mineral: transaction.found } : session.discovery,
     boardChangedAt: transaction.ok && action.type !== 'reroll' ? action.now ?? session.boardChangedAt : session.boardChangedAt,
     mergedId: transaction.merged ? (action.type === 'buy'

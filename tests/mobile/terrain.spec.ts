@@ -166,3 +166,54 @@ test('ancienne sauvegarde migrée sans ajouter de rochers sur les gemmes existan
   await expect(cell(page, 1)).toHaveAccessibleName(/Récolte/)
   await expect(page.getByRole('alert')).toHaveCount(0)
 })
+
+for (const reduced of [false, true]) {
+  test('éclatement du rocher : ' + (reduced ? 'flash fixe en mode réduit' : 'fragments et poussière en vue épurée'), async ({ page }, testInfo) => {
+    const game = fixture(), rock = game.stones.findIndex(Boolean)
+    game.settings.reducedMotion = reduced
+    if (reduced) game.settings.viewMode = 'advanced'
+    await page.clock.install()
+    await page.clock.pauseAt(await page.evaluate(() => Date.now() + 100))
+    await seed(page, game)
+    for (let i = 0; i < 30 && await page.locator('.excavation-feedback').count() === 0; i++) {
+      await page.clock.runFor(50)
+      if (i < 10) await page.waitForLoadState('networkidle')
+    }
+    await expect(page.locator('.excavation-feedback')).toHaveCount(1)
+    await expect(page.locator('.stone-burst')).toHaveCount(0)
+    const board = await page.locator('.board-grid').boundingBox()
+    const canvas = (await page.locator('canvas').elementHandle())!
+    await page.getByTestId('offer-0').click()
+    await cell(page, rock).click()
+    await page.clock.runFor(60)
+    const burst = page.locator('.stone-burst')
+    await expect(burst).toHaveAttribute('data-cell', String(rock))
+    await expect(burst).toHaveAttribute('data-reduced', String(reduced))
+    await expect(burst.locator('.stone-fragment')).toHaveCount(reduced ? 0 : 9)
+    await expect(burst.locator('.stone-dust')).toHaveCount(reduced ? 0 : 5)
+    await expect(cell(page, rock)).toHaveAccessibleName(/case vide/)
+    await expect(page.getByTestId('balance')).toHaveText('✧ 22')
+    expect(await page.locator('.board-grid').boundingBox()).toEqual(board)
+    const position = await burst.evaluate((element) => ({ x: parseFloat(element.style.left), y: parseFloat(element.style.top) }))
+    const stage = (await page.locator('.board-stage').boundingBox())!, target = (await cell(page, rock).boundingBox())!
+    expect(Math.abs(stage.x + position.x - target.x - target.width / 2)).toBeLessThan(2)
+    expect(Math.abs(stage.y + position.y - target.y - target.height / 2)).toBeLessThan(2)
+    const particle = reduced ? burst.locator('.stone-flash') : burst.locator('.stone-fragment').first()
+    const appearance = await particle.getAttribute('style')
+    await page.clock.runFor(70)
+    if (reduced) expect(await particle.getAttribute('style')).toBe(appearance)
+    else expect(await particle.getAttribute('style')).not.toBe(appearance)
+    await page.screenshot({ path: testInfo.outputPath('stone-excavation.png'), scale: 'css' })
+    await page.clock.runFor(reduced ? 150 : 600)
+    await expect(burst).toHaveCount(0)
+    expect(await canvas.evaluate((element) => element.isConnected)).toBe(true)
+    await page.getByRole('button', { name: reduced ? 'Passer en vue épurée' : 'Passer en vue avancée' }).click()
+    await page.clock.runFor(50)
+    await expect(burst).toHaveCount(0)
+    expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight + 1 && document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    await page.clock.runFor(200)
+    await page.reload()
+    await page.clock.runFor(100)
+    await expect(page.locator('.stone-burst')).toHaveCount(0)
+  })
+}

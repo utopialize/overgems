@@ -1,16 +1,17 @@
 import { lazy, Suspense, useState } from 'react'
 import { canMerge } from '../game/fusion'
 import { RULES, gemDescription, isGem } from '../game/catalog'
-import type { ActiveEmission } from '../game/runtime'
+import type { ActiveEmission, ExcavationFeedback } from '../game/runtime'
 import type { Gem, GemOrigin, ShopItem, Slot } from '../game/types'
 import { GemView } from './GemView'
 import { StoneView } from './TerrainViews'
 
 const PixiCanvas = lazy(() => import('./PixiCanvas').then((module) => ({ default: module.PixiCanvas })))
 
-export function GameBoard({ board, stones, selected, selectedItem, emissions, reducedMotion, advanced, mergedId, previewIndex, onPreview, onChoose }: {
+export function GameBoard({ board, stones, selected, selectedItem, emissions, excavationEffects, reducedMotion, advanced, mergedId, previewIndex, onPreview, onChoose }: {
   board: (Gem | null)[]; stones: boolean[]; selected: GemOrigin | null; selectedItem: ShopItem | null
   emissions: ActiveEmission[]; reducedMotion: boolean; advanced: boolean; mergedId: string | null
+  excavationEffects: ExcavationFeedback[]
   previewIndex: number | null; onPreview: (index: number | null) => void
   onChoose: (slot: Slot) => void
 }) {
@@ -47,7 +48,7 @@ export function GameBoard({ board, stones, selected, selectedItem, emissions, re
             )
           })}
         </div>
-        <Suspense fallback={null}><PixiCanvas emissions={emissions} reducedMotion={reducedMotion} advanced={advanced} /></Suspense>
+        <Suspense fallback={null}><PixiCanvas emissions={emissions} excavationEffects={excavationEffects} reducedMotion={reducedMotion} advanced={advanced} /></Suspense>
       </div>
     </div>
   )

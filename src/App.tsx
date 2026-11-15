@@ -148,6 +148,7 @@ export default function App() {
             <i className={game.settings.paused ? 'paused' : ''} />{game.settings.paused ? advanced ? 'En pause' : 'Ⅱ' : (advanced ? 'Puissance 1 · ' : '') + RULES.periodMs / 1000 + ' s'}
           </span></div>
         <GameBoard board={game.board} stones={game.stones} selected={selected} selectedItem={ghost?.item ?? selectedItem} emissions={session.pending}
+          excavationEffects={session.excavationEffects}
           reducedMotion={reducedMotion} advanced={advanced} mergedId={session.mergedId} onChoose={choose}
           previewIndex={showPreview ? previewDestination : null} onPreview={(index) => { if (advanced && selected) setHovered(index) }} />
       </section>

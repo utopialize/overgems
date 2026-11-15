@@ -1,11 +1,12 @@
 import { Graphics } from 'pixi.js'
 import type { Application } from 'pixi.js'
 import { RULES, numberLabel } from '../game/catalog'
-import type { ActiveEmission } from '../game/runtime'
+import type { ActiveEmission, ExcavationFeedback } from '../game/runtime'
 import type { Point, FlowEvent } from '../game/types'
 import { PULSE_VISUALS, powerLabel } from './pulseVisuals'
+import { createExcavationFeedback } from './createExcavationFeedback'
 
-export type FlowSnapshot = { emissions: ActiveEmission[]; reducedMotion: boolean; advanced: boolean; offset: number }
+export type FlowSnapshot = { emissions: ActiveEmission[]; excavationEffects: ExcavationFeedback[]; reducedMotion: boolean; advanced: boolean; offset: number }
 type IndexedEvent = { event: FlowEvent; index: number }
 type Timeline = { indexed: number; steps: Map<number, IndexedEvent[]> }
 
@@ -26,15 +27,17 @@ export function createFlowScene(app: Application, snapshot: { current: FlowSnaps
   const impacts = new Map<string, HTMLSpanElement>()
   const timelines = new Map<number, Timeline>()
   const cells = Array.from(host.parentElement!.querySelectorAll<HTMLElement>('.board-cell'))
+  const excavation = createExcavationFeedback(host.parentElement!)
   let glowing = new Map<number, number>()
 
   const draw = () => {
     light.clear()
-    const { emissions, reducedMotion, advanced, offset } = snapshot.current
+    const { emissions, excavationEffects, reducedMotion, advanced, offset } = snapshot.current
     const cellWidth = (app.screen.width - offset) / 7
     const cellHeight = app.screen.height / 9
     const point = (p: Point, source = false) => ({ x: source ? offset / 2 : offset + (p.x + 0.5) * cellWidth, y: (p.y + 0.5) * cellHeight })
     const now = performance.now()
+    excavation.draw(excavationEffects, now, reducedMotion, offset, cellWidth, cellHeight)
     const activeLabels = new Set<string>(), activeOrbs = new Set<string>()
     const activeImpacts = new Set<string>()
     const nextGlowing = new Map<number, number>()
@@ -174,6 +177,6 @@ export function createFlowScene(app: Application, snapshot: { current: FlowSnaps
   return () => {
     app.ticker.remove(draw)
     for (const [index] of glowing) cells[index]?.style.removeProperty('--flow-intensity')
-    labels.clear(); orbs.clear(); impacts.clear(); timelines.clear(); layer.remove(); orbLayer.remove(); light.destroy()
+    labels.clear(); orbs.clear(); impacts.clear(); timelines.clear(); layer.remove(); orbLayer.remove(); excavation.destroy(); light.destroy()
   }
 }

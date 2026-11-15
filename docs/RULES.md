@@ -63,6 +63,14 @@ Creuser avant le contact laisse continuer la branche déjà partie. Après le
 contact, une branche éclatée reste terminée. Les autres branches ne sont pas
 interrompues. Théorie, contribution et aperçus tiennent compte des rochers actuels.
 
+Une excavation validée déclenche neuf fragments, cinq nuages de poussière et un
+halo bref sur la case libérée pendant 700 ms. Les tailles suivent les cases et
+les effets sont confinés au plateau. En mode réduit, seul un flash fixe de
+250 ms subsiste. Ce feedback fonctionne dans les deux vues et en pause ; il est
+piloté par le ticker PixiJS, sans état React à chaque image, sans monnaie ni
+recalcul des flux. Les effets simultanés sont bornés, nettoyés au démontage et
+jamais restaurés avec une sauvegarde. Un achat refusé ne déclenche aucun effet.
+
 Les sauvegardes antérieures sans terrain sont migrées avec des cases libres,
 sans obstacle ajouté sous les gemmes. L'ancien champ d'offre `gem` devient `item` ;
 la progression est conservée. Seule une nouvelle partie introduit les rochers.
